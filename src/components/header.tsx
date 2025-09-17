@@ -18,9 +18,12 @@ export function Header() {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    if (savedTheme === 'dark') {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+    
+    if (initialTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
@@ -42,7 +45,7 @@ export function Header() {
     <header className="flex h-16 items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
         <PaiLogo className="h-8 w-8 text-primary" />
-        <h1 className="text-xl font-semibold tracking-tight">Pai Chatbot</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Pai</h1>
       </div>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">

@@ -5,10 +5,9 @@ import type { FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Header } from '@/components/header';
 import { ChatMessage } from '@/components/chat-message';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Mic } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -31,21 +30,22 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollableNode = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-      if (scrollableNode) {
-        scrollableNode.scrollTo({
-          top: scrollableNode.scrollHeight,
-          behavior: 'smooth',
-        });
-      }
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, isLoading]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage: ChatMessageType = {
       id: uuidv4(),
@@ -112,48 +112,57 @@ export default function Home() {
       <Header />
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
-          <ScrollArea className="h-full">
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="space-y-6">
-                {messages.length === 0 ? (
-                   <WelcomeMessage setInput={setInput} />
-                ) : (
-                  messages.map((message) => (
-                    <ChatMessage key={message.id} {...message} />
-                  ))
-                )}
-                 {isLoading && (
-                  <ChatMessage
-                    id="loading"
-                    role="assistant"
-                    content={
-                      <div className="flex items-center space-x-2 p-4">
-                        <div className="w-2 h-2 rounded-full bg-muted dot1"></div>
-                        <div className="w-2 h-2 rounded-full bg-muted dot2"></div>
-                        <div className="w-2 h-2 rounded-full bg-muted dot3"></div>
-                        <span className="text-sm text-muted-foreground">Pai is thinking...</span>
-                      </div>
-                    }
-                  />
-                 )}
-              </div>
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="space-y-6">
+              {messages.length === 0 && !isLoading ? (
+                 <WelcomeMessage setInput={setInput} />
+              ) : (
+                messages.map((message) => (
+                  <ChatMessage key={message.id} {...message} />
+                ))
+              )}
+               {isLoading && (
+                <ChatMessage
+                  id="loading"
+                  role="assistant"
+                  content={
+                    <div className="flex items-center space-x-2 p-4">
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot1"></div>
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot2"></div>
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot3"></div>
+                      <span className="text-sm text-muted-foreground">Pai is thinking...</span>
+                    </div>
+                  }
+                />
+               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
         <div className="bg-background/80 backdrop-blur-md border-t">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                 <form onSubmit={handleSendMessage} className="flex items-center gap-4">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Pai — e.g., ‘Tax on ₹15L’ or ‘SIP of 5000 for 10 years’"
-                    className="flex-1 h-12 px-5 rounded-full text-base bg-muted border-2 border-transparent focus-visible:border-primary focus-visible:ring-0"
-                    disabled={isLoading}
-                  />
+                 <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
+                  <div className="flex-1 flex items-center px-2 bg-muted rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+                     <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Ask Pai anything about finance..."
+                        className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-300"
+                        disabled={isLoading}
+                      >
+                        <Mic className="size-5" />
+                      </Button>
+                  </div>
                   <Button
                     type="submit"
                     size="icon"
-                    className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0"
+                    className="size-12 rounded-full bg-gradient-to-br from-primary to-green-400 dark:to-green-600 flex-shrink-0 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 ease-out disabled:scale-100 disabled:shadow-lg"
                     disabled={!input.trim() || isLoading}
                   >
                     <ArrowUp className="size-5" />
