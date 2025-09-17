@@ -16,6 +16,8 @@ import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calc
 import { calculateSip, calculateFd, calculateRd, calculateReverseSip, calculateCAGR } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
+import { compareTaxRegimes } from './compare-tax-regimes';
+import type { CompareTaxRegimesInput } from './compare-tax-regimes';
 import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, SavingsRatioResult, DtiResult, ReverseSipResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 
@@ -160,21 +162,17 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         if (regime === 'both') {
             const newRegimeResult = calculateTax(intent.income, fy, 'new');
             const oldRegimeResult = calculateTax(intent.income, fy, 'old');
-            const saving = oldRegimeResult.total_tax - newRegimeResult.total_tax;
             
-            let explanation = `Comparing tax regimes for an income of ₹${intent.income.toLocaleString('en-IN')}:\n\n`;
-            explanation += `New Regime Tax: ₹${newRegimeResult.total_tax.toLocaleString('en-IN')}\n`;
-            explanation += `Old Regime Tax: ₹${oldRegimeResult.total_tax.toLocaleString('en-IN')}\n\n`;
-            if (saving > 0) {
-                explanation += `You could save ₹${saving.toLocaleString('en-IN')} by choosing the New Regime.`;
-            } else if (saving < 0) {
-                explanation += `You could save ₹${Math.abs(saving).toLocaleString('en-IN')} by choosing the Old Regime (assuming you have sufficient deductions).`;
-            } else {
-                explanation += `The tax amount is the same under both regimes.`;
-            }
+            const comparisonInput: CompareTaxRegimesInput = {
+                income: intent.income,
+                fy,
+                newRegimeResult,
+                oldRegimeResult
+            };
+            const comparisonResult = await compareTaxRegimes(comparisonInput);
 
             return {
-                response: explanation,
+                response: comparisonResult.comparison,
                 calculationResult: { type: 'tax_comparison', data: { new: newRegimeResult, old: oldRegimeResult } }
             }
         } else {
