@@ -58,9 +58,9 @@ Total Tax: ₹{{{total_tax}}}
 Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure. Do NOT use markdown asterisks or bullet points.
 
 Example Format:
-💰 Income Tax Summary — FY {{{fy}}} ({{#if (eq regime "new")}}New{{else}}Old{{/if}} Regime)
+💰 Income Tax Summary — FY {{{fy}}} ({{regime}} Regime)
 📊 Tax Slabs
-{{#if (eq regime "new")}}
+{{#if (eq regime 'new')}}
 ₹0 – ₹3,00,000: Nil
 ₹3,00,001 – ₹6,00,000: 5%
 ₹6,00,001 – ₹9,00,000: 10%
@@ -80,7 +80,7 @@ Above ₹10,00,000: 30%
 🧾 Tax Payable
 ₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
 
-⚠️ Note: This is an illustrative calculation based on the {{#if (eq regime "new")}}New{{else}}Old{{/if}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
+⚠️ Note: This is an illustrative calculation based on the {{regime}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
 });
 
