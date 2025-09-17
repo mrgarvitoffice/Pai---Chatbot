@@ -18,12 +18,23 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
     if (!result) return null;
 
     return (
-        <div className="p-4 bg-transparent rounded-b-2xl rounded-tr-2xl">
+        <div className="p-4 bg-transparent rounded-b-2xl rounded-tr-2xl space-y-4">
+             <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Taxable Income</p>
+                <p className="font-semibold text-lg">₹{result.taxable_income.toLocaleString('en-IN')}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Tax</p>
+                <p className="font-semibold text-lg text-primary">₹{result.total_tax.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+
             <div className="p-4 rounded-xl bg-background/50">
                 <div className="whitespace-pre-wrap text-sm text-foreground">{explanation}</div>
             </div>
             
-            <Accordion type="single" collapsible className="w-full mt-2">
+            <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1" className="border-t">
                 <AccordionTrigger className="font-code text-sm">How we calculated this</AccordionTrigger>
                 <AccordionContent>
