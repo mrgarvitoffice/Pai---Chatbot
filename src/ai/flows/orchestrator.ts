@@ -272,10 +272,13 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
+    if (intent?.intent === 'GENERAL') {
+        return {
+            response: "I can provide information on a wide range of financial topics. For specific calculations, try asking 'Tax on 15L' or 'SIP of 5000 for 10 years'."
+        }
+    }
 
     return {
         response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'Distribute 80k income'."
     };
 }
-
-    
