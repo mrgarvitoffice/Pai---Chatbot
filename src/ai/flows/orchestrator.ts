@@ -118,16 +118,21 @@ const intentPrompt = ai.definePrompt({
     - "income tax on 10 lakh" -> intent: "TAX", income: 1000000, regime: 'new'
     - "tax on 20 lakhs" -> intent: "TAX", income: 2000000, regime: 'new'
     - "What is my tax if I earn ₹7,50,000 under the new regime?" -> intent: "TAX", income: 750000, regime: 'new'
+    - "Calculate my tax for ₹15,00,000 income under the old regime." -> intent: "TAX", income: 1500000, regime: 'old'
     - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
     - "HRA exemption on 8L salary with 20k monthly rent" -> intent: "HRA", income: 800000, monthly_rent: 20000
     - "I pay ₹20,000 monthly rent. What HRA exemption can I claim if my salary is ₹8,00,000?" -> intent: "HRA", income: 800000, monthly_rent: 20000
+    - "How much HRA if I stay in metro city with ₹40,000 rent and 15L salary" -> intent: "HRA", income: 1500000, monthly_rent: 40000, metro_city: true
     - "How much should I invest in 80C if I earn 10L" -> intent: "80C_PLANNING", income: 1000000
+    - "Show me my tax saving if I invest ₹1.5L in ELSS" -> intent: "80C_PLANNING", income: 0, investment_80c: 150000 // income not specified, needs to be handled
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
     - "What will be my SIP value if I invest ₹5,000 for 20 years at 12%?" -> intent: "SIP", sip_monthly: 5000, sip_years: 20, sip_rate: 12
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Home loan EMI on ₹40 lakh at 8.5% for 25 years." -> intent: "EMI", emi_principal: 4000000, emi_years: 25, emi_rate: 8.5
+    - "Interest paid on ₹5 lakh personal loan at 12% for 5 years" -> intent: "EMI", emi_principal: 500000, emi_rate: 12, emi_years: 5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
+    - "How much will ₹50,000 grow in 12 years at 9%?" -> intent: "COMPOUND_INTEREST", ci_principal: 50000, ci_years: 12, ci_rate: 9, ci_frequency: 1
     - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
     - "Split my ₹90k income using 50-30-20 rule." -> intent: "BUDGET", income: 90000
     - "FD of 1 lakh for 5 years at 7%" -> intent: "FD", fd_principal: 100000, fd_years: 5, fd_rate: 7
@@ -136,6 +141,7 @@ const intentPrompt = ai.definePrompt({
     - "How much interest on ₹1 lakh RD for 3 years at 6.5%?" -> intent: "RD", rd_monthly: 100000/36, rd_months: 36, rd_rate: 6.5 // approximate monthly from total
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "Explain what is HRA" -> intent: "GENERAL"
+    - "What is reducing vs flat interest EMI?" -> intent: "GENERAL"
     `,
 });
 
@@ -195,10 +201,11 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
     
-    if (intent?.intent === "80C_PLANNING" && intent.income) {
+    if (intent?.intent === "80C_PLANNING") {
+        const income = intent.income || 1000000; // Assume 10L if not provided
         const maxInvestment = 150000;
-        const oldRegimeResult = calculateTax(intent.income, '2024-25', 'old', 0);
-        const oldRegimeWith80C = calculateTax(intent.income, '2024-25', 'old', maxInvestment);
+        const oldRegimeResult = calculateTax(income, '2024-25', 'old', 0);
+        const oldRegimeWith80C = calculateTax(income, '2024-25', 'old', maxInvestment);
         const taxSaving = oldRegimeResult.total_tax - oldRegimeWith80C.total_tax;
         const explanation = `By investing the full ₹${maxInvestment.toLocaleString('en-IN')} under Section 80C, you could potentially save up to ₹${taxSaving.toLocaleString('en-IN')} in taxes under the Old Regime. The New Regime does not offer 80C deductions.`;
         return {
