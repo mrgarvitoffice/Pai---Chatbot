@@ -82,8 +82,7 @@ export default function Home() {
         content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'reverse_sip') {
         content = <ReverseSipResultCard result={result.calculationResult.data} explanation={result.response} />;
-      }
-      else {
+      } else {
         content = result.response;
       }
       
