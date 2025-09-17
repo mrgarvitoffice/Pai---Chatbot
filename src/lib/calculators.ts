@@ -18,13 +18,17 @@ export function calculateTax(
     breakdown['Standard Deduction'] = -standardDeduction;
 
     if (taxable_income <= 700000) {
+        // Tax is 0 due to rebate under Section 87A
         tax = 0;
     } else {
-        if (taxable_income > 1500000) tax += (taxable_income - 1500000) * 0.30;
-        if (taxable_income > 1200000) tax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
-        if (taxable_income > 900000) tax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
-        if (taxable_income > 600000) tax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
-        if (taxable_income > 300000) tax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
+        // Recalculate tax from slabs without rebate
+        let tempTax = 0;
+        if (taxable_income > 1500000) tempTax += (taxable_income - 1500000) * 0.30;
+        if (taxable_income > 1200000) tempTax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
+        if (taxable_income > 900000) tempTax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
+        if (taxable_income > 600000) tempTax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
+        if (taxable_income > 300000) tempTax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
+        tax = tempTax;
     }
   } else { // Old Regime
     const standardDeduction = 50000;
