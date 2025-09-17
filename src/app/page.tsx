@@ -137,20 +137,20 @@ export default function Home() {
             </div>
           </ScrollArea>
         </div>
-        <div className="bg-background border-t">
+        <div className="bg-background/80 backdrop-blur-md border-t">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                 <form onSubmit={handleSendMessage} className="relative">
+                 <form onSubmit={handleSendMessage} className="flex items-center gap-4">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask Pai — e.g., ‘Tax on ₹15L’ or ‘SIP of 5000 for 10 years’"
-                    className="pr-12 h-12 rounded-xl text-base bg-muted border-2 border-transparent focus-visible:border-primary focus-visible:ring-0"
+                    className="flex-1 h-12 px-5 rounded-full text-base bg-muted border-2 border-transparent focus-visible:border-primary focus-visible:ring-0"
                     disabled={isLoading}
                   />
                   <Button
                     type="submit"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-br from-primary to-secondary"
+                    className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0"
                     disabled={!input.trim() || isLoading}
                   >
                     <ArrowUp className="size-5" />

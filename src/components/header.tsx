@@ -39,19 +39,19 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 sticky top-0 z-10">
+    <header className="flex h-16 items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
         <PaiLogo className="h-8 w-8 text-primary" />
         <h1 className="text-xl font-semibold tracking-tight">Pai Chatbot</h1>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
                 <AvatarImage src="https://picsum.photos/seed/user-avatar/100/100" data-ai-hint="person" alt="User Avatar" />
                 <AvatarFallback>
