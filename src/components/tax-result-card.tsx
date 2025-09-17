@@ -21,7 +21,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
 
     return (
         <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl">
-            <div className="grid grid-cols-2 gap-4 text-center p-4 rounded-xl bg-background">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center p-4 rounded-xl bg-background">
                 <div>
                     <p className="text-sm text-muted-foreground">Total Tax</p>
                     <p className="font-semibold text-2xl text-primary">₹{result.total_tax.toLocaleString('en-IN')}</p>
@@ -72,7 +72,7 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
                 <p className="font-semibold text-lg">Tax Regime Comparison</p>
                 <p className="text-sm text-muted-foreground">For Income of ₹{newRegime.income.toLocaleString('en-IN')}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg bg-background text-center">
                     <p className="font-semibold text-primary">New Regime</p>
                     <p className="text-xl font-bold">₹{newRegime.total_tax.toLocaleString('en-IN')}</p>
@@ -94,7 +94,7 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
               <AccordionItem value="item-1" className="border-t">
                 <AccordionTrigger className="font-code text-sm">View Details</AccordionTrigger>
                 <AccordionContent>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <p className="font-semibold mb-2 text-center">New Regime</p>
                              <div className="space-y-1 text-xs font-code text-muted-foreground">

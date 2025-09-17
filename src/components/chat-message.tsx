@@ -19,7 +19,7 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
       )}
       <div
         className={cn(
-          'max-w-[85%] rounded-2xl text-base',
+          'max-w-[85%] md:max-w-[85%] rounded-2xl text-base',
           isAssistant
             ? 'bg-muted rounded-tl-none'
             : 'bg-gradient-to-br from-secondary via-pink-500 to-rose-500 text-primary-foreground rounded-br-none shadow-lg'

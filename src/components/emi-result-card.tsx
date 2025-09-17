@@ -17,7 +17,7 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
                 <p className="font-semibold text-3xl text-primary">₹{result.emi.toLocaleString('en-IN')}</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
                     <div className="p-2 rounded-md bg-secondary">
                         <PiggyBank className="size-5 text-secondary-foreground"/>
@@ -66,5 +66,3 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
         </div>
     );
 }
-
-    

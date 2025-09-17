@@ -25,7 +25,7 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
                 <p className={`text-sm font-semibold ${benchmark.color}`}>{benchmark.label}</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="p-3 rounded-lg bg-background">
                     <p className="text-muted-foreground">Monthly Income</p>
                     <p className="font-semibold">₹{result.monthlyIncome.toLocaleString('en-IN')}</p>
