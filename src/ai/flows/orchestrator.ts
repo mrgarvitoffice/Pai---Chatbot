@@ -103,7 +103,7 @@ const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: intentSchema },
-    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities.
+    prompt: `You are an expert at analyzing user queries about Indian personal finance, including queries in English, Hindi, and Hinglish. Your task is to determine the user's intent and extract relevant entities.
 
     User Query: {{{query}}}
 
@@ -123,21 +123,27 @@ const intentPrompt = ai.definePrompt({
         - "DTI_RATIO": Calculating the Debt-to-Income ratio.
         - "CAGR": Calculating Compound Annual Growth Rate.
         - "REAL_RETURN": Calculating inflation-adjusted return.
-        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation").
+        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
-    3. regime: If the user mentions 'old', 'new', or wants to 'compare', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
+    3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
     4. HRA details (monthly_rent, metro_city, basic_salary): Extract for HRA intent. If basic salary is not given, assume it's 50% of total income.
     5. 80C investment: Extract if the intent is 80C planning.
     
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
+    - "15L pe kitna tax lagega?" -> intent: "TAX", income: 1500000, regime: 'new'
+    - "₹15 लाख पर कितना टैक्स लगेगा?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
+    - "12 lakh par old aur new regime me tax compare karo" -> intent: "TAX", income: 1200000, regime: 'both'
     - "HRA exemption on 8L salary with 20k monthly rent" -> intent: "HRA", income: 800000, monthly_rent: 20000
     - "How much should I invest in 80C if I earn 10L" -> intent: "80C_PLANNING", income: 1000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
+    - "Agar main 10 saal ke liye 5000 mahine ka SIP karu to kitna milega?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "How much should I invest monthly to get ₹1 crore in 25 years at 10%?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
+    - "1 crore paane ke liye 25 saal tak kitna invest karna padega?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
     - "monthly sip to reach ₹3 crore in 35 years at 12%" -> intent: "REVERSE_SIP", sip_target: 30000000, sip_years: 35, sip_rate: 12
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
+    - "50 lakh home loan ka EMI kitna hoga 20 saal ke liye?" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
     - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
     - "FD of 1 lakh for 5 years at 7%" -> intent: "FD", fd_principal: 100000, fd_years: 5, fd_rate: 7
@@ -148,6 +154,7 @@ const intentPrompt = ai.definePrompt({
     - "What is CAGR if investment grew from ₹1 lakh to ₹2 lakh in 5 years?" -> intent: "CAGR", cagr_start_value: 100000, cagr_end_value: 200000, cagr_years: 5
     - "real return if mutual fund gives 14% and inflation is 6%" -> intent: "REAL_RETURN", real_return_nominal: 14, real_return_inflation: 6
     - "What is a mutual fund?" -> intent: "GENERAL"
+    - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
     `,
 });
 
