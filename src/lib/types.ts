@@ -76,6 +76,18 @@ export interface RdCalculationResult {
     total_interest: number;
 }
 
+export interface SavingsRatioResult {
+    monthlyIncome: number;
+    monthlySavings: number;
+    savingsRatio: number;
+}
+
+export interface DtiResult {
+    monthlyIncome: number;
+    monthlyEmi: number;
+    dtiRatio: number;
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'tax_comparison', data: TaxComparisonResult }
@@ -84,6 +96,6 @@ export type CalculationResult =
   | { type: 'compound_interest', data: CompoundInterestResult }
   | { type: 'budget', data: BudgetAllocationResult }
   | { type: 'fd', data: FdCalculationResult }
-  | { type: 'rd', data: RdCalculationResult };
-
-    
+  | { type: 'rd', data: RdCalculationResult }
+  | { type: 'savings_ratio', data: SavingsRatioResult }
+  | { type: 'dti_ratio', data: DtiResult };

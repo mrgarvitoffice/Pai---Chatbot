@@ -412,7 +412,7 @@ export function retirementCorpusEstimate(params: {
  */
 export function savingsRatio(monthlyIncome: number, monthlySavings: number): number {
   if (monthlyIncome <= 0) return 0;
-  return round2(monthlySavings / monthlyIncome);
+  return round2(monthlySavings / monthlyIncome * 100);
 }
 
 /**
@@ -421,7 +421,7 @@ export function savingsRatio(monthlyIncome: number, monthlySavings: number): num
  */
 export function debtToIncomeRatio(grossMonthlyIncome: number, totalMonthlyDebtPayments: number): number {
   if (grossMonthlyIncome <= 0) return 0;
-  return round2(totalMonthlyDebtPayments / grossMonthlyIncome);
+  return round2(totalMonthlyDebtPayments / grossMonthlyIncome * 100);
 }
 
 /**
@@ -456,5 +456,3 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
-
-    

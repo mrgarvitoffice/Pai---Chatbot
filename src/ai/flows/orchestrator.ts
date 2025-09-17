@@ -12,11 +12,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA, savingsRatio, debtToIncomeRatio } from '@/lib/calculators';
 import { calculateSip, calculateFd, calculateRd } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, SavingsRatioResult, DtiResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 
 const OrchestratorInputSchema = z.object({
@@ -47,8 +47,8 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "GENERAL"]).describe("The user's intent."),
-    income: z.number().optional().describe("The user's annual income. For example, '15L' or '10 lakhs' becomes 1500000."),
+    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "SAVINGS_RATIO", "DTI_RATIO", "GENERAL"]).describe("The user's intent."),
+    income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
     monthly_rent: z.number().optional().describe("Monthly rent paid for HRA calculation."),
     metro_city: z.boolean().optional().describe("Whether the user lives in a metro city for HRA calculation."),
@@ -70,6 +70,8 @@ const intentSchema = z.object({
     rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
     rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
+    savings_monthly: z.number().optional().describe("The user's monthly savings amount."),
+    dti_emi: z.number().optional().describe("The user's total monthly EMI payments for DTI calculation."),
 });
 
 const generalResponsePrompt = ai.definePrompt({
@@ -107,6 +109,8 @@ const intentPrompt = ai.definePrompt({
         - "BUDGET": Allocating monthly income (e.g., 50/30/20 rule).
         - "FD": Fixed Deposit calculation.
         - "RD": Recurring Deposit calculation.
+        - "SAVINGS_RATIO": Calculating the personal savings ratio.
+        - "DTI_RATIO": Calculating the Debt-to-Income ratio.
         - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000.
     3. regime: If the user mentions 'old', 'new', or wants to 'compare', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
@@ -139,6 +143,8 @@ const intentPrompt = ai.definePrompt({
     - "What’s the maturity on ₹2 lakh FD at 7% for 5 years?" -> intent: "FD", fd_principal: 200000, fd_years: 5, fd_rate: 7
     - "RD of 2000 for 24 months at 6.5%" -> intent: "RD", rd_monthly: 2000, rd_months: 24, rd_rate: 6.5
     - "How much interest on ₹1 lakh RD for 3 years at 6.5%?" -> intent: "RD", rd_monthly: 100000/36, rd_months: 36, rd_rate: 6.5 // approximate monthly from total
+    - "My income is ₹1 lakh, savings ₹25k — savings ratio?" -> intent: "SAVINGS_RATIO", income: 100000, savings_monthly: 25000
+    - "My EMI is ₹30k on ₹1 lakh income — what is my DTI ratio?" -> intent: "DTI_RATIO", income: 100000, dti_emi: 30000
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "Explain what is HRA" -> intent: "GENERAL"
     - "What is reducing vs flat interest EMI?" -> intent: "GENERAL"
@@ -300,6 +306,34 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         return {
             response: explanation,
             calculationResult: { type: 'rd', data: rdResult }
+        };
+    }
+
+    if (intent?.intent === "SAVINGS_RATIO" && intent.income && intent.savings_monthly) {
+        const ratio = savingsRatio(intent.income, intent.savings_monthly);
+        const srResult: SavingsRatioResult = {
+            monthlyIncome: intent.income,
+            monthlySavings: intent.savings_monthly,
+            savingsRatio: ratio
+        };
+        const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and savings of ₹${intent.savings_monthly.toLocaleString('en-IN')}, your savings ratio is ${ratio}%.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'savings_ratio', data: srResult }
+        };
+    }
+
+    if (intent?.intent === "DTI_RATIO" && intent.income && intent.dti_emi) {
+        const ratio = debtToIncomeRatio(intent.income, intent.dti_emi);
+        const dtiResult: DtiResult = {
+            monthlyIncome: intent.income,
+            monthlyEmi: intent.dti_emi,
+            dtiRatio: ratio
+        };
+        const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and total EMIs of ₹${intent.dti_emi.toLocaleString('en-IN')}, your Debt-to-Income (DTI) ratio is ${ratio}%.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'dti_ratio', data: dtiResult }
         };
     }
 

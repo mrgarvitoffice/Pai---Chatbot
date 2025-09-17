@@ -19,6 +19,8 @@ import { CompoundInterestResultCard } from '@/components/compound-interest-resul
 import { BudgetAllocationResultCard } from '@/components/budget-allocation-result-card';
 import { FdResultCard } from '@/components/fd-result-card';
 import { RdResultCard } from '@/components/rd-result-card';
+import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
+import { DtiResultCard } from '@/components/dti-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -73,6 +75,10 @@ export default function Home() {
         content = <FdResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'rd') {
         content = <RdResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'savings_ratio') {
+        content = <SavingsRatioResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'dti_ratio') {
+        content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
       }
       else {
         content = result.response;
