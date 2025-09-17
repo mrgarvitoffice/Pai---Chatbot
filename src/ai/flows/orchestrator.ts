@@ -13,10 +13,10 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
-import { calculateSip } from '@/lib/investment-calculators';
+import { calculateSip, calculateFd, calculateRd } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, CalculationResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult } from '@/lib/types';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -40,13 +40,13 @@ export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 const sources = [
     {
       name: "Income Tax Department of India",
-      url: "https://www.incomax.gov.in/",
+      url: "https://www.incometax.gov.in/",
       last_updated: "2024-04-01"
     }
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, Budgeting, or something else?"),
+    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, Budgeting, FD (Fixed Deposit), RD (Recurring Deposit), or something else?"),
     income: z.number().optional().describe("The user's annual income for tax queries, or monthly income for budget queries. For example, '15L' or '10 lakhs' becomes 1500000 for annual, or '80k' becomes 80000 for monthly."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
     sip_years: z.number().optional().describe("The duration of the SIP in years."),
@@ -58,6 +58,12 @@ const intentSchema = z.object({
     ci_years: z.number().optional().describe("The duration in years for compound interest calculation."),
     ci_rate: z.number().optional().describe("The annual interest rate for compound interest calculation."),
     ci_frequency: z.number().optional().describe("The compounding frequency per year (e.g., 1 for yearly, 4 for quarterly, 12 for monthly)."),
+    fd_principal: z.number().optional().describe("The principal amount for a Fixed Deposit."),
+    fd_years: z.number().optional().describe("The duration in years for a Fixed Deposit."),
+    fd_rate: z.number().optional().describe("The annual interest rate for a Fixed Deposit."),
+    rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
+    rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
+    rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
 });
 
 const intentPrompt = ai.definePrompt({
@@ -75,6 +81,8 @@ const intentPrompt = ai.definePrompt({
         - Set to "EMI" if the query is about calculating a loan EMI.
         - Set to "COMPOUND_INTEREST" if the query is about calculating compound interest on a lump sum.
         - Set to "BUDGET" if the query is about allocating monthly income (e.g., 50/30/20 rule).
+        - Set to "FD" if the query is about a Fixed Deposit.
+        - Set to "RD" if the query is about a Recurring Deposit.
         - Set to "GENERAL" for anything else.
     2.  income:
         - If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
@@ -89,6 +97,13 @@ const intentPrompt = ai.definePrompt({
     10. ci_years: If intent is "COMPOUND_INTEREST", extract the duration in years.
     11. ci_rate: If intent is "COMPOUND_INTEREST", extract the annual interest rate.
     12. ci_frequency: If intent is "COMPOUND_INTEREST", extract compounding frequency. Default to 1 (yearly) if not specified.
+    13. fd_principal: If intent is "FD", extract the principal amount.
+    14. fd_years: If intent is "FD", extract the duration in years.
+    15. fd_rate: If intent is "FD", extract the annual interest rate.
+    16. rd_monthly: If intent is "RD", extract the monthly deposit amount.
+    17. rd_months: If intent is "RD", extract the duration in months.
+    18. rd_rate: If intent is "RD", extract the annual interest rate.
+
 
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000
@@ -99,6 +114,8 @@ const intentPrompt = ai.definePrompt({
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
     - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
+    - "FD of 1 lakh for 5 years at 7%" -> intent: "FD", fd_principal: 100000, fd_years: 5, fd_rate: 7
+    - "RD of 2000 for 24 months at 6.5%" -> intent: "RD", rd_monthly: 2000, rd_months: 24, rd_rate: 6.5
     - "What is a mutual fund?" -> intent: "GENERAL"
     `,
 });
@@ -197,6 +214,29 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             calculationResult: { type: 'budget', data: budgetResult }
         };
     }
+
+    if (intent?.intent === "FD" && intent.fd_principal && intent.fd_years && intent.fd_rate) {
+        const fdResult = calculateFd(intent.fd_principal, intent.fd_rate, intent.fd_years, 4); // Default quarterly compounding
+        
+        const explanation = `A Fixed Deposit of ₹${intent.fd_principal.toLocaleString('en-IN')} for ${intent.fd_years} years at an annual rate of ${intent.fd_rate}% would give you a maturity value of ₹${fdResult.future_value.toLocaleString('en-IN')}.`;
+
+        return {
+            response: explanation,
+            calculationResult: { type: 'fd', data: fdResult }
+        };
+    }
+    
+    if (intent?.intent === "RD" && intent.rd_monthly && intent.rd_months && intent.rd_rate) {
+        const rdResult = calculateRd(intent.rd_monthly, intent.rd_rate, intent.rd_months);
+        
+        const explanation = `A monthly Recurring Deposit of ₹${intent.rd_monthly.toLocaleString('en-IN')} for ${intent.rd_months} months at an annual rate of ${intent.rd_rate}% would result in a maturity value of ₹${rdResult.future_value.toLocaleString('en-IN')}.`;
+
+        return {
+            response: explanation,
+            calculationResult: { type: 'rd', data: rdResult }
+        };
+    }
+
 
     return {
         response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'Distribute 80k income'."

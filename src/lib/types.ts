@@ -54,9 +54,28 @@ export interface BudgetAllocationResult {
     savings: number;
 }
 
+export interface FdCalculationResult {
+    principal: number;
+    annual_rate: number;
+    years: number;
+    future_value: number;
+    total_interest: number;
+}
+
+export interface RdCalculationResult {
+    monthly_deposit: number;
+    annual_rate: number;
+    months: number;
+    future_value: number;
+    total_deposited: number;
+    total_interest: number;
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'sip'; data: SipCalculationResult }
   | { type: 'emi'; data: EmiCalculationResult }
   | { type: 'compound_interest', data: CompoundInterestResult }
-  | { type: 'budget', data: BudgetAllocationResult };
+  | { type: 'budget', data: BudgetAllocationResult }
+  | { type: 'fd', data: FdCalculationResult }
+  | { type: 'rd', data: RdCalculationResult };
