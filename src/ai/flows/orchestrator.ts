@@ -70,6 +70,7 @@ const intentPrompt = ai.definePrompt({
     - "income tax on 10 lakh" -> isTaxQuery: true, income: 1000000, fy: null
     - "what is my tax liability on 25,00,000" -> isTaxQuery: true, income: 2500000, fy: null
     - "tax for 1 crore" -> isTaxQuery: true, income: 10000000, fy: null
+    - "income tax on 20 lakh" -> isTaxQuery: true, income: 2000000, fy: null
     - "What is a mutual fund?" -> isTaxQuery: false, income: null, fy: null
     - "hello" -> isTaxQuery: false, income: null, fy: null
     `,
