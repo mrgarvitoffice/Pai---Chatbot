@@ -456,3 +456,5 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
+
+    

@@ -85,3 +85,5 @@ export type CalculationResult =
   | { type: 'budget', data: BudgetAllocationResult }
   | { type: 'fd', data: FdCalculationResult }
   | { type: 'rd', data: RdCalculationResult };
+
+    
