@@ -7,6 +7,9 @@ export interface ChatMessage {
 }
 
 export interface TaxCalculationResult {
+  income: number;
+  fy: string;
+  regime: 'new' | 'old';
   total_tax: number;
   taxable_income: number;
   tax_breakdown: Record<string, number>;

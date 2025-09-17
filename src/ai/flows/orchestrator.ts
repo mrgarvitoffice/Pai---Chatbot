@@ -15,6 +15,7 @@ import { z } from 'genkit';
 import { calculateTax } from '@/lib/calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
+import type { TaxCalculationResult } from '@/lib/types';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -30,6 +31,7 @@ const OrchestratorOutputSchema = z.object({
       last_updated: z.string(),
     })
   ).optional().describe('A list of sources used to generate the response.'),
+  calculationResult: z.custom<TaxCalculationResult>().optional().describe('The structured result of a calculation, if performed.'),
 });
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
@@ -37,24 +39,35 @@ export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 const sources = [
     {
       name: "Income Tax Department of India",
-      url: "https://www.incomtax.gov.in/",
+      url: "https://www.incometax.gov.in/",
       last_updated: "2024-04-01"
     }
 ];
 
 const taxIntentSchema = z.object({
-    isTaxQuery: z.boolean().describe("Is the user asking a question about calculating income tax?"),
-    income: z.number().optional().describe("The user's income, if mentioned."),
-    fy: z.string().optional().describe("The fiscal year, if mentioned."),
+    isTaxQuery: z.boolean().describe("Is the user asking a question about calculating income tax? This is true even if the query is a simple statement like 'income tax on 10 lakh'."),
+    income: z.number().optional().describe("The user's income. Extract this value even from phrases like '15L', '10 lakhs', or '25,00,000'."),
+    fy: z.string().optional().describe("The fiscal year, if mentioned (e.g., 'FY 25-26')."),
 });
 
 const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: taxIntentSchema },
-    prompt: `Analyze the user query to determine if it is about income tax calculation. Extract the income and fiscal year if present.
+    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine if the query is about income tax calculation and extract the relevant entities.
 
     User Query: {{{query}}}
+
+    Analyze the query and determine the following:
+    1.  isTaxQuery: Set to true if the query is about calculating income tax. This includes direct questions and statements like "tax on 15L".
+    2.  income: Extract the annual income. Be flexible with formats. "15L" or "15 lakhs" means 1500000. "1 crore" means 10000000.
+    3.  fy: Extract the fiscal year if mentioned, like "FY 2025-26".
+
+    Examples:
+    - "How much tax on ₹15L for FY 25-26?" -> isTaxQuery: true, income: 1500000, fy: "25-26"
+    - "income tax on 10 lakh" -> isTaxQuery: true, income: 1000000, fy: null
+    - "what is my tax liability on 25,00,000" -> isTaxQuery: true, income: 2500000, fy: null
+    - "What is a mutual fund?" -> isTaxQuery: false, income: null, fy: null
     `,
 });
 
@@ -78,13 +91,12 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
         const explanationResult = await explainTaxCalculation(explanationInput);
         
-        let response = `Based on the information you provided for Fiscal Year ${fy} under the new regime:\n\n`
-        response += `For a gross income of ₹${intent.income.toLocaleString('en-IN')}, your total tax liability is **₹${calculationResult.total_tax.toLocaleString('en-IN')}**.\n\n`
-        response += `**AI-Generated Explanation:**\n${explanationResult.explanation}`;
+        const response = `Based on the information you provided for Fiscal Year ${fy} under the new regime, here is your tax breakdown:\n\n**AI-Generated Explanation:**\n${explanationResult.explanation}`;
 
         return {
-            response,
-            sources: explanationResult.sources
+            response: explanationResult.explanation,
+            sources: explanationResult.sources,
+            calculationResult: calculationResult
         };
     }
 

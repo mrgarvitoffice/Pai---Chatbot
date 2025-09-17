@@ -12,6 +12,7 @@ import { ArrowUp } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
+import { TaxResultCard } from '@/components/tax-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -37,10 +38,19 @@ export default function Home() {
 
     try {
       const result = await sendMessageAction({ query: currentInput });
+      
+      let content: React.ReactNode;
+
+      if (result.calculationResult) {
+        content = <TaxResultCard result={result.calculationResult} explanation={result.response} />;
+      } else {
+        content = result.response;
+      }
+      
       const botResponse: ChatMessageType = {
         id: uuidv4(),
         role: 'assistant',
-        content: result.response,
+        content: content,
       };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
@@ -75,8 +85,10 @@ export default function Home() {
                         id="loading"
                         role="assistant"
                         content={
-                            <div className="flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                            <div className="flex items-center space-x-2">
+                                <div className="animate-pulse bg-muted rounded-full h-2 w-2"></div>
+                                <div className="animate-pulse bg-muted rounded-full h-2 w-2 delay-150"></div>
+                                <div className="animate-pulse bg-muted rounded-full h-2 w-2 delay-300"></div>
                             </div>
                         }
                     />

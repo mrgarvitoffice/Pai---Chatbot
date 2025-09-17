@@ -19,13 +19,17 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
       )}
       <div
         className={cn(
-          'max-w-[85%] rounded-2xl p-4 text-base whitespace-pre-wrap',
+          'max-w-[85%] rounded-2xl text-base',
           isAssistant
             ? 'bg-secondary rounded-tl-none'
             : 'bg-primary text-primary-foreground rounded-br-none'
         )}
       >
-        {content}
+        {typeof content === 'string' ? (
+          <div className="p-4 whitespace-pre-wrap">{content}</div>
+        ) : (
+          content
+        )}
       </div>
        {!isAssistant && (
         <Avatar className="size-8 border flex-shrink-0">

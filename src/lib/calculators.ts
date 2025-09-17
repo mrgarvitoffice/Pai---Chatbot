@@ -2,8 +2,8 @@ import type { TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
-  fy: string, // Currently unused, for future expansion
-  regime: 'new' | 'old' // Currently only 'new' is implemented
+  fy: string,
+  regime: 'new' | 'old'
 ): TaxCalculationResult {
   const breakdown: Record<string, number> = {};
 
@@ -43,6 +43,9 @@ export function calculateTax(
   const total_tax = Math.round(tax + cess);
 
   return {
+    income,
+    fy,
+    regime,
     total_tax,
     taxable_income,
     tax_breakdown: breakdown,
