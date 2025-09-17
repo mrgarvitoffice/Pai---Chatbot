@@ -27,7 +27,7 @@ export function TaxResultCard({ result, explanation }: TaxResultCardProps) {
 
             <div className="py-4 whitespace-pre-wrap text-sm">
                 <p className="text-muted-foreground mb-2">Based on the information you provided for <span className="font-semibold text-foreground">Fiscal Year {result.fy}</span> under the <span className="font-semibold text-foreground">{result.regime} regime</span>, here is your tax breakdown:</p>
-                <p>{explanation}</p>
+                <div className="whitespace-pre-wrap">{explanation}</div>
             </div>
             
             <Accordion type="single" collapsible className="w-full">
