@@ -11,34 +11,36 @@ export function calculateTax(
 
   let taxable_income = income;
   let tax = 0;
+  const standardDeduction = 50000;
 
   if (regime === 'new') {
-    const standardDeduction = 50000;
     taxable_income = Math.max(0, income - standardDeduction);
     breakdown['Standard Deduction'] = -standardDeduction;
 
-    if (taxable_income <= 300000) {
-      tax = 0;
-    } else if (taxable_income <= 700000) {
-      // Tax is 0 due to rebate under Section 87A, but we calculate it first for clarity
-      let preRebateTax = 0;
-      if (taxable_income > 600000) preRebateTax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
-      if (taxable_income > 300000) preRebateTax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
-      
-      // With rebate under Section 87A, tax becomes zero
+    if (taxable_income <= 700000) {
+      // Tax is 0 due to rebate under Section 87A
       tax = 0;
     } else {
-        // Incomes > ₹7L do not get a rebate. Tax is calculated on slabs from the start.
-        let tempTax = 0;
-        if (taxable_income > 1500000) tempTax += (taxable_income - 1500000) * 0.30;
-        if (taxable_income > 1200000) tempTax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
-        if (taxable_income > 900000) tempTax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
-        if (taxable_income > 600000) tempTax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
-        if (taxable_income > 300000) tempTax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
-        tax = tempTax;
+      // Incomes > ₹7L do not get a rebate. Tax is calculated on slabs from the start.
+      let tempTax = 0;
+      if (taxable_income > 1500000) {
+        tempTax += (taxable_income - 1500000) * 0.30;
+      }
+      if (taxable_income > 1200000) {
+        tempTax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
+      }
+      if (taxable_income > 900000) {
+        tempTax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
+      }
+      if (taxable_income > 600000) {
+        tempTax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
+      }
+      if (taxable_income > 300000) {
+        tempTax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
+      }
+      tax = tempTax;
     }
   } else { // Old Regime
-    const standardDeduction = 50000;
     const totalDeductions = standardDeduction + deductions80C;
     taxable_income = Math.max(0, income - totalDeductions);
     breakdown['Standard Deduction'] = -standardDeduction;
