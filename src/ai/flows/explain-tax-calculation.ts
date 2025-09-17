@@ -55,7 +55,7 @@ Income: ₹{{{income}}}
 Regime: {{{regime}}}
 Total Tax: ₹{{{total_tax}}}
 
-Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure.
+Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text, hashtags, or asterisks.
 
 Example Format:
 💰 Income Tax Summary — FY {{{fy}}} ({{regime}} Regime)
@@ -63,11 +63,27 @@ Example Format:
 🧮 Your Income
 ₹{{{income}}}
 
-🧾 Tax Payable
+{{#if (eq regime "new")}}
+🧾 New Regime Tax Slabs
+₹0 – ₹3L → Nil
+₹3L – ₹6L → 5%
+₹6L – ₹9L → 10%
+₹9L – ₹12L → 15%
+₹12L – ₹15L → 20%
+Above ₹15L → 30%
+{{else}}
+🧾 Old Regime Tax Slabs
+₹0 – ₹2.5L → Nil
+₹2.5L – ₹5L → 5%
+₹5L – ₹10L → 20%
+Above ₹10L → 30%
+{{/if}}
+
+👉 Tax Payable
 ₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
 
 ---
-*⚠️ Note: This is an illustrative calculation based on the {{regime}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.*
+⚠️ Note: This is an illustrative calculation based on the {{regime}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
 });
 

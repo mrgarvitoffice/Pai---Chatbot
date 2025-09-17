@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
 - **Old Regime Tax (without deductions):** ₹{{{oldRegimeResult.total_tax}}}
 
 **Instructions:**
-Generate a comparison in Markdown. Structure your response EXACTLY as follows. Do NOT add any extra text before or after this structure. Use the emojis provided.
+Generate a comparison in Markdown. Structure your response EXACTLY as follows. Do NOT add any extra text, hashtags, or asterisks. Use the emojis provided.
 
 ⚖️ Tax Regime Comparison (FY {{{fy}}})
 
@@ -54,12 +54,26 @@ Here’s a comparison for a gross income of **₹{{income}}**.
 🧾 New Regime (Default)
 Offers lower tax rates but removes most deductions. Simpler for those with fewer investments to claim.
 
+Tax Slabs:
+₹0 – ₹3L → Nil
+₹3L – ₹6L → 5%
+₹6L – ₹9L → 10%
+₹9L – ₹12L → 15%
+₹12L – ₹15L → 20%
+Above ₹15L → 30%
+
 👉 Your Tax Payable: ₹{{{newRegimeResult.total_tax}}}
 
 ---
 
 🧾 Old Regime (With Deductions)
 Has higher tax slabs but allows you to reduce your taxable income through various deductions.
+
+Tax Slabs:
+₹0 – ₹2.5L → Nil
+₹2.5L – ₹5L → 5%
+₹5L – ₹10L → 20%
+Above ₹10L → 30%
 
 👉 Tax Before Deductions: ₹{{{oldRegimeResult.total_tax}}}
 
@@ -78,7 +92,7 @@ You can lower this tax by claiming deductions like:
 }{{subtract oldRegimeResult.total_tax newRegimeResult.total_tax}}{{#else}}0{{/if}}** upfront.
 - The **Old Regime** becomes more beneficial if your total claimed deductions significantly exceed **~₹2.5 Lakhs**.
 
-*This is an illustrative calculation. For personalized advice, please consult a tax professional.*
+This is an illustrative calculation. For personalized advice, please consult a tax professional.
 `,
 });
 
