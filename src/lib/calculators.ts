@@ -17,11 +17,17 @@ export function calculateTax(
     taxable_income = Math.max(0, income - standardDeduction);
     breakdown['Standard Deduction'] = -standardDeduction;
 
-    if (taxable_income <= 700000) {
-        // Tax is 0 due to rebate under Section 87A
-        tax = 0;
+    if (taxable_income <= 300000) {
+      tax = 0;
+    } else if (taxable_income <= 700000) {
+      // Tax is 0 due to rebate under Section 87A, but we calculate it first
+      const taxOn3LTo6L = (Math.min(taxable_income, 600000) - 300000) * 0.05;
+      const taxOn6LTo7L = (taxable_income > 600000 ? (taxable_income - 600000) * 0.10 : 0);
+      const preRebateTax = taxOn3LTo6L + taxOn6LTo7L;
+      // Rebate makes it zero
+      tax = 0;
     } else {
-        // Recalculate tax from slabs without rebate
+        // Incomes > ₹7L do not get a rebate. Tax is calculated on slabs from the start.
         let tempTax = 0;
         if (taxable_income > 1500000) tempTax += (taxable_income - 1500000) * 0.30;
         if (taxable_income > 1200000) tempTax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
@@ -47,7 +53,7 @@ export function calculateTax(
     })();
 
     if (taxable_income <= 500000) {
-        tax = 0;
+        tax = 0; // Rebate makes it zero
     } else {
         tax = taxBeforeRebate;
     }
