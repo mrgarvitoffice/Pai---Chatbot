@@ -24,11 +24,18 @@ import { ReverseSipResultCard } from '@/components/reverse-sip-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
+// Check for SpeechRecognition API
+const SpeechRecognition =
+  (typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition));
+
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessageType[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -107,6 +114,39 @@ export default function Home() {
     }
   };
 
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    } else {
+       if (!SpeechRecognition) {
+          alert("Your browser does not support Speech Recognition. Please try Chrome or Safari.");
+          return;
+       }
+       if (!recognitionRef.current) {
+         recognitionRef.current = new SpeechRecognition();
+         recognitionRef.current.continuous = true;
+         recognitionRef.current.interimResults = true;
+         recognitionRef.current.onresult = (event: any) => {
+           const transcript = Array.from(event.results)
+             .map((result: any) => result[0])
+             .map((result) => result.transcript)
+             .join('');
+           setInput(transcript);
+         };
+         recognitionRef.current.onend = () => {
+            setIsRecording(false);
+         }
+         recognitionRef.current.onerror = (event: any) => {
+            console.error('Speech recognition error:', event.error);
+            setIsRecording(false);
+         }
+       }
+       recognitionRef.current.start();
+       setIsRecording(true);
+    }
+  };
+
+
   return (
     <div className="flex flex-col h-screen bg-background font-body">
       <Header />
@@ -145,7 +185,7 @@ export default function Home() {
                      <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask Pai anything about finance..."
+                        placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
                         className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base"
                         disabled={isLoading}
                       />
@@ -153,10 +193,11 @@ export default function Home() {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        onClick={toggleRecording}
                         className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-300"
                         disabled={isLoading}
                       >
-                        <Mic className="size-5" />
+                        <Mic className={`size-5 transition-colors ${isRecording ? 'text-primary animate-pulse' : ''}`} />
                       </Button>
                   </div>
                   <Button

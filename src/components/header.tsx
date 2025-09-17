@@ -18,8 +18,11 @@ export function Header() {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
+    // Check for saved theme in localStorage. If not found, check system preference.
     const savedTheme = localStorage.getItem('theme');
-    const initialTheme = savedTheme || 'light'; // Default to light theme
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || 'light';
+    
     setTheme(initialTheme);
     
     if (initialTheme === 'dark') {
