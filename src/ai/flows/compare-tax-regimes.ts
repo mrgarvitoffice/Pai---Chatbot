@@ -45,23 +45,23 @@ const prompt = ai.definePrompt({
 **Instructions:**
 Generate a comparison in Markdown. Structure your response EXACTLY as follows. Do NOT add any extra text before or after this structure. Use the emojis provided.
 
-#### ⚖️ Tax Regime Comparison (FY {{{fy}}})
+⚖️ Tax Regime Comparison (FY {{{fy}}})
 
 Here’s a comparison for a gross income of **₹{{income}}**.
 
 ---
 
-**🧾 New Regime (Default)**
+🧾 New Regime (Default)
 Offers lower tax rates but removes most deductions. Simpler for those with fewer investments to claim.
 
-👉 **Your Tax Payable: ₹{{{newRegimeResult.total_tax}}}**
+👉 Your Tax Payable: ₹{{{newRegimeResult.total_tax}}}
 
 ---
 
-**🧾 Old Regime (With Deductions)**
+🧾 Old Regime (With Deductions)
 Has higher tax slabs but allows you to reduce your taxable income through various deductions.
 
-👉 **Tax Before Deductions: ₹{{{oldRegimeResult.total_tax}}}**
+👉 Tax Before Deductions: ₹{{{oldRegimeResult.total_tax}}}
 
 You can lower this tax by claiming deductions like:
 - **₹1.5 Lakh** under Section 80C (PPF, ELSS, EPF, etc.)
@@ -71,7 +71,7 @@ You can lower this tax by claiming deductions like:
 
 ---
 
-**✅ Key Takeaway:**
+✅ Key Takeaway:
 
 - The **New Regime** is better for you if you have minimal deductions, saving you **₹${
   '{{#if (gt oldRegimeResult.total_tax newRegimeResult.total_tax)}}'
