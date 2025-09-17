@@ -10,9 +10,9 @@ interface DtiResultCardProps {
 
 export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
     const getRiskLevel = (ratio: number) => {
-        if (ratio > 40) return { label: "High Risk", color: "text-red-500", progressColor: "bg-red-500" };
-        if (ratio > 30) return { label: "Moderate", color: "text-yellow-500", progressColor: "bg-yellow-500" };
-        return { label: "Safe", color: "text-green-500", progressColor: "bg-green-500" };
+        if (ratio > 40) return { label: "High Risk", color: "text-destructive" };
+        if (ratio > 30) return { label: "Moderate", color: "text-yellow-600 dark:text-yellow-400" }; // A moderate accent
+        return { label: "Safe", color: "text-foreground" };
     }
     const risk = getRiskLevel(result.dtiRatio);
 
@@ -36,7 +36,7 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
             </div>
 
             <div>
-                <p className="text-xs text-muted-foreground mb-1">Risk Levels: <30% (Safe), 30-40% (Moderate), >40% (High Risk)</p>
+                <p className="text-xs text-muted-foreground mb-1">Risk Levels: &lt;30% (Safe), 30-40% (Moderate), &gt;40% (High Risk)</p>
                 <Progress value={result.dtiRatio} className="h-2 [&>div]:bg-primary" />
             </div>
 
