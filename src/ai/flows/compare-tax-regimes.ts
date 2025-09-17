@@ -33,57 +33,52 @@ const prompt = ai.definePrompt({
   name: 'compareTaxRegimesPrompt',
   input: {schema: CompareTaxRegimesInputSchema},
   output: {schema: CompareTaxRegimesOutputSchema},
-  prompt: `You are Pai, an expert Indian personal finance assistant. Your task is to provide a detailed, human-friendly comparison between the Old and New tax regimes based on the provided calculation results.
+  prompt: `You are Pai, an expert Indian personal finance assistant. Your task is to provide a detailed, professional, and human-friendly comparison between the Old and New tax regimes based on the provided calculation results for FY {{{fy}}}.
 
 **Income Details:**
 - Gross Income: ₹{{{income}}}
-- Fiscal Year: {{{fy}}}
 
 **Calculation Results:**
 - **New Regime Tax:** ₹{{{newRegimeResult.total_tax}}}
 - **Old Regime Tax (without deductions):** ₹{{{oldRegimeResult.total_tax}}}
 
 **Instructions:**
-Generate a comparison in Markdown. Structure your response EXACTLY as follows. Do NOT add any extra text before or after this structure.
+Generate a comparison in Markdown. Structure your response EXACTLY as follows. Do NOT add any extra text before or after this structure. Use the emojis provided.
 
-#### ⚖️ Tax Regime Comparison — FY {{{fy}}}
+#### ⚖️ Tax Regime Comparison (FY {{{fy}}})
 
 Here’s a comparison for a gross income of **₹{{income}}**.
 
 ---
 
 **🧾 New Regime (Default)**
-The New Regime offers lower tax rates but does not allow for most common deductions.
+Offers lower tax rates but removes most deductions. Simpler for those with fewer investments to claim.
 
-- **Your Tax Payable:** **₹{{{newRegimeResult.total_tax}}}**
-
-*This is generally simpler if you don't have significant investments or expenses to claim.*
+👉 **Your Tax Payable: ₹{{{newRegimeResult.total_tax}}}**
 
 ---
 
 **🧾 Old Regime (With Deductions)**
-The Old Regime has higher tax rates but allows you to reduce your taxable income through various deductions.
+Has higher tax slabs but allows you to reduce your taxable income through various deductions.
 
-- **Tax Before Deductions:** ₹{{{oldRegimeResult.total_tax}}}
+👉 **Tax Before Deductions: ₹{{{oldRegimeResult.total_tax}}}**
 
-👉 **Potential Savings:**
 You can lower this tax by claiming deductions like:
-- **₹1.5 Lakh** under Section 80C (PPF, ELSS, EPF)
+- **₹1.5 Lakh** under Section 80C (PPF, ELSS, EPF, etc.)
 - **₹50,000** under Section 80CCD(1B) (NPS)
 - **₹25,000+** under Section 80D (Health Insurance)
-- **₹2 Lakh** on Home Loan Interest
+- **Home Loan Interest** and others.
 
 ---
 
 **✅ Key Takeaway:**
 
-The **New Regime** is better for you, saving you **₹${
+- The **New Regime** is better for you if you have minimal deductions, saving you **₹${
   '{{#if (gt oldRegimeResult.total_tax newRegimeResult.total_tax)}}'
 }{{subtract oldRegimeResult.total_tax newRegimeResult.total_tax}}{{#else}}0{{/if}}** upfront.
+- The **Old Regime** becomes more beneficial if your total claimed deductions significantly exceed **~₹2.5 Lakhs**.
 
-However, if you can claim deductions of **more than ~₹2.5 Lakhs**, the **Old Regime** would likely become more beneficial.
-
-*⚠️ Note: This is an illustrative calculation. For personalized advice, please consult a tax professional.*
+*This is an illustrative calculation. For personalized advice, please consult a tax professional.*
 `,
 });
 
