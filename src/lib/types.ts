@@ -24,6 +24,16 @@ export interface SipCalculationResult {
   future_value: number;
 }
 
+export interface EmiCalculationResult {
+    principal: number;
+    annual_rate: number;
+    years: number;
+    emi: number;
+    total_interest: number;
+    total_payment: number;
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
-  | { type: 'sip'; data: SipCalculationResult };
+  | { type: 'sip'; data: SipCalculationResult }
+  | { type: 'emi'; data: EmiCalculationResult };

@@ -14,6 +14,7 @@ import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
 import { TaxResultCard } from '@/components/tax-result-card';
 import { SipResultCard } from '@/components/sip-result-card';
+import { EmiResultCard } from '@/components/emi-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -56,6 +57,8 @@ export default function Home() {
         content = <TaxResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'sip') {
         content = <SipResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'emi') {
+        content = <EmiResultCard result={result.calculationResult.data} explanation={result.response} />;
       }
       else {
         content = result.response;
