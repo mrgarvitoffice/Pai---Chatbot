@@ -33,10 +33,13 @@ export default function Home() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      const scrollableNode = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+      if (scrollableNode) {
+        scrollableNode.scrollTo({
+          top: scrollableNode.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [messages, isLoading]);
 
@@ -125,9 +128,9 @@ export default function Home() {
                     role="assistant"
                     content={
                       <div className="flex items-center space-x-2 p-4">
-                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.3s]"></div>
-                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.15s]"></div>
-                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse"></div>
+                        <div className="w-2 h-2 rounded-full bg-muted dot1"></div>
+                        <div className="w-2 h-2 rounded-full bg-muted dot2"></div>
+                        <div className="w-2 h-2 rounded-full bg-muted dot3"></div>
                         <span className="text-sm text-muted-foreground">Pai is thinking...</span>
                       </div>
                     }

@@ -17,7 +17,7 @@ interface WelcomeMessageProps {
 
 export function WelcomeMessage({ setInput }: WelcomeMessageProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full pt-4 sm:pt-16">
+    <div className="flex flex-col items-center justify-center h-full pt-4 sm:pt-16 animate-slide-in-up">
         <div className="relative mb-6">
             <div className="absolute -inset-2 bg-gradient-to-br from-primary to-secondary rounded-full blur-xl opacity-75 animate-pulse [animation-delay:-1s]"></div>
              <div className="absolute -inset-4 bg-gradient-to-br from-secondary to-primary/50 rounded-full blur-2xl opacity-50 animate-pulse"></div>

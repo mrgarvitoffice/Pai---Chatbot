@@ -9,7 +9,7 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
   const isAssistant = role === 'assistant';
 
   return (
-    <div className={cn('flex items-start gap-3', isAssistant ? '' : 'justify-end')}>
+    <div className={cn('flex items-start gap-3 animate-slide-in-up', isAssistant ? '' : 'justify-end')}>
       {isAssistant && (
         <Avatar className="size-8 border bg-gradient-to-tr from-primary to-secondary text-primary-foreground flex-shrink-0">
             <div className="flex items-center justify-center h-full w-full">
