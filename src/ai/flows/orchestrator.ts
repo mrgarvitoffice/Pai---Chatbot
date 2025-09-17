@@ -101,16 +101,23 @@ const intentPrompt = ai.definePrompt({
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "income tax on 10 lakh" -> intent: "TAX", income: 1000000, regime: 'new'
     - "tax on 20 lakhs" -> intent: "TAX", income: 2000000, regime: 'new'
+    - "What is my tax if I earn ₹7,50,000 under the new regime?" -> intent: "TAX", income: 750000, regime: 'new'
     - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
     - "HRA exemption on 8L salary with 20k monthly rent" -> intent: "HRA", income: 800000, monthly_rent: 20000
+    - "I pay ₹20,000 monthly rent. What HRA exemption can I claim if my salary is ₹8,00,000?" -> intent: "HRA", income: 800000, monthly_rent: 20000
     - "How much should I invest in 80C if I earn 10L" -> intent: "80C_PLANNING", income: 1000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
+    - "What will be my SIP value if I invest ₹5,000 for 20 years at 12%?" -> intent: "SIP", sip_monthly: 5000, sip_years: 20, sip_rate: 12
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
+    - "Home loan EMI on ₹40 lakh at 8.5% for 25 years." -> intent: "EMI", emi_principal: 4000000, emi_years: 25, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
     - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
+    - "Split my ₹90k income using 50-30-20 rule." -> intent: "BUDGET", income: 90000
     - "FD of 1 lakh for 5 years at 7%" -> intent: "FD", fd_principal: 100000, fd_years: 5, fd_rate: 7
+    - "What’s the maturity on ₹2 lakh FD at 7% for 5 years?" -> intent: "FD", fd_principal: 200000, fd_years: 5, fd_rate: 7
     - "RD of 2000 for 24 months at 6.5%" -> intent: "RD", rd_monthly: 2000, rd_months: 24, rd_rate: 6.5
+    - "How much interest on ₹1 lakh RD for 3 years at 6.5%?" -> intent: "RD", rd_monthly: 100000/36, rd_months: 36, rd_rate: 6.5 // approximate monthly from total
     - "What is a mutual fund?" -> intent: "GENERAL"
     `,
 });
