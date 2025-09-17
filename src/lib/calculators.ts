@@ -33,12 +33,19 @@ export function calculateTax(
     breakdown['Standard Deduction'] = -standardDeduction;
     if (deductions80C > 0) breakdown['80C Deductions'] = -deductions80C;
     
+    // Tax rebate u/s 87A for income up to 5L
+    const taxBeforeRebate = (() => {
+        let tempTax = 0;
+        if (taxable_income > 1000000) tempTax += (taxable_income - 1000000) * 0.30;
+        if (taxable_income > 500000) tempTax += (Math.min(taxable_income, 1000000) - 500000) * 0.20;
+        if (taxable_income > 250000) tempTax += (Math.min(taxable_income, 500000) - 250000) * 0.05;
+        return tempTax;
+    })();
+
     if (taxable_income <= 500000) {
-        tax = 0; // Tax rebate u/s 87A
+        tax = 0;
     } else {
-        if (taxable_income > 1000000) tax += (taxable_income - 1000000) * 0.30;
-        if (taxable_income > 500000) tax += (Math.min(taxable_income, 1000000) - 500000) * 0.20;
-        if (taxable_income > 250000) tax += (Math.min(taxable_income, 500000) - 250000) * 0.05;
+        tax = taxBeforeRebate;
     }
   }
   
