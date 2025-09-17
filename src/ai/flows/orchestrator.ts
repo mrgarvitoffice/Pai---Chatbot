@@ -3,7 +3,7 @@
 /**
  * @fileOverview The main orchestrator flow for Pai Chatbot.
  * This flow analyzes user queries, determines the intent, and routes
- * to the appropriate tool (e.g., tax calculator, SIP calculator).
+ * to the appropriate tool (e.g., tax calculator, SIP calculator, or knowledge base).
  *
  * - orchestrate - The main function that handles user queries.
  * - OrchestratorInput - The input type for the orchestrate function.
@@ -17,6 +17,7 @@ import { calculateSip, calculateFd, calculateRd } from '@/lib/investment-calcula
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult } from '@/lib/types';
+import { searchKnowledgeBase } from '../tools/knowledge-base';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -71,6 +72,21 @@ const intentSchema = z.object({
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
 });
 
+const generalResponsePrompt = ai.definePrompt({
+    name: 'generalResponsePrompt',
+    tools: [searchKnowledgeBase],
+    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful answers based on the information provided by the searchKnowledgeBase tool.
+
+    User Query: {{{query}}}
+
+    Instructions:
+    1.  Use the searchKnowledgeBase tool to find relevant information about the user's query.
+    2.  If the tool returns relevant information, use it to construct a clear and concise answer.
+    3.  ALWAYS cite your sources by mentioning the source name and URL from the tool's output.
+    4.  If the tool returns no relevant information or you cannot answer based on the provided context, politely state that you don't have enough information to answer that specific question. Do NOT invent answers.
+    5.  Keep the response conversational and easy to understand.
+    `
+});
 
 const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
@@ -91,7 +107,7 @@ const intentPrompt = ai.definePrompt({
         - "BUDGET": Allocating monthly income (e.g., 50/30/20 rule).
         - "FD": Fixed Deposit calculation.
         - "RD": Recurring Deposit calculation.
-        - "GENERAL": For anything else.
+        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000.
     3. regime: If the user mentions 'old', 'new', or wants to 'compare', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
     4. HRA details (monthly_rent, metro_city, basic_salary): Extract for HRA intent. If basic salary is not given, assume it's 50% of total income.
@@ -119,6 +135,7 @@ const intentPrompt = ai.definePrompt({
     - "RD of 2000 for 24 months at 6.5%" -> intent: "RD", rd_monthly: 2000, rd_months: 24, rd_rate: 6.5
     - "How much interest on ₹1 lakh RD for 3 years at 6.5%?" -> intent: "RD", rd_monthly: 100000/36, rd_months: 36, rd_rate: 6.5 // approximate monthly from total
     - "What is a mutual fund?" -> intent: "GENERAL"
+    - "Explain what is HRA" -> intent: "GENERAL"
     `,
 });
 
@@ -280,12 +297,15 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     }
 
     if (intent?.intent === 'GENERAL') {
+        const result = await generalResponsePrompt({ query: input.query });
         return {
-            response: "I can provide information on a wide range of financial topics. For specific calculations, try asking 'Tax on 15L' or 'SIP of 5000 for 10 years'."
-        }
+            response: result.output as string,
+        };
     }
 
     return {
-        response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'Distribute 80k income'."
+        response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'What is a mutual fund?'."
     };
 }
+
+    
