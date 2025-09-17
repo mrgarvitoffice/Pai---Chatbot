@@ -15,12 +15,11 @@ import { User, Sun, Moon } from 'lucide-react';
 import { PaiLogo } from './icons';
 
 export function Header() {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    const initialTheme = savedTheme || 'light'; // Default to light theme
     setTheme(initialTheme);
     
     if (initialTheme === 'dark') {

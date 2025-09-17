@@ -162,7 +162,7 @@ export default function Home() {
                   <Button
                     type="submit"
                     size="icon"
-                    className="size-12 rounded-full bg-gradient-to-br from-primary to-green-400 dark:to-green-600 flex-shrink-0 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 ease-out disabled:scale-100 disabled:shadow-lg"
+                    className="size-12 rounded-full bg-gradient-to-br from-primary to-pink-400 dark:to-pink-600 flex-shrink-0 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 ease-out disabled:scale-100 disabled:shadow-lg"
                     disabled={!input.trim() || isLoading}
                   >
                     <ArrowUp className="size-5" />
