@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Header } from '@/components/header';
@@ -20,6 +20,16 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessageType[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -69,7 +79,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-background font-body">
       <Header />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
           <ScrollArea className="h-full">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="space-y-6">
@@ -85,10 +95,12 @@ export default function Home() {
                         id="loading"
                         role="assistant"
                         content={
-                            <div className="flex items-center space-x-2">
-                                <div className="animate-pulse bg-muted rounded-full h-2 w-2"></div>
-                                <div className="animate-pulse bg-muted rounded-full h-2 w-2 delay-150"></div>
-                                <div className="animate-pulse bg-muted rounded-full h-2 w-2 delay-300"></div>
+                            <div className="flex items-center justify-center p-4">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.3s]"></div>
+                                    <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.15s]"></div>
+                                    <div className="w-2 h-2 rounded-full bg-muted animate-pulse"></div>
+                                </div>
                             </div>
                         }
                     />
