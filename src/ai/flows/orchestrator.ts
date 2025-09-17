@@ -72,6 +72,7 @@ const intentSchema = z.object({
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
     savings_monthly: z.number().optional().describe("The user's monthly savings amount."),
     dti_emi: z.number().optional().describe("The user's total monthly EMI payments for DTI calculation."),
+    dti_ratio_value: z.number().optional().describe("A pre-calculated DTI ratio provided by the user."),
 });
 
 const generalResponsePrompt = ai.definePrompt({
@@ -145,6 +146,7 @@ const intentPrompt = ai.definePrompt({
     - "How much interest on ₹1 lakh RD for 3 years at 6.5%?" -> intent: "RD", rd_monthly: 100000/36, rd_months: 36, rd_rate: 6.5 // approximate monthly from total
     - "My income is ₹1 lakh, savings ₹25k — savings ratio?" -> intent: "SAVINGS_RATIO", income: 100000, savings_monthly: 25000
     - "My EMI is ₹30k on ₹1 lakh income — what is my DTI ratio?" -> intent: "DTI_RATIO", income: 100000, dti_emi: 30000
+    - "Is 35% DTI safe or risky?" -> intent: "DTI_RATIO", dti_ratio_value: 35
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "Explain what is HRA" -> intent: "GENERAL"
     - "What is reducing vs flat interest EMI?" -> intent: "GENERAL"
@@ -323,18 +325,30 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "DTI_RATIO" && intent.income && intent.dti_emi) {
-        const ratio = debtToIncomeRatio(intent.income, intent.dti_emi);
-        const dtiResult: DtiResult = {
-            monthlyIncome: intent.income,
-            monthlyEmi: intent.dti_emi,
-            dtiRatio: ratio
-        };
-        const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and total EMIs of ₹${intent.dti_emi.toLocaleString('en-IN')}, your Debt-to-Income (DTI) ratio is ${ratio}%.`;
-        return {
-            response: explanation,
-            calculationResult: { type: 'dti_ratio', data: dtiResult }
-        };
+    if (intent?.intent === "DTI_RATIO") {
+        if (intent.income && intent.dti_emi) {
+            const ratio = debtToIncomeRatio(intent.income, intent.dti_emi);
+            const dtiResult: DtiResult = {
+                monthlyIncome: intent.income,
+                monthlyEmi: intent.dti_emi,
+                dtiRatio: ratio
+            };
+            const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and total EMIs of ₹${intent.dti_emi.toLocaleString('en-IN')}, your Debt-to-Income (DTI) ratio is ${ratio}%.`;
+            return {
+                response: explanation,
+                calculationResult: { type: 'dti_ratio', data: dtiResult }
+            };
+        } else if (intent.dti_ratio_value) {
+            const ratio = intent.dti_ratio_value;
+            let riskLevel = "safe";
+            if (ratio > 40) riskLevel = "high risk";
+            else if (ratio > 30) riskLevel = "moderate";
+            
+            const explanation = `A Debt-to-Income (DTI) ratio of ${ratio}% is generally considered to be in the ${riskLevel} category. Lenders prefer a DTI ratio below 30-35% for the best loan terms.`;
+            return {
+                response: explanation
+            };
+        }
     }
 
     if (intent?.intent === 'GENERAL') {
