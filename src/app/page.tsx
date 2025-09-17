@@ -112,19 +112,19 @@ export default function Home() {
                   ))
                 )}
                  {isLoading && (
-                    <ChatMessage
-                        id="loading"
-                        role="assistant"
-                        content={
-                            <div className="flex items-center space-x-2 p-4">
-                                <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.3s]"></div>
-                                <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.15s]"></div>
-                                <div className="w-2 h-2 rounded-full bg-muted animate-pulse"></div>
-                                <span className="text-sm text-muted-foreground">Pai is thinking...</span>
-                            </div>
-                        }
-                    />
-                )}
+                  <ChatMessage
+                    id="loading"
+                    role="assistant"
+                    content={
+                      <div className="flex items-center space-x-2 p-4">
+                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.3s]"></div>
+                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse [animation-delay:-0.15s]"></div>
+                        <div className="w-2 h-2 rounded-full bg-muted animate-pulse"></div>
+                        <span className="text-sm text-muted-foreground">Pai is thinking...</span>
+                      </div>
+                    }
+                  />
+                 )}
               </div>
             </div>
           </ScrollArea>
