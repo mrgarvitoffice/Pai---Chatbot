@@ -52,17 +52,17 @@ Tax Calculation for Fiscal Year: {{{fy}}}
 Income: ₹{{{income}}}
 Total Tax: ₹{{{total_tax}}}
 
-Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure.
+Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure. Do NOT use markdown asterisks or bullet points.
 
 Example Format:
 💰 Income Tax Summary — FY {{{fy}}} (New Regime)
 📊 Tax Slabs
-**₹0 – ₹3,00,000:** Nil
-**₹3,00,001 – ₹6,00,000:** 5%
-**₹6,00,001 – ₹9,00,000:** 10%
-**₹9,00,001 – ₹12,00,000:** 15%
-**₹12,00,001 – ₹15,00,000:** 20%
-**Above ₹15,00,000:** 30%
+₹0 – ₹3,00,000: Nil
+₹3,00,001 – ₹6,00,000: 5%
+₹6,00,001 – ₹9,00,000: 10%
+₹9,00,001 – ₹12,00,000: 15%
+₹12,00,001 – ₹15,00,000: 20%
+Above ₹15,00,000: 30%
 
 🧮 Your Income
 ₹{{{income}}}
