@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Bot } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
 import { PaiLogo } from './icons';
 
 export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
@@ -19,7 +19,7 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
       )}
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl p-4 text-sm whitespace-pre-wrap',
+          'max-w-[85%] rounded-2xl p-4 text-base whitespace-pre-wrap',
           isAssistant
             ? 'bg-secondary rounded-tl-none'
             : 'bg-primary text-primary-foreground rounded-br-none'

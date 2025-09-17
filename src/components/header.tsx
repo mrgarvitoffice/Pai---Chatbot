@@ -13,7 +13,7 @@ import { PaiLogo } from './icons';
 
 export function Header() {
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
         <PaiLogo className="h-8 w-8 text-primary" />
         <h1 className="text-xl font-semibold tracking-tight">Pai Chatbot</h1>
