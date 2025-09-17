@@ -59,6 +59,8 @@ export default function Home() {
 
       if (result.calculationResult?.type === 'tax') {
         content = <TaxResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'tax_comparison') {
+        content = <TaxResultCard comparisonResult={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'sip') {
         content = <SipResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'emi') {

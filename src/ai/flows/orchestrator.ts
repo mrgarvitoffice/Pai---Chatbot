@@ -12,7 +12,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA } from '@/lib/calculators';
 import { calculateSip, calculateFd, calculateRd } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
@@ -46,8 +46,13 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, Budgeting, FD (Fixed Deposit), RD (Recurring Deposit), or something else?"),
-    income: z.number().optional().describe("The user's annual income for tax queries, or monthly income for budget queries. For example, '15L' or '10 lakhs' becomes 1500000 for annual, or '80k' becomes 80000 for monthly."),
+    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "GENERAL"]).describe("The user's intent."),
+    income: z.number().optional().describe("The user's annual income. For example, '15L' or '10 lakhs' becomes 1500000."),
+    regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
+    monthly_rent: z.number().optional().describe("Monthly rent paid for HRA calculation."),
+    metro_city: z.boolean().optional().describe("Whether the user lives in a metro city for HRA calculation."),
+    basic_salary: z.number().optional().describe("User's basic annual salary for HRA calculation."),
+    investment_80c: z.number().optional().describe("Amount to invest under section 80C."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
     sip_years: z.number().optional().describe("The duration of the SIP in years."),
     sip_rate: z.number().optional().describe("The expected annual rate of return for the SIP."),
@@ -57,7 +62,7 @@ const intentSchema = z.object({
     ci_principal: z.number().optional().describe("The principal amount for compound interest calculation."),
     ci_years: z.number().optional().describe("The duration in years for compound interest calculation."),
     ci_rate: z.number().optional().describe("The annual interest rate for compound interest calculation."),
-    ci_frequency: z.number().optional().describe("The compounding frequency per year (e.g., 1 for yearly, 4 for quarterly, 12 for monthly)."),
+    ci_frequency: z.number().optional().describe("The compounding frequency per year."),
     fd_principal: z.number().optional().describe("The principal amount for a Fixed Deposit."),
     fd_years: z.number().optional().describe("The duration in years for a Fixed Deposit."),
     fd_rate: z.number().optional().describe("The annual interest rate for a Fixed Deposit."),
@@ -65,6 +70,7 @@ const intentSchema = z.object({
     rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
 });
+
 
 const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
@@ -76,39 +82,28 @@ const intentPrompt = ai.definePrompt({
 
     Analyze the query and determine the following:
     1.  intent:
-        - Set to "TAX" if the query is about calculating Indian income tax.
-        - Set to "SIP" if the query is about calculating returns for a Systematic Investment Plan or mutual fund investment.
-        - Set to "EMI" if the query is about calculating a loan EMI.
-        - Set to "COMPOUND_INTEREST" if the query is about calculating compound interest on a lump sum.
-        - Set to "BUDGET" if the query is about allocating monthly income (e.g., 50/30/20 rule).
-        - Set to "FD" if the query is about a Fixed Deposit.
-        - Set to "RD" if the query is about a Recurring Deposit.
-        - Set to "GENERAL" for anything else.
-    2.  income:
-        - If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
-        - If intent is "BUDGET", extract the monthly income as a number. 'k' means 1000.
-    3.  sip_monthly: If intent is "SIP", extract the monthly investment amount.
-    4.  sip_years: If intent is "SIP", extract the investment duration in years.
-    5.  sip_rate: If intent is "SIP", extract the expected annual rate of return. If not mentioned, default to 12.
-    6.  emi_principal: If intent is "EMI", extract the loan principal amount.
-    7.  emi_years: If intent is "EMI", extract the loan duration in years.
-    8.  emi_rate: If intent is "EMI", extract the annual interest rate.
-    9.  ci_principal: If intent is "COMPOUND_INTEREST", extract the principal amount.
-    10. ci_years: If intent is "COMPOUND_INTEREST", extract the duration in years.
-    11. ci_rate: If intent is "COMPOUND_INTEREST", extract the annual interest rate.
-    12. ci_frequency: If intent is "COMPOUND_INTEREST", extract compounding frequency. Default to 1 (yearly) if not specified.
-    13. fd_principal: If intent is "FD", extract the principal amount.
-    14. fd_years: If intent is "FD", extract the duration in years.
-    15. fd_rate: If intent is "FD", extract the annual interest rate.
-    16. rd_monthly: If intent is "RD", extract the monthly deposit amount.
-    17. rd_months: If intent is "RD", extract the duration in months.
-    18. rd_rate: If intent is "RD", extract the annual interest rate.
-
-
+        - "TAX": Calculating Indian income tax.
+        - "HRA": Calculating HRA exemption.
+        - "80C_PLANNING": User wants to know how much to invest in 80C.
+        - "SIP": Calculating returns for a Systematic Investment Plan.
+        - "EMI": Calculating a loan EMI.
+        - "COMPOUND_INTEREST": Calculating compound interest.
+        - "BUDGET": Allocating monthly income (e.g., 50/30/20 rule).
+        - "FD": Fixed Deposit calculation.
+        - "RD": Recurring Deposit calculation.
+        - "GENERAL": For anything else.
+    2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000.
+    3. regime: If the user mentions 'old', 'new', or wants to 'compare', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
+    4. HRA details (monthly_rent, metro_city, basic_salary): Extract for HRA intent. If basic salary is not given, assume it's 50% of total income.
+    5. 80C investment: Extract if the intent is 80C planning.
+    
     Examples:
-    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000
-    - "income tax on 10 lakh" -> intent: "TAX", income: 1000000
-    - "tax on 20 lakhs" -> intent: "TAX", income: 2000000
+    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
+    - "income tax on 10 lakh" -> intent: "TAX", income: 1000000, regime: 'new'
+    - "tax on 20 lakhs" -> intent: "TAX", income: 2000000, regime: 'new'
+    - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
+    - "HRA exemption on 8L salary with 20k monthly rent" -> intent: "HRA", income: 800000, monthly_rent: 20000
+    - "How much should I invest in 80C if I earn 10L" -> intent: "80C_PLANNING", income: 1000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
@@ -125,25 +120,65 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     const intent = intentResult.output;
 
     if (intent?.intent === "TAX" && intent.income) {
-        const fy = '2024-25'; // Defaulting FY for now
-        const regime = 'new';
-        
-        const calculationResult = calculateTax(intent.income, fy, regime);
+        const fy = '2024-25';
+        const regime = intent.regime || 'new';
 
-        const explanationInput: ExplainTaxCalculationInput = {
-            income: intent.income,
-            fy,
-            tax_breakdown: calculationResult.tax_breakdown,
-            total_tax: calculationResult.total_tax,
-            sources: sources
-        };
+        if (regime === 'both') {
+            const newRegimeResult = calculateTax(intent.income, fy, 'new');
+            const oldRegimeResult = calculateTax(intent.income, fy, 'old');
+            const saving = oldRegimeResult.total_tax - newRegimeResult.total_tax;
+            
+            let explanation = `Comparing tax regimes for an income of ₹${intent.income.toLocaleString('en-IN')}:\n\n`;
+            explanation += `New Regime Tax: ₹${newRegimeResult.total_tax.toLocaleString('en-IN')}\n`;
+            explanation += `Old Regime Tax: ₹${oldRegimeResult.total_tax.toLocaleString('en-IN')}\n\n`;
+            if (saving > 0) {
+                explanation += `You could save ₹${saving.toLocaleString('en-IN')} by choosing the New Regime.`;
+            } else if (saving < 0) {
+                explanation += `You could save ₹${Math.abs(saving).toLocaleString('en-IN')} by choosing the Old Regime (assuming you have sufficient deductions).`;
+            } else {
+                explanation += `The tax amount is the same under both regimes.`;
+            }
 
-        const explanationResult = await explainTaxCalculation(explanationInput);
-        
+            return {
+                response: explanation,
+                calculationResult: { type: 'tax_comparison', data: { new: newRegimeResult, old: oldRegimeResult } }
+            }
+        } else {
+            const calculationResult = calculateTax(intent.income, fy, regime);
+            const explanationInput: ExplainTaxCalculationInput = {
+                income: intent.income,
+                fy,
+                tax_breakdown: calculationResult.tax_breakdown,
+                total_tax: calculationResult.total_tax,
+                sources: sources
+            };
+            const explanationResult = await explainTaxCalculation(explanationInput);
+            return {
+                response: explanationResult.explanation,
+                sources: explanationResult.sources,
+                calculationResult: { type: 'tax', data: calculationResult }
+            };
+        }
+    }
+
+    if (intent?.intent === "HRA" && intent.income && intent.monthly_rent) {
+        const basicSalary = intent.basic_salary || intent.income * 0.5; // Assume 50% if not provided
+        const metro = intent.metro_city ?? false; // Assume non-metro if not specified
+        const hraExemption = calculateHRA(basicSalary, intent.income, intent.monthly_rent * 12, metro);
+        const explanation = `Based on a basic salary of ₹${basicSalary.toLocaleString('en-IN')} and annual rent of ₹${(intent.monthly_rent * 12).toLocaleString('en-IN')}, your estimated HRA exemption is ₹${hraExemption.toLocaleString('en-IN')}.`;
         return {
-            response: explanationResult.explanation,
-            sources: explanationResult.sources,
-            calculationResult: { type: 'tax', data: calculationResult }
+            response: explanation
+        };
+    }
+    
+    if (intent?.intent === "80C_PLANNING" && intent.income) {
+        const maxInvestment = 150000;
+        const oldRegimeResult = calculateTax(intent.income, '2024-25', 'old', 0);
+        const oldRegimeWith80C = calculateTax(intent.income, '2024-25', 'old', maxInvestment);
+        const taxSaving = oldRegimeResult.total_tax - oldRegimeWith80C.total_tax;
+        const explanation = `By investing the full ₹${maxInvestment.toLocaleString('en-IN')} under Section 80C, you could potentially save up to ₹${taxSaving.toLocaleString('en-IN')} in taxes under the Old Regime. The New Regime does not offer 80C deductions.`;
+        return {
+            response: explanation
         };
     }
 

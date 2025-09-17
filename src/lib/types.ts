@@ -15,6 +15,11 @@ export interface TaxCalculationResult {
   tax_breakdown: Record<string, number>;
 }
 
+export interface TaxComparisonResult {
+    new: TaxCalculationResult;
+    old: TaxCalculationResult;
+}
+
 export interface SipCalculationResult {
   monthly_investment: number;
   years: number;
@@ -73,6 +78,7 @@ export interface RdCalculationResult {
 
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
+  | { type: 'tax_comparison', data: TaxComparisonResult }
   | { type: 'sip'; data: SipCalculationResult }
   | { type: 'emi'; data: EmiCalculationResult }
   | { type: 'compound_interest', data: CompoundInterestResult }

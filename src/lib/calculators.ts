@@ -3,43 +3,48 @@ import type { TaxCalculationResult } from './types';
 export function calculateTax(
   income: number,
   fy: string,
-  regime: 'new' | 'old'
+  regime: 'new' | 'old',
+  deductions80C: number = 0,
 ): TaxCalculationResult {
   const breakdown: Record<string, number> = {};
-
-  const standardDeduction = 50000;
-  const taxable_income = Math.max(0, income - standardDeduction);
   breakdown['Gross Income'] = income;
-  breakdown['Standard Deduction'] = -standardDeduction;
 
+  let taxable_income = income;
   let tax = 0;
 
-  if (taxable_income > 1500000) {
-    tax += (taxable_income - 1500000) * 0.30;
-  }
-  if (taxable_income > 1200000) {
-    tax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
-  }
-  if (taxable_income > 900000) {
-    tax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
-  }
-  if (taxable_income > 600000) {
-    tax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
-  }
-  if (taxable_income > 300000) {
-    tax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
-  }
+  if (regime === 'new') {
+    const standardDeduction = 50000;
+    taxable_income = Math.max(0, income - standardDeduction);
+    breakdown['Standard Deduction'] = -standardDeduction;
 
-  // Rebate under Section 87A
-  if (taxable_income <= 700000) {
-    tax = 0;
+    if (taxable_income <= 700000) {
+        tax = 0;
+    } else {
+        if (taxable_income > 1500000) tax += (taxable_income - 1500000) * 0.30;
+        if (taxable_income > 1200000) tax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
+        if (taxable_income > 900000) tax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
+        if (taxable_income > 600000) tax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
+        if (taxable_income > 300000) tax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
+    }
+  } else { // Old Regime
+    const standardDeduction = 50000;
+    const totalDeductions = standardDeduction + deductions80C;
+    taxable_income = Math.max(0, income - totalDeductions);
+    breakdown['Standard Deduction'] = -standardDeduction;
+    if (deductions80C > 0) breakdown['80C Deductions'] = -deductions80C;
+    
+    if (taxable_income <= 500000) {
+        tax = 0; // Tax rebate u/s 87A
+    } else {
+        if (taxable_income > 1000000) tax += (taxable_income - 1000000) * 0.30;
+        if (taxable_income > 500000) tax += (Math.min(taxable_income, 1000000) - 500000) * 0.20;
+        if (taxable_income > 250000) tax += (Math.min(taxable_income, 500000) - 250000) * 0.05;
+    }
   }
   
   breakdown['Tax Before Cess'] = tax;
-  
   const cess = tax * 0.04;
   breakdown['Health & Edu Cess (4%)'] = cess;
-  
   const total_tax = Math.round(tax + cess);
 
   return {
@@ -47,10 +52,40 @@ export function calculateTax(
     fy,
     regime,
     total_tax,
-    taxable_income,
+    taxable_income: round2(taxable_income),
     tax_breakdown: breakdown,
   };
 }
+
+
+/**
+ * Calculates House Rent Allowance (HRA) exemption.
+ * @param basicSalary Annual basic salary.
+ * @param totalSalary Annual total salary (for DA assumption).
+ * @param rentPaid Annual rent paid.
+ * @param metroCity Lives in a metro city (true) or not (false).
+ * @returns The amount of HRA exemption.
+ */
+export function calculateHRA(
+  basicSalary: number,
+  totalSalary: number,
+  rentPaid: number,
+  metroCity: boolean
+): number {
+  // Assuming DA is 40% of basic, a common scenario. HRA is calculated on Basic+DA.
+  // This is an estimation; actual DA can vary.
+  const dearnessAllowance = basicSalary * 0.40;
+  const salaryForHRA = basicSalary + dearnessAllowance;
+
+  const hraReceived = salaryForHRA * 0.50; // Assuming HRA component is 50% of basic+DA
+  
+  const condition1 = hraReceived;
+  const condition2 = rentPaid - (salaryForHRA * 0.10);
+  const condition3 = metroCity ? (salaryForHRA * 0.50) : (salaryForHRA * 0.40);
+
+  return round2(Math.max(0, Math.min(condition1, condition2, condition3)));
+}
+
 
 // All functions use numbers (floating) and return values rounded to 2 decimals where appropriate.
 // Keep numeric precision in mind for money — outputs are rounded for display but internal calculations use JS numbers.
