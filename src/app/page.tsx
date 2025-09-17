@@ -117,6 +117,7 @@ export default function Home() {
   const toggleRecording = () => {
     if (isRecording) {
       recognitionRef.current?.stop();
+      setIsRecording(false);
     } else {
        if (!SpeechRecognition) {
           alert("Your browser does not support Speech Recognition. Please try Chrome or Safari.");
@@ -124,15 +125,23 @@ export default function Home() {
        }
        if (!recognitionRef.current) {
          recognitionRef.current = new SpeechRecognition();
-         recognitionRef.current.continuous = true;
+         recognitionRef.current.continuous = false; // Set to false to handle results per utterance
          recognitionRef.current.interimResults = true;
+         
          recognitionRef.current.onresult = (event: any) => {
-           const transcript = Array.from(event.results)
-             .map((result: any) => result[0])
-             .map((result) => result.transcript)
-             .join('');
-           setInput(transcript);
+           let finalTranscript = '';
+           for (let i = 0; i < event.results.length; i++) {
+             const segment = event.results[i];
+             if (segment.isFinal) {
+               finalTranscript += segment[0].transcript;
+             }
+           }
+           // Use the final transcript after the user finishes speaking
+           if (finalTranscript) {
+              setInput(prev => prev + (prev ? ' ' : '') + finalTranscript);
+           }
          };
+
          recognitionRef.current.onend = () => {
             setIsRecording(false);
          }
@@ -141,6 +150,7 @@ export default function Home() {
             setIsRecording(false);
          }
        }
+       setInput('');
        recognitionRef.current.start();
        setIsRecording(true);
     }
