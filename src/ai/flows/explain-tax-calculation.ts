@@ -27,7 +27,7 @@ const ExplainTaxCalculationInputSchema = z.object({
 export type ExplainTaxCalculationInput = z.infer<typeof ExplainTaxCalculationInputSchema>;
 
 const ExplainTaxCalculationOutputSchema = z.object({
-  explanation: z.string().describe('A human-friendly explanation of the tax calculation.'),
+  explanation: z.string().describe('A human-friendly explanation of the tax calculation, formatted with Markdown.'),
   sources: z.array(
     z.object({
       name: z.string().describe('The name of the source.'),
@@ -54,13 +54,29 @@ Tax Breakdown: {{#each tax_breakdown}}{{{@key}}}: ₹{{{this}}} {{/each}}
 Total Tax: ₹{{{total_tax}}}
 Sources: {{#each sources}}{{{name}}} - {{{url}}} (Last updated: {{{last_updated}}}) {{/each}}
 
-Provide a clear and concise explanation of how the tax was calculated, including the relevant tax slabs and deductions. Cite the sources used for the information.
+Provide a clear and concise explanation of how the tax was calculated. Use Markdown for formatting. Structure your response as follows:
+
+- Start with a clear heading for the tax regime used.
+- Use bullet points or a simple list to show the applicable tax slabs.
+- Provide a summary of the final tax calculation, showing how the total tax was derived.
+- Include a "Rule of Thumb" or a brief comparative note if relevant.
+- Do not wrap the entire response in a code block.
+
+Example Format:
+### New Regime (Default)
+
+*   **₹0 – ₹3L:** Nil
+*   **₹3L – ₹6L:** 5%
+*   ...and so on for other slabs.
+
+**Calculation Summary:**
+For an income of ₹{{{income}}}, your tax is calculated to be **₹{{{total_tax}}}** (including cess).
 
 This is not financial advice.
 
 Return JSON:
 {
-  "explanation": "human friendly explanation",
+  "explanation": "human friendly explanation in markdown format",
   "sources": [{"name": "...", "url": "...", "date": "..."}]
 }
 `,
