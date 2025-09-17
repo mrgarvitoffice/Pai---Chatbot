@@ -9,9 +9,9 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
   const isAssistant = role === 'assistant';
 
   return (
-    <div className={cn('flex items-start gap-4', isAssistant ? '' : 'justify-end')}>
+    <div className={cn('flex items-start gap-3', isAssistant ? '' : 'justify-end')}>
       {isAssistant && (
-        <Avatar className="size-8 border bg-gradient-to-tr from-green-500 to-emerald-700 text-primary-foreground flex-shrink-0">
+        <Avatar className="size-8 border bg-gradient-to-tr from-primary to-secondary text-primary-foreground flex-shrink-0">
             <div className="flex items-center justify-center h-full w-full">
                 <PaiLogo className="size-5" />
             </div>
@@ -22,7 +22,7 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
           'max-w-[85%] rounded-2xl text-base',
           isAssistant
             ? 'bg-muted rounded-tl-none'
-            : 'bg-gradient-to-br from-primary to-secondary text-primary-foreground rounded-br-none shadow-lg'
+            : 'bg-gradient-to-br from-secondary via-pink-500 to-rose-500 text-primary-foreground rounded-br-none shadow-lg'
         )}
       >
         {typeof content === 'string' ? (
@@ -32,8 +32,8 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
         )}
       </div>
        {!isAssistant && (
-        <Avatar className="size-8 border flex-shrink-0 bg-muted">
-            <AvatarFallback>
+        <Avatar className="size-8 border flex-shrink-0 bg-gradient-to-br from-pink-500 to-rose-500">
+            <AvatarFallback className="bg-transparent text-primary-foreground">
                 <User className="size-4" />
             </AvatarFallback>
         </Avatar>
