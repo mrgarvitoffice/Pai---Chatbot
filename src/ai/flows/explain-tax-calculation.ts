@@ -10,10 +10,12 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type {TaxCalculationResult} from '@/lib/types';
 
 const ExplainTaxCalculationInputSchema = z.object({
   income: z.number().describe('The income for which to calculate tax.'),
   fy: z.string().describe('The fiscal year for the tax calculation (e.g., 2025-26).'),
+  regime: z.enum(['new', 'old']).describe('The tax regime used for the calculation.'),
   tax_breakdown: z.record(z.string(), z.number()).describe('A breakdown of the tax calculation.'),
   total_tax: z.number().describe('The total tax amount.'),
   sources: z.array(
@@ -50,19 +52,27 @@ const prompt = ai.definePrompt({
 
 Tax Calculation for Fiscal Year: {{{fy}}}
 Income: ₹{{{income}}}
+Regime: {{{regime}}}
 Total Tax: ₹{{{total_tax}}}
 
 Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure. Do NOT use markdown asterisks or bullet points.
 
 Example Format:
-💰 Income Tax Summary — FY {{{fy}}} (New Regime)
+💰 Income Tax Summary — FY {{{fy}}} ({{#if (eq regime "new")}}New{{else}}Old{{/if}} Regime)
 📊 Tax Slabs
+{{#if (eq regime "new")}}
 ₹0 – ₹3,00,000: Nil
 ₹3,00,001 – ₹6,00,000: 5%
 ₹6,00,001 – ₹9,00,000: 10%
 ₹9,00,001 – ₹12,00,000: 15%
 ₹12,00,001 – ₹15,00,000: 20%
 Above ₹15,00,000: 30%
+{{else}}
+₹0 – ₹2,50,000: Nil
+₹2,50,001 – ₹5,00,000: 5%
+₹5,00,001 – ₹10,00,000: 20%
+Above ₹10,00,000: 30%
+{{/if}}
 
 🧮 Your Income
 ₹{{{income}}}
@@ -70,7 +80,7 @@ Above ₹15,00,000: 30%
 🧾 Tax Payable
 ₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
 
-⚠️ Note: This is an illustrative calculation based on the New Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
+⚠️ Note: This is an illustrative calculation based on the {{#if (eq regime "new")}}New{{else}}Old{{/if}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
 });
 

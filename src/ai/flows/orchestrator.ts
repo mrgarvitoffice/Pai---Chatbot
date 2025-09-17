@@ -186,6 +186,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             const explanationInput: ExplainTaxCalculationInput = {
                 income: intent.income,
                 fy,
+                regime: calculationResult.regime,
                 tax_breakdown: calculationResult.tax_breakdown,
                 total_tax: calculationResult.total_tax,
                 sources: sources
