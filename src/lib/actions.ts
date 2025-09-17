@@ -2,6 +2,7 @@
 
 import { explainTaxCalculation } from '@/ai/flows/explain-tax-calculation';
 import type { ExplainTaxCalculationInput, ExplainTaxCalculationOutput } from '@/ai/flows/explain-tax-calculation';
+import { orchestrate, OrchestratorInput, OrchestratorOutput } from '@/ai/flows/orchestrator';
 
 type TaxExplanationInput = {
     income: number;
@@ -39,6 +40,17 @@ export async function getTaxExplanationAction(input: TaxExplanationInput): Promi
     return {
       explanation: "I'm sorry, I encountered an error while trying to generate an explanation. Please try again.",
       sources: sources,
+    };
+  }
+}
+
+export async function sendMessageAction(input: OrchestratorInput): Promise<OrchestratorOutput> {
+  try {
+    return await orchestrate(input);
+  } catch (error) {
+    console.error("Error in orchestrator:", error);
+    return {
+      response: "I'm sorry, I encountered an error while processing your request. Please try again.",
     };
   }
 }

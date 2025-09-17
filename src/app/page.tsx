@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
+import { sendMessageAction } from '@/lib/actions';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -19,7 +20,7 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = (e: FormEvent) => {
+  const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -30,20 +31,28 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
-    // TODO: Replace with a call to the orchestrator logic
-    // For now, we simulate a response
-    setTimeout(() => {
-        const botResponse: ChatMessageType = {
-          id: uuidv4(),
-          role: 'assistant',
-          content: "I'm sorry, I'm not yet equipped to handle that request. Please try asking a tax-related question.",
-        };
-        setMessages((prev) => [...prev, botResponse]);
-        setIsLoading(false);
-    }, 1000);
+    try {
+      const result = await sendMessageAction({ query: currentInput });
+      const botResponse: ChatMessageType = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: result.response,
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    } catch (error) {
+      const errorResponse: ChatMessageType = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: "Sorry, I encountered an error. Please try again.",
+      };
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
