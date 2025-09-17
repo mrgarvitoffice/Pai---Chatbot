@@ -1,4 +1,4 @@
-import type { EmiCalculationResult, TaxCalculationResult } from './types';
+import type { BudgetAllocationResult, CompoundInterestResult, EmiCalculationResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -16,26 +16,16 @@ export function calculateTax(
   if (regime === 'new') {
     taxable_income = Math.max(0, income - standardDeduction);
     breakdown['Standard Deduction'] = -standardDeduction;
-
+    
     if (taxable_income <= 700000) {
       tax = 0; // Tax rebate u/s 87A
     } else {
       let tempTax = 0;
-      if (taxable_income > 300000) {
-         tempTax += Math.min(300000, taxable_income - 300000) * 0.05;
-      }
-      if (taxable_income > 600000) {
-        tempTax += Math.min(300000, taxable_income - 600000) * 0.10;
-      }
-      if (taxable_income > 900000) {
-        tempTax += Math.min(300000, taxable_income - 900000) * 0.15;
-      }
-      if (taxable_income > 1200000) {
-        tempTax += Math.min(300000, taxable_income - 1200000) * 0.20;
-      }
-      if (taxable_income > 1500000) {
-        tempTax += (taxable_income - 1500000) * 0.30;
-      }
+      if (taxable_income > 300000)  tempTax += Math.min(300000, taxable_income - 300000) * 0.05;
+      if (taxable_income > 600000)  tempTax += Math.min(300000, taxable_income - 600000) * 0.10;
+      if (taxable_income > 900000)  tempTax += Math.min(300000, taxable_income - 900000) * 0.15;
+      if (taxable_income > 1200000) tempTax += Math.min(300000, taxable_income - 1200000) * 0.20;
+      if (taxable_income > 1500000) tempTax += (taxable_income - 1500000) * 0.30;
       tax = tempTax;
     }
 
@@ -476,7 +466,7 @@ export function netWorth(assets: number[], liabilities: number[]): number {
  * Budget allocation planner (default 50-30-20)
  * Accept custom splits optionally (object with needs,wants,savings percentages that sum to 100)
  */
-export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: number; wantsPct?: number; savingsPct?: number}) {
+export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: number; wantsPct?: number; savingsPct?: number}): BudgetAllocationResult {
   const defaultSplit = {needsPct: 50, wantsPct: 30, savingsPct: 20};
   const split = {...defaultSplit, ...(custom || {})};
   const totalPct = (split.needsPct || 0) + (split.wantsPct || 0) + (split.savingsPct || 0);
@@ -494,5 +484,3 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
-
-    
