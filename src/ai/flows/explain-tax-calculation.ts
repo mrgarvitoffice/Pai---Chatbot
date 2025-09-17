@@ -57,7 +57,6 @@ Total Tax: ₹{{{total_tax}}}
 
 Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text, hashtags, or asterisks.
 
-Example Format:
 💰 Income Tax Summary — FY {{{fy}}} ({{regime}} Regime)
 
 🧮 Your Income
