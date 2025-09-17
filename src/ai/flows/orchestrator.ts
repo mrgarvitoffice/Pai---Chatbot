@@ -45,29 +45,33 @@ const sources = [
 ];
 
 const taxIntentSchema = z.object({
-    isTaxQuery: z.boolean().describe("Is the user asking a question about calculating income tax? This is true even if the query is a simple statement like 'income tax on 10 lakh'."),
-    income: z.number().optional().describe("The user's income. Extract this value even from phrases like '15L', '10 lakhs', or '25,00,000'."),
-    fy: z.string().optional().describe("The fiscal year, if mentioned (e.g., 'FY 25-26')."),
+    isTaxQuery: z.boolean().describe("Set to true if the user's query is about calculating income tax in India. This is true even for simple statements like 'income tax on 10 lakh'."),
+    income: z.number().optional().describe("The user's annual income, extracted from the query. Must be a number. For example, '15L' or '10 lakhs' becomes 1500000."),
+    fy: z.string().optional().describe("The fiscal year, if mentioned (e.g., 'FY 25-26'). If not mentioned, this can be null."),
 });
 
 const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: taxIntentSchema },
-    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine if the query is about income tax calculation and extract the relevant entities.
+    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine if the query is about income tax calculation and extract the relevant entities. The user may not ask a direct question, but their intent might still be to get a tax calculation.
 
     User Query: {{{query}}}
 
     Analyze the query and determine the following:
-    1.  isTaxQuery: Set to true if the query is about calculating income tax. This includes direct questions and statements like "tax on 15L".
-    2.  income: Extract the annual income. Be flexible with formats. "15L" or "15 lakhs" means 1500000. "1 crore" means 10000000.
+    1.  isTaxQuery: Set to true ONLY if the query is about calculating Indian income tax. It should be true for direct questions and for simple statements of income like "tax on 15L".
+    2.  income: Extract the annual income as a number. Be flexible with formats like 'L' for lakh (100,000) and 'crore' (10,000,000). If no income is found, this MUST be null.
     3.  fy: Extract the fiscal year if mentioned, like "FY 2025-26".
+
+    IMPORTANT: If the query is NOT about tax calculation, set isTaxQuery to false and income to null.
 
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> isTaxQuery: true, income: 1500000, fy: "25-26"
     - "income tax on 10 lakh" -> isTaxQuery: true, income: 1000000, fy: null
     - "what is my tax liability on 25,00,000" -> isTaxQuery: true, income: 2500000, fy: null
+    - "tax for 1 crore" -> isTaxQuery: true, income: 10000000, fy: null
     - "What is a mutual fund?" -> isTaxQuery: false, income: null, fy: null
+    - "hello" -> isTaxQuery: false, income: null, fy: null
     `,
 });
 
@@ -91,8 +95,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
         const explanationResult = await explainTaxCalculation(explanationInput);
         
-        const response = `Based on the information you provided for Fiscal Year ${fy} under the new regime, here is your tax breakdown:\n\n**AI-Generated Explanation:**\n${explanationResult.explanation}`;
-
         return {
             response: explanationResult.explanation,
             sources: explanationResult.sources,
