@@ -144,13 +144,13 @@ export default function Home() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask Pai — e.g., ‘Tax on ₹15L’ or ‘SIP of 5000 for 10 years’"
-                    className="pr-12 h-12 rounded-xl text-base"
+                    className="pr-12 h-12 rounded-xl text-base bg-muted border-2 border-transparent focus-visible:border-primary focus-visible:ring-0"
                     disabled={isLoading}
                   />
                   <Button
                     type="submit"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-br from-primary to-secondary"
                     disabled={!input.trim() || isLoading}
                   >
                     <ArrowUp className="size-5" />

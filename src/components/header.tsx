@@ -18,24 +18,16 @@ export function Header() {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    // This component only works with a dark theme as per the new design.
+    // We are forcing the dark theme here.
+    const savedTheme = 'dark';
     setTheme(savedTheme);
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.add('dark');
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Theme toggling is disabled to match the new design.
+    // If you want to re-enable it, you can implement the logic here.
   };
 
   return (
@@ -45,11 +37,6 @@ export function Header() {
         <h1 className="text-xl font-semibold tracking-tight">Pai Chatbot</h1>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
