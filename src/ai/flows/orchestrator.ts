@@ -66,7 +66,7 @@ const intentPrompt = ai.definePrompt({
         - Set to "TAX" if the query is about calculating Indian income tax.
         - Set to "SIP" if the query is about calculating returns for a Systematic Investment Plan or mutual fund investment.
         - Set to "GENERAL" for anything else.
-    2.  income: If intent is "TAX", extract the annual income as a number. 'L' means lakh (100,000).
+    2.  income: If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
     3.  sip_monthly: If intent is "SIP", extract the monthly investment amount.
     4.  sip_years: If intent is "SIP", extract the investment duration in years.
     5.  sip_rate: If intent is "SIP", extract the expected annual rate of return. If not mentioned, default to 12.
@@ -74,6 +74,7 @@ const intentPrompt = ai.definePrompt({
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000
     - "income tax on 10 lakh" -> intent: "TAX", income: 1000000
+    - "tax on 20 lakhs" -> intent: "TAX", income: 2000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
     - "What is a mutual fund?" -> intent: "GENERAL"

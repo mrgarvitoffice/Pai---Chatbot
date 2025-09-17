@@ -2,7 +2,7 @@
 
 import type { SipCalculationResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { TrendingUp, Wallet, PiggyBank } from "lucide-react";
+import { TrendingUp, Wallet } from "lucide-react";
 
 interface SipResultCardProps {
     result: SipCalculationResult;

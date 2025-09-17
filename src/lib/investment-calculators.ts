@@ -12,23 +12,43 @@ export function calculateSip(
   years: number,
   annual_rate: number
 ): SipCalculationResult {
-  const monthly_rate = annual_rate / 12 / 100;
-  const n = years * 12; // number of months
+  const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+  
+  if (monthly_investment <= 0 || years <= 0) {
+    return {
+      monthly_investment,
+      years,
+      annual_rate,
+      total_invested: 0,
+      total_gain: 0,
+      future_value: 0,
+    };
+  }
+  
+  const r = annual_rate / 12 / 100;
+  const n = Math.round(years * 12);
 
-  // FV = P * (((1 + i)^n - 1) / i) * (1 + i)
-  const future_value = Math.round(
-    monthly_investment * ((((1 + monthly_rate) ** n - 1) / monthly_rate) * (1 + monthly_rate))
-  );
+  if (r === 0) {
+    const invested = round2(monthly_investment * n);
+    return {
+      monthly_investment,
+      years,
+      annual_rate,
+      total_invested: invested,
+      total_gain: 0,
+      future_value: invested,
+    };
+  }
 
-  const total_invested = monthly_investment * n;
-  const total_gain = future_value - total_invested;
-
+  const fv = monthly_investment * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+  const invested = round2(monthly_investment * n);
+  
   return {
     monthly_investment,
     years,
     annual_rate,
-    total_invested,
-    total_gain,
-    future_value,
+    future_value: round2(fv),
+    total_invested: invested,
+    total_gain: round2(fv - invested),
   };
 }
