@@ -31,7 +31,7 @@ export function calculateTax(
 
   } else { // Old Regime
     const standardDeduction = 50000;
-    const totalDeductions = standardDituction + deductions80C;
+    const totalDeductions = standardDeduction + deductions80C;
     taxable_income = Math.max(0, income - totalDeductions);
     breakdown['Standard Deduction'] = -standardDeduction;
     if (deductions80C > 0) breakdown['80C Deductions'] = -deductions80C;
