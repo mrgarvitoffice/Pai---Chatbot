@@ -52,24 +52,25 @@ Tax Calculation for Fiscal Year: {{{fy}}}
 Income: ₹{{{income}}}
 Total Tax: ₹{{{total_tax}}}
 
-Provide a clear and concise explanation. Use Markdown for formatting. Structure your response EXACTLY as follows:
-
-- Start with a clear heading for the tax regime used (e.g., "### New Regime (Default)").
-- Use bullet points to show the applicable tax slabs for the income level.
-- Provide a single, final summary sentence stating the total tax.
-- Do NOT include a detailed "Calculation Summary" or step-by-step breakdown. The user can see that in a separate section.
-- Do NOT wrap the entire response in a code block.
+Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text before or after this structure.
 
 Example Format:
-### New Regime (Default)
+💰 Income Tax Summary — FY {{{fy}}} (New Regime)
+📊 Tax Slabs
+*   **₹0 – ₹3,00,000:** Nil
+*   **₹3,00,001 – ₹6,00,000:** 5%
+*   **₹6,00,001 – ₹9,00,000:** 10%
+*   **₹9,00,001 – ₹12,00,000:** 15%
+*   **₹12,00,001 – ₹15,00,000:** 20%
+*   **Above ₹15,00,000:** 30%
 
-*   **₹0 – ₹3L:** Nil
-*   **₹3L – ₹6L:** 5%
-*   ...and so on for other slabs.
+🧮 Your Income
+₹{{{income}}}
 
-For an income of ₹{{{income}}}, your tax is calculated to be **₹{{{total_tax}}}** (including cess).
+🧾 Tax Payable
+₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
 
-This is not financial advice.
+⚠️ Note: This is an illustrative calculation based on the New Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
 });
 
