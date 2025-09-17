@@ -1,4 +1,5 @@
-import type { SipCalculationResult, FdCalculationResult, RdCalculationResult } from './types';
+import type { SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult } from './types';
+const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 
 /**
  * Calculates the future value of a Systematic Investment Plan (SIP).
@@ -12,8 +13,6 @@ export function calculateSip(
   years: number,
   annual_rate: number
 ): SipCalculationResult {
-  const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
-  
   if (monthly_investment <= 0 || years <= 0) {
     return {
       monthly_investment,
@@ -54,6 +53,66 @@ export function calculateSip(
 }
 
 /**
+ * Calculates the required monthly SIP to reach a target future value.
+ * @param future_value The target corpus amount.
+ * @param years The total number of years for the investment.
+ * @param annual_rate The expected annual rate of return (in percent).
+ * @returns An object containing the reverse SIP calculation results.
+ */
+export function calculateReverseSip(
+  future_value: number,
+  years: number,
+  annual_rate: number
+): ReverseSipResult {
+  if (future_value <= 0 || years <= 0) {
+    return { future_value, years, annual_rate, monthly_investment: 0, total_invested: 0, total_gain: 0 };
+  }
+
+  const r = annual_rate / 12 / 100;
+  const n = Math.round(years * 12);
+
+  if (r === 0) {
+    const monthly_investment = round2(future_value / n);
+    return {
+      future_value,
+      years,
+      annual_rate,
+      monthly_investment,
+      total_invested: future_value,
+      total_gain: 0
+    };
+  }
+  
+  const monthly_investment = future_value / (((Math.pow(1 + r, n) - 1) / r) * (1 + r));
+  const total_invested = round2(monthly_investment * n);
+
+  return {
+    future_value,
+    years,
+    annual_rate,
+    monthly_investment: round2(monthly_investment),
+    total_invested: total_invested,
+    total_gain: round2(future_value - total_invested)
+  };
+}
+
+
+/**
+ * Calculates the Compound Annual Growth Rate (CAGR).
+ * @param start_value The initial value of the investment.
+ * @param end_value The final value of the investment.
+ * @param years The number of years over which the investment grew.
+ * @returns The CAGR as a percentage.
+ */
+export function calculateCAGR(start_value: number, end_value: number, years: number): number {
+    if (start_value <= 0 || years <= 0) {
+        return 0;
+    }
+    const cagr = Math.pow(end_value / start_value, 1 / years) - 1;
+    return round2(cagr * 100);
+}
+
+/**
  * Calculates the future value of a Fixed Deposit (FD).
  * @param principal The initial amount invested.
  * @param annual_rate The annual interest rate.
@@ -67,8 +126,6 @@ export function calculateFd(
     years: number,
     compounding_frequency: number,
 ): FdCalculationResult {
-    const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
-
     if (principal <= 0 || years <= 0) {
         return { principal, annual_rate, years, total_interest: 0, future_value: principal };
     }
@@ -99,8 +156,6 @@ export function calculateRd(
     annual_rate: number,
     months: number
 ): RdCalculationResult {
-    const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
-
     if (monthly_deposit <= 0 || months <= 0) {
         return { monthly_deposit, annual_rate, months, total_deposited: 0, total_interest: 0, future_value: 0 };
     }
@@ -127,5 +182,3 @@ export function calculateRd(
         total_interest: round2(total_interest)
     };
 }
-
-    
