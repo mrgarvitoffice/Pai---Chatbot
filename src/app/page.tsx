@@ -13,6 +13,7 @@ import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
 import { TaxResultCard } from '@/components/tax-result-card';
+import { SipResultCard } from '@/components/sip-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -51,9 +52,12 @@ export default function Home() {
       
       let content: React.ReactNode;
 
-      if (result.calculationResult) {
-        content = <TaxResultCard result={result.calculationResult} explanation={result.response} />;
-      } else {
+      if (result.calculationResult?.type === 'tax') {
+        content = <TaxResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'sip') {
+        content = <SipResultCard result={result.calculationResult.data} explanation={result.response} />;
+      }
+      else {
         content = result.response;
       }
       
@@ -114,7 +118,7 @@ export default function Home() {
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Pai — e.g., ‘Tax on ₹15L for FY 25–26’"
+                    placeholder="Ask Pai — e.g., ‘Tax on ₹15L’ or ‘SIP of 5000 for 10 years’"
                     className="pr-12 h-12 rounded-xl text-base"
                     disabled={isLoading}
                   />
