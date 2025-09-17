@@ -12,11 +12,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { calculateTax, calculateEMI, compoundFutureValue } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
 import { calculateSip } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, CalculationResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, CalculationResult } from '@/lib/types';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -46,8 +46,8 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, or something else?"),
-    income: z.number().optional().describe("The user's annual income, for tax queries. For example, '15L' or '10 lakhs' becomes 1500000."),
+    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, Budgeting, or something else?"),
+    income: z.number().optional().describe("The user's annual income for tax queries, or monthly income for budget queries. For example, '15L' or '10 lakhs' becomes 1500000 for annual, or '80k' becomes 80000 for monthly."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
     sip_years: z.number().optional().describe("The duration of the SIP in years."),
     sip_rate: z.number().optional().describe("The expected annual rate of return for the SIP."),
@@ -74,8 +74,11 @@ const intentPrompt = ai.definePrompt({
         - Set to "SIP" if the query is about calculating returns for a Systematic Investment Plan or mutual fund investment.
         - Set to "EMI" if the query is about calculating a loan EMI.
         - Set to "COMPOUND_INTEREST" if the query is about calculating compound interest on a lump sum.
+        - Set to "BUDGET" if the query is about allocating monthly income (e.g., 50/30/20 rule).
         - Set to "GENERAL" for anything else.
-    2.  income: If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
+    2.  income:
+        - If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
+        - If intent is "BUDGET", extract the monthly income as a number. 'k' means 1000.
     3.  sip_monthly: If intent is "SIP", extract the monthly investment amount.
     4.  sip_years: If intent is "SIP", extract the investment duration in years.
     5.  sip_rate: If intent is "SIP", extract the expected annual rate of return. If not mentioned, default to 12.
@@ -95,6 +98,7 @@ const intentPrompt = ai.definePrompt({
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
+    - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
     - "What is a mutual fund?" -> intent: "GENERAL"
     `,
 });
@@ -183,7 +187,18 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
+    if (intent?.intent === "BUDGET" && intent.income) {
+        const budgetResult = budgetAllocation(intent.income);
+        
+        const explanation = `Here is a suggested budget allocation for your monthly income of ₹${intent.income.toLocaleString('en-IN')} based on the 50/30/20 rule. This is a guideline to help you manage your finances.`;
+
+        return {
+            response: explanation,
+            calculationResult: { type: 'budget', data: budgetResult }
+        };
+    }
+
     return {
-        response: "I can help with Indian income tax, SIP, EMI, and compound interest calculations. Please ask me a question like 'How much tax on ₹15L' or 'SIP of 5000 for 10 years'."
+        response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'Distribute 80k income'."
     };
 }

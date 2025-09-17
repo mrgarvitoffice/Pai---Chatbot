@@ -42,8 +42,21 @@ export interface CompoundInterestResult {
     total_interest: number;
 }
 
+export interface BudgetAllocationResult {
+    monthlyIncome: number;
+    split: {
+        needsPct: number;
+        wantsPct: number;
+        savingsPct: number;
+    };
+    needs: number;
+    wants: number;
+    savings: number;
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'sip'; data: SipCalculationResult }
   | { type: 'emi'; data: EmiCalculationResult }
-  | { type: 'compound_interest', data: CompoundInterestResult };
+  | { type: 'compound_interest', data: CompoundInterestResult }
+  | { type: 'budget', data: BudgetAllocationResult };

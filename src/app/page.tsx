@@ -16,6 +16,7 @@ import { TaxResultCard } from '@/components/tax-result-card';
 import { SipResultCard } from '@/components/sip-result-card';
 import { EmiResultCard } from '@/components/emi-result-card';
 import { CompoundInterestResultCard } from '@/components/compound-interest-result-card';
+import { BudgetAllocationResultCard } from '@/components/budget-allocation-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -62,6 +63,8 @@ export default function Home() {
         content = <EmiResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'compound_interest') {
         content = <CompoundInterestResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'budget') {
+        content = <BudgetAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
       }
       else {
         content = result.response;
