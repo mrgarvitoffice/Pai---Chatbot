@@ -12,11 +12,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { calculateTax, calculateEMI } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue } from '@/lib/calculators';
 import { calculateSip } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CalculationResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, CalculationResult } from '@/lib/types';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -46,7 +46,7 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "EMI", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), or something else?"),
+    intent: z.enum(["TAX", "SIP", "EMI", "COMPOUND_INTEREST", "GENERAL"]).describe("The user's intent. Is it about Tax, SIP (Systematic Investment Plan), EMI (Equated Monthly Installment), Compound Interest, or something else?"),
     income: z.number().optional().describe("The user's annual income, for tax queries. For example, '15L' or '10 lakhs' becomes 1500000."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
     sip_years: z.number().optional().describe("The duration of the SIP in years."),
@@ -54,6 +54,10 @@ const intentSchema = z.object({
     emi_principal: z.number().optional().describe("The principal loan amount for an EMI calculation."),
     emi_years: z.number().optional().describe("The duration of the loan in years."),
     emi_rate: z.number().optional().describe("The annual interest rate for the loan."),
+    ci_principal: z.number().optional().describe("The principal amount for compound interest calculation."),
+    ci_years: z.number().optional().describe("The duration in years for compound interest calculation."),
+    ci_rate: z.number().optional().describe("The annual interest rate for compound interest calculation."),
+    ci_frequency: z.number().optional().describe("The compounding frequency per year (e.g., 1 for yearly, 4 for quarterly, 12 for monthly)."),
 });
 
 const intentPrompt = ai.definePrompt({
@@ -69,6 +73,7 @@ const intentPrompt = ai.definePrompt({
         - Set to "TAX" if the query is about calculating Indian income tax.
         - Set to "SIP" if the query is about calculating returns for a Systematic Investment Plan or mutual fund investment.
         - Set to "EMI" if the query is about calculating a loan EMI.
+        - Set to "COMPOUND_INTEREST" if the query is about calculating compound interest on a lump sum.
         - Set to "GENERAL" for anything else.
     2.  income: If intent is "TAX", extract the annual income as a number. 'L' or 'lakh' means 100,000.
     3.  sip_monthly: If intent is "SIP", extract the monthly investment amount.
@@ -77,6 +82,10 @@ const intentPrompt = ai.definePrompt({
     6.  emi_principal: If intent is "EMI", extract the loan principal amount.
     7.  emi_years: If intent is "EMI", extract the loan duration in years.
     8.  emi_rate: If intent is "EMI", extract the annual interest rate.
+    9.  ci_principal: If intent is "COMPOUND_INTEREST", extract the principal amount.
+    10. ci_years: If intent is "COMPOUND_INTEREST", extract the duration in years.
+    11. ci_rate: If intent is "COMPOUND_INTEREST", extract the annual interest rate.
+    12. ci_frequency: If intent is "COMPOUND_INTEREST", extract compounding frequency. Default to 1 (yearly) if not specified.
 
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000
@@ -85,6 +94,7 @@ const intentPrompt = ai.definePrompt({
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "SIP of 10000 for 15 years at 10%" -> intent: "SIP", sip_monthly: 10000, sip_years: 15, sip_rate: 10
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
+    - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
     - "What is a mutual fund?" -> intent: "GENERAL"
     `,
 });
@@ -151,7 +161,29 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
+    if (intent?.intent === "COMPOUND_INTEREST" && intent.ci_principal && intent.ci_years && intent.ci_rate) {
+        const frequency = intent.ci_frequency || 1;
+        const futureValue = compoundFutureValue(intent.ci_principal, intent.ci_rate, intent.ci_years, frequency);
+        const totalInterest = futureValue - intent.ci_principal;
+
+        const ciResult: CompoundInterestResult = {
+            principal: intent.ci_principal,
+            annual_rate: intent.ci_rate,
+            years: intent.ci_years,
+            compounding_frequency: frequency,
+            future_value: futureValue,
+            total_interest: totalInterest
+        };
+
+        const explanation = `Investing ₹${intent.ci_principal.toLocaleString('en-IN')} for ${intent.ci_years} years at an annual rate of ${intent.ci_rate}%, compounded ${frequency === 1 ? 'annually' : (frequency === 4 ? 'quarterly' : 'monthly')}, would result in a future value of ₹${futureValue.toLocaleString('en-IN')}.`;
+
+        return {
+            response: explanation,
+            calculationResult: { type: 'compound_interest', data: ciResult }
+        };
+    }
+
     return {
-        response: "I can help with Indian income tax, SIP, and EMI calculations. Please ask me a question like 'How much tax on ₹15L' or 'SIP of 5000 for 10 years'."
+        response: "I can help with Indian income tax, SIP, EMI, and compound interest calculations. Please ask me a question like 'How much tax on ₹15L' or 'SIP of 5000 for 10 years'."
     };
 }
