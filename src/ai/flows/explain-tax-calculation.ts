@@ -46,21 +46,19 @@ const prompt = ai.definePrompt({
   name: 'explainTaxCalculationPrompt',
   input: {schema: ExplainTaxCalculationInputSchema},
   output: {schema: ExplainTaxCalculationOutputSchema},
-  prompt: `You are Pai, an expert Indian personal finance assistant. You are provided with a tax calculation breakdown, total tax amount, and sources. Your task is to provide a human-friendly explanation of the tax calculation, citing the sources used.
+  prompt: `You are Pai, an expert Indian personal finance assistant. You are provided with a tax calculation breakdown and total tax amount. Your task is to provide a human-friendly and CONCISE explanation of the tax calculation.
 
 Tax Calculation for Fiscal Year: {{{fy}}}
 Income: ₹{{{income}}}
-Tax Breakdown: {{#each tax_breakdown}}{{{@key}}}: ₹{{{this}}} {{/each}}
 Total Tax: ₹{{{total_tax}}}
-Sources: {{#each sources}}{{{name}}} - {{{url}}} (Last updated: {{{last_updated}}}) {{/each}}
 
-Provide a clear and concise explanation of how the tax was calculated. Use Markdown for formatting. Structure your response as follows:
+Provide a clear and concise explanation. Use Markdown for formatting. Structure your response EXACTLY as follows:
 
-- Start with a clear heading for the tax regime used.
-- Use bullet points or a simple list to show the applicable tax slabs.
-- Provide a summary of the final tax calculation, showing how the total tax was derived.
-- Include a "Rule of Thumb" or a brief comparative note if relevant.
-- Do not wrap the entire response in a code block.
+- Start with a clear heading for the tax regime used (e.g., "### New Regime (Default)").
+- Use bullet points to show the applicable tax slabs for the income level.
+- Provide a single, final summary sentence stating the total tax.
+- Do NOT include a detailed "Calculation Summary" or step-by-step breakdown. The user can see that in a separate section.
+- Do NOT wrap the entire response in a code block.
 
 Example Format:
 ### New Regime (Default)
@@ -69,16 +67,9 @@ Example Format:
 *   **₹3L – ₹6L:** 5%
 *   ...and so on for other slabs.
 
-**Calculation Summary:**
 For an income of ₹{{{income}}}, your tax is calculated to be **₹{{{total_tax}}}** (including cess).
 
 This is not financial advice.
-
-Return JSON:
-{
-  "explanation": "human friendly explanation in markdown format",
-  "sources": [{"name": "...", "url": "...", "date": "..."}]
-}
 `,
 });
 
