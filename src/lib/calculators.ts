@@ -1,4 +1,4 @@
-import type { TaxCalculationResult } from './types';
+import type { EmiCalculationResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -18,35 +18,33 @@ export function calculateTax(
     breakdown['Standard Deduction'] = -standardDeduction;
 
     if (taxable_income <= 700000) {
-      // Tax is 0 due to rebate under Section 87A
-      tax = 0;
+      tax = 0; // Tax rebate u/s 87A
     } else {
-      // Incomes > ₹7L do not get a rebate. Tax is calculated on slabs from the start.
       let tempTax = 0;
+      if (taxable_income > 300000) {
+         tempTax += Math.min(300000, taxable_income - 300000) * 0.05;
+      }
+      if (taxable_income > 600000) {
+        tempTax += Math.min(300000, taxable_income - 600000) * 0.10;
+      }
+      if (taxable_income > 900000) {
+        tempTax += Math.min(300000, taxable_income - 900000) * 0.15;
+      }
+      if (taxable_income > 1200000) {
+        tempTax += Math.min(300000, taxable_income - 1200000) * 0.20;
+      }
       if (taxable_income > 1500000) {
         tempTax += (taxable_income - 1500000) * 0.30;
       }
-      if (taxable_income > 1200000) {
-        tempTax += (Math.min(taxable_income, 1500000) - 1200000) * 0.20;
-      }
-      if (taxable_income > 900000) {
-        tempTax += (Math.min(taxable_income, 1200000) - 900000) * 0.15;
-      }
-      if (taxable_income > 600000) {
-        tempTax += (Math.min(taxable_income, 900000) - 600000) * 0.10;
-      }
-      if (taxable_income > 300000) {
-        tempTax += (Math.min(taxable_income, 600000) - 300000) * 0.05;
-      }
       tax = tempTax;
     }
+
   } else { // Old Regime
     const totalDeductions = standardDeduction + deductions80C;
     taxable_income = Math.max(0, income - totalDeductions);
     breakdown['Standard Deduction'] = -standardDeduction;
     if (deductions80C > 0) breakdown['80C Deductions'] = -deductions80C;
     
-    // Tax rebate u/s 87A for income up to 5L
     const taxBeforeRebate = (() => {
         let tempTax = 0;
         if (taxable_income > 1000000) tempTax += (taxable_income - 1000000) * 0.30;
@@ -143,22 +141,42 @@ const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 /** --------------- LOANS & CREDIT --------------- **/
 
 /**
- * Calculate EMI
+ * Calculate EMI and other loan details.
  * @param principal principal amount (P)
  * @param annualRate annual nominal rate in percent (e.g., 8.5)
- * @param months total months (n)
- * @returns emi (monthly payment) rounded to 2 decimals
+ * @param years total years for the loan
+ * @returns An object with EMI, total interest, and total payment.
  */
-export function calculateEMI(principal: number, annualRate: number, months: number): number {
-  if (months <= 0) throw new Error("months must be > 0");
-  if (principal <= 0) return 0;
+export function calculateEMI(principal: number, annualRate: number, years: number): EmiCalculationResult {
+  const months = years * 12;
+  if (months <= 0) throw new Error("Loan duration must be positive.");
+  if (principal <= 0) return { principal, annual_rate: annualRate, years, emi: 0, total_interest: 0, total_payment: 0 };
+  
   const monthlyRate = annualRate / 12 / 100;
-  if (monthlyRate === 0) return round2(principal / months);
-  const r = monthlyRate;
-  const n = months;
-  const emi = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
-  return round2(emi);
+  
+  let emi: number;
+  if (monthlyRate === 0) {
+    emi = principal / months;
+  } else {
+    const r = monthlyRate;
+    const n = months;
+    emi = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  }
+  
+  const roundedEmi = round2(emi);
+  const total_payment = round2(roundedEmi * months);
+  const total_interest = round2(total_payment - principal);
+
+  return {
+    principal,
+    annual_rate: annualRate,
+    years,
+    emi: roundedEmi,
+    total_interest,
+    total_payment,
+  };
 }
+
 
 /**
  * Generate amortization table (monthly)
@@ -169,7 +187,7 @@ export function calculateEMI(principal: number, annualRate: number, months: numb
  */
 export function amortizationTable(principal: number, annualRate: number, months: number, startDate?: string): AmortizationResult {
   if (months <= 0) throw new Error("months must be > 0");
-  const emi = calculateEMI(principal, annualRate, months);
+  const emi = calculateEMI(principal, annualRate, months / 12).emi;
   const r = annualRate / 12 / 100;
   let outstanding = principal;
   const schedule: AmortRow[] = [];
@@ -229,7 +247,7 @@ export function prepaymentImpact(principal: number, annualRate: number, months: 
   function simulateWithRecalc(keepEmiFlag: boolean) : AmortizationResult {
     let schedule: AmortRow[] = [];
     let out = principal;
-    let currentEmi = calculateEMI(out, annualRate, months);
+    let currentEmi = calculateEMI(out, annualRate, months / 12).emi;
     let month = 1;
     let totalInt = 0;
     let totalP = 0;
@@ -273,7 +291,7 @@ export function prepaymentImpact(principal: number, annualRate: number, months: 
       if (!keepEmiFlag) {
         const remainingMonths = Math.max(1, months - month);
         if (out > 0 && remainingMonths > 0) {
-          currentEmi = calculateEMI(out, annualRate, remainingMonths);
+          currentEmi = calculateEMI(out, annualRate, remainingMonths / 12).emi;
         }
       } else {
         // if keepEmi true, EMI remains same; loan will finish earlier.
@@ -284,7 +302,7 @@ export function prepaymentImpact(principal: number, annualRate: number, months: 
       schedule,
       totalInterest: round2(totalInt),
       totalPayment: round2(totalP),
-      monthlyEMI: round2(calculateEMI(principal, annualRate, months)),
+      monthlyEMI: round2(calculateEMI(principal, annualRate, months/12).emi),
       originalPrincipal: principal,
       originalMonths: months
     };
@@ -476,3 +494,5 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
+
+    

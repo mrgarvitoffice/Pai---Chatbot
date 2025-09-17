@@ -259,21 +259,9 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     }
 
     if (intent?.intent === "EMI" && intent.emi_principal && intent.emi_years && intent.emi_rate) {
-        const months = intent.emi_years * 12;
-        const emi = calculateEMI(intent.emi_principal, intent.emi_rate, months);
-        const total_payment = emi * months;
-        const total_interest = total_payment - intent.emi_principal;
-
-        const emiResult: EmiCalculationResult = {
-            principal: intent.emi_principal,
-            annual_rate: intent.emi_rate,
-            years: intent.emi_years,
-            emi: emi,
-            total_interest: total_interest,
-            total_payment: total_payment
-        };
-
-        const explanation = `For a loan of ₹${intent.emi_principal.toLocaleString('en-IN')} over ${intent.emi_years} years at ${intent.emi_rate}% interest, your Equated Monthly Installment (EMI) would be ₹${emi.toLocaleString('en-IN')}.`;
+        const emiResult = calculateEMI(intent.emi_principal, intent.emi_rate, intent.emi_years);
+        
+        const explanation = `For a loan of ₹${intent.emi_principal.toLocaleString('en-IN')} over ${intent.emi_years} years at ${intent.emi_rate}% interest, your Equated Monthly Installment (EMI) would be ₹${emiResult.emi.toLocaleString('en-IN')}.`;
 
         return {
             response: explanation,
@@ -387,3 +375,5 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'What is a mutual fund?'."
     };
 }
+
+    

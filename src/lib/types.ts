@@ -109,3 +109,5 @@ export type CalculationResult =
   | { type: 'rd', data: RdCalculationResult }
   | { type: 'savings_ratio', data: SavingsRatioResult }
   | { type: 'dti_ratio', data: DtiResult };
+
+    
