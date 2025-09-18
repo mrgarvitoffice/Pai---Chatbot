@@ -1,4 +1,4 @@
-import type { SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult } from './types';
+import type { SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult, RetirementCorpusResult, TermInsuranceResult } from './types';
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 
 /**
@@ -191,4 +191,43 @@ export function compoundFutureValue(principal: number, annualRate: number, years
   };
 }
 
+/**
+ * Calculates the required retirement corpus.
+ */
+export function calculateRetirementCorpus(
+    { currentAge, retirementAge, monthlyExpenses, inflationRate = 6, lifeExpectancy = 85, preRetirementReturn = 12, postRetirementReturn = 7 } : 
+    { currentAge: number; retirementAge: number; monthlyExpenses: number; inflationRate?: number; lifeExpectancy?: number; preRetirementReturn?: number; postRetirementReturn?: number }
+): RetirementCorpusResult {
+
+    const yearsToRetire = retirementAge - currentAge;
+    const annualExpenses = monthlyExpenses * 12;
     
+    const futureAnnualExpenses = annualExpenses * Math.pow(1 + inflationRate / 100, yearsToRetire);
+    
+    // Using perpetuity formula adjusted for inflation
+    const requiredCorpus = (futureAnnualExpenses * (1 + inflationRate/100)) / ((postRetirementReturn/100) - (inflationRate/100));
+
+    return {
+        requiredCorpus: round2(requiredCorpus),
+        assumptions: {
+            currentAge,
+            retirementAge,
+            monthlyExpenses,
+            inflationRate,
+            lifeExpectancy,
+            preRetirementReturn,
+            postRetirementReturn
+        }
+    };
+}
+
+/**
+ * Calculates a recommended term insurance cover.
+ */
+export function calculateTermInsuranceCover(annualIncome: number): TermInsuranceResult {
+    const recommendedCover = annualIncome * 15; // 15x is a common recommendation
+    return {
+        annualIncome,
+        recommendedCover: round2(recommendedCover)
+    };
+}

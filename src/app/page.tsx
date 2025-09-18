@@ -19,6 +19,9 @@ import { BudgetAllocationResultCard } from '@/components/budget-allocation-resul
 import { FdResultCard } from '@/components/fd-result-card';
 import { RdResultCard } from '@/components/rd-result-card';
 import { ReverseSipResultCard } from '@/components/reverse-sip-result-card';
+import { RetirementResultCard } from '@/components/retirement-result-card';
+import { DtiResultCard } from '@/components/dti-result-card';
+import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -86,6 +89,12 @@ export default function Home() {
         content = <RdResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'reverse_sip') {
         content = <ReverseSipResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'retirement') {
+        content = <RetirementResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'dti') {
+        content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'savings_ratio') {
+        content = <SavingsRatioResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else {
         content = result.response;
       }

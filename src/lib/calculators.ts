@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, EmiCalculationResult, TaxCalculationResult } from './types';
+import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, SavingsRatioResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -143,17 +143,19 @@ export function calculateEMI(principal: number, annualRate: number, years: numbe
 /**
  * Savings ratio: monthlySavings / monthlyIncome
  */
-export function savingsRatio(monthlyIncome: number, monthlySavings: number): number {
-  if (monthlyIncome <= 0) return 0;
-  return round2(monthlySavings / monthlyIncome * 100);
+export function savingsRatio(monthlyIncome: number, monthlySavings: number): SavingsRatioResult {
+  if (monthlyIncome <= 0) return { monthlyIncome, monthlySavings, savingsRatio: 0 };
+  const ratio = round2((monthlySavings / monthlyIncome) * 100);
+  return { monthlyIncome, monthlySavings, savingsRatio: ratio };
 }
 
 /**
  * Debt to Income Ratio (DTI): totalMonthlyDebtPayments / grossMonthlyIncome
  */
-export function debtToIncomeRatio(grossMonthlyIncome: number, totalMonthlyDebtPayments: number): number {
-  if (grossMonthlyIncome <= 0) return 0;
-  return round2(totalMonthlyDebtPayments / grossMonthlyIncome * 100);
+export function debtToIncomeRatio(monthlyIncome: number, monthlyEmi: number): DtiResult {
+  if (monthlyIncome <= 0) return { monthlyIncome, monthlyEmi, dtiRatio: 0 };
+  const ratio = round2((monthlyEmi / monthlyIncome) * 100);
+  return { monthlyIncome, monthlyEmi, dtiRatio: ratio };
 }
 
 /**
@@ -177,5 +179,3 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
-
-    

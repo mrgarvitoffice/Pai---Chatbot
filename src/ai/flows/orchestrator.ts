@@ -12,13 +12,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, budgetAllocation } from '@/lib/calculators';
-import { calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue } from '@/lib/investment-calculators';
+import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio } from '@/lib/calculators';
+import { calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 
@@ -59,6 +59,10 @@ const intentSchema = z.object({
         "BUDGET_CALCULATION",
         "FD_CALCULATION",
         "RD_CALCULATION",
+        "RETIREMENT_CORPUS_CALCULATION",
+        "DTI_CALCULATION",
+        "SAVINGS_RATIO_CALCULATION",
+        "TERM_INSURANCE_CALCULATION",
         "GENERAL_KNOWLEDGE",
         "DYNAMIC_DATA_QUERY"
     ]).describe("The user's intent."),
@@ -81,7 +85,13 @@ const intentSchema = z.object({
     rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
     rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
+    retire_age: z.number().optional().describe("The current age of the user for retirement calculation."),
+    retire_target_age: z.number().optional().describe("The target retirement age."),
+    retire_monthly_expenses: z.number().optional().describe("Current monthly expenses for retirement calculation."),
+    dti_monthly_emi: z.number().optional().describe("Total monthly EMI for DTI calculation."),
+    savings_monthly: z.number().optional().describe("Total monthly savings for savings ratio calculation."),
 });
+
 
 // Production-ready system prompt based on the user's detailed blueprint.
 const generalResponsePrompt = ai.definePrompt({
@@ -125,6 +135,10 @@ const intentPrompt = ai.definePrompt({
     - "BUDGET_CALCULATION": User wants to **calculate** a budget allocation.
     - "FD_CALCULATION": User wants to **calculate** Fixed Deposit returns.
     - "RD_CALCULATION": User wants to **calculate** Recurring Deposit returns.
+    - "RETIREMENT_CORPUS_CALCULATION": User wants to calculate their retirement corpus.
+    - "DTI_CALCULATION": User wants to calculate their debt-to-income ratio.
+    - "SAVINGS_RATIO_CALCULATION": User wants to calculate their savings ratio.
+    - "TERM_INSURANCE_CALCULATION": User wants to know how much term insurance they need.
     - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value. (e.g., "current repo rate", "latest tax slabs for FY 24-25", "HDFC FD rates").
     - "GENERAL_KNOWLEDGE": **DEFAULT**. Use for any other question. (e.g., "What is a mutual fund?", "Explain 80C deductions", "Do I need a Will?").
     
@@ -260,6 +274,46 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         return {
             response: explanation,
             calculationResult: { type: 'rd', data: rdResult }
+        };
+    }
+
+    if (intent?.intent === "RETIREMENT_CORPUS_CALCULATION" && intent.retire_age && intent.retire_target_age && intent.retire_monthly_expenses) {
+        const result = calculateRetirementCorpus({
+            currentAge: intent.retire_age,
+            retirementAge: intent.retire_target_age,
+            monthlyExpenses: intent.retire_monthly_expenses,
+        });
+        const explanation = `To maintain your current lifestyle in retirement, you will need a corpus of approximately ₹${result.requiredCorpus.toLocaleString('en-IN')}. This is based on a set of standard assumptions about inflation and investment returns.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'retirement', data: result }
+        };
+    }
+
+    if (intent?.intent === "DTI_CALCULATION" && intent.income && intent.dti_monthly_emi) {
+        const result = debtToIncomeRatio(intent.income, intent.dti_monthly_emi);
+        const explanation = `Your Debt-to-Income (DTI) ratio is ${result.dtiRatio}%. Lenders generally prefer a DTI ratio below 36-40%.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'dti', data: result }
+        };
+    }
+
+    if (intent?.intent === "SAVINGS_RATIO_CALCULATION" && intent.income && intent.savings_monthly) {
+        const result = savingsRatio(intent.income, intent.savings_monthly);
+        const explanation = `Your current savings ratio is ${result.savingsRatio}%. A healthy savings ratio is typically considered to be 20% or higher.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'savings_ratio', data: result }
+        };
+    }
+
+    if (intent?.intent === "TERM_INSURANCE_CALCULATION" && intent.income) {
+        const result = calculateTermInsuranceCover(intent.income);
+        const explanation = `Based on the rule of thumb of having a life cover of at least 10-15 times your annual income, a suitable term insurance cover for you would be around ₹${result.recommendedCover.toLocaleString('en-IN')}.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'term_insurance', data: result }
         };
     }
 
