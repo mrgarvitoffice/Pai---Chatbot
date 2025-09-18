@@ -14,7 +14,7 @@ const documents: Document[] = [
         id: 'mutual-funds-101',
         sourceName: 'AMFI (Association of Mutual Funds in India)',
         url: 'https://www.amfiindia.com/investor-corner/knowledge-center/what-are-mutual-funds',
-        content: 'A mutual fund is a company that pools money from many investors and invests the money in securities such as stocks, bonds, and short-term debt. The combined holdings of the mutual fund are known as its portfolio. Investors buy shares in mutual funds. Each share represents an investor’s part ownership in the fund and the income it generates. Direct plans have lower expense ratios than Regular plans, leading to higher returns.',
+        content: 'A mutual fund is a company that pools money from many investors and invests the money in securities such as stocks, bonds, and short-term debt. The combined holdings of the mutual fund are known as its portfolio. Investors buy shares in mutual funds. Each share represents an investor’s part ownership in the fund and the income it generates. Direct plans have lower expense ratios than Regular plans, leading to higher returns. For beginners, a good starting point is an Index Fund, such as one that tracks the Nifty 50 or Sensex. SIP (Systematic Investment Plan), STP (Systematic Transfer Plan), and SWP (Systematic Withdrawal Plan) are different methods for investing in or redeeming from mutual funds.',
         keywords: ['mutual fund', 'investment', 'sip', 'nav', 'portfolio', 'securities', 'stp', 'swp', 'direct', 'regular', 'beginner', 'index', 'nifty', 's&p 500']
     },
     {
@@ -35,7 +35,7 @@ const documents: Document[] = [
         id: 'term-insurance-vs-ulip',
         sourceName: 'IRDAI (Insurance Regulatory and Development Authority of India)',
         url: 'https://www.irdai.gov.in/',
-        content: 'Term insurance is a pure life insurance product that offers a large amount of coverage at a low premium. It provides a death benefit to the nominee if the insured person dies during the policy term. ULIPs (Unit Linked Insurance Plans) and Endowment plans are investment-cum-insurance products. They offer a death benefit along with a maturity benefit. For most individuals, a combination of term insurance for protection and mutual funds for wealth creation is a more efficient strategy than buying ULIPs or endowment plans.',
+        content: 'Term insurance is a pure life insurance product that offers a large amount of coverage at a low premium. It provides a death benefit to the nominee if the insured person dies during the policy term. ULIPs (Unit Linked Insurance Plans) and Endowment plans are investment-cum-insurance products. They offer a death benefit along with a maturity benefit. For most individuals, a combination of term insurance for protection and mutual funds for wealth creation is a more efficient strategy than buying ULIPs or endowment plans. A good term insurance cover is generally 10-15 times your annual income.',
         keywords: ['term insurance', 'ulip', 'endowment', 'insurance', 'life insurance', 'investment', 'cover']
     },
     {
