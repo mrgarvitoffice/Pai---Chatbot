@@ -112,12 +112,12 @@ const intentPrompt = ai.definePrompt({
     prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities.
 
     **Intent Hierarchy (Most to Least Specific):**
-    1.  **CALCULATOR**: If the user is explicitly asking for a calculation (e.g., "calculate", "how much tax on X", "what is the EMI for Y"), use a specific calculator intent.
+    1.  **CALCULATOR**: If the user is explicitly asking for a calculation (e.g., "calculate tax on 15L", "how much EMI for 50L", "SIP of 5k for 10 years"), use a specific calculator intent. The query MUST contain numbers and calculation-related keywords.
     2.  **DYNAMIC_DATA_QUERY**: If the user is asking for a specific, current number that changes over time (e.g., "what is the current repo rate?", "latest PPF interest rate", "current NAV of SBI Bluechip").
-    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question (e.g., "What is a mutual fund?", "Explain the new tax regime", "How do I save for retirement?").
+    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question, even if it contains financial terms. (e.g., "What is a mutual fund?", "Explain the new tax regime", "How do I save for retirement?", "How are mutual funds taxed?").
 
     **Intents:**
-    - "TAX_CALCULATION": User wants to **calculate** income tax. Query MUST contain an income figure. (e.g., "tax on 15L").
+    - "TAX_CALCULATION": User wants to **calculate** income tax. Query MUST contain an income figure and words like "tax on".
     - "SIP_CALCULATION": User wants to **calculate** SIP returns. (e.g., "if I invest 5000 a month...").
     - "REVERSE_SIP_CALCULATION": User wants to **calculate** the required monthly SIP for a target.
     - "EMI_CALCULATION": User wants to **calculate** a loan EMI.
@@ -136,6 +136,7 @@ const intentPrompt = ai.definePrompt({
     - "What is PPF?" -> intent: "GENERAL_KNOWLEDGE"
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
+    - "How are mutual funds taxed?" -> intent: "GENERAL_KNOWLEDGE"
     `,
 });
 
@@ -219,19 +220,9 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
     if (intent?.intent === "COMPOUND_INTEREST_CALCULATION" && intent.ci_principal && intent.ci_years && intent.ci_rate) {
         const frequency = intent.ci_frequency || 1;
-        const futureValue = compoundFutureValue(intent.ci_principal, intent.ci_rate, intent.ci_years, frequency);
-        const totalInterest = futureValue - intent.ci_principal;
+        const ciResult = compoundFutureValue(intent.ci_principal, intent.ci_rate, intent.ci_years, frequency);
 
-        const ciResult = {
-            principal: intent.ci_principal,
-            annual_rate: intent.ci_rate,
-            years: intent.ci_years,
-            compounding_frequency: frequency,
-            future_value: futureValue,
-            total_interest: totalInterest
-        };
-
-        const explanation = `Investing ₹${intent.ci_principal.toLocaleString('en-IN')} for ${intent.ci_years} years at an annual rate of ${intent.ci_rate}%, compounded ${frequency === 1 ? 'annually' : (frequency === 4 ? 'quarterly' : 'monthly')}, would result in a future value of ₹${futureValue.toLocaleString('en-IN')}.`;
+        const explanation = `Investing ₹${intent.ci_principal.toLocaleString('en-IN')} for ${intent.ci_years} years at an annual rate of ${intent.ci_rate}%, compounded ${frequency === 1 ? 'annually' : (frequency === 4 ? 'quarterly' : 'monthly')}, would result in a future value of ₹${ciResult.future_value.toLocaleString('en-IN')}.`;
 
         return {
             response: explanation,
