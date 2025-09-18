@@ -20,6 +20,7 @@ import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
 import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
+import { getDynamicData } from '../tools/dynamic-data';
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe('The user\'s message to the chatbot.'),
@@ -49,7 +50,18 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "GENERAL"]).describe("The user's intent."),
+    intent: z.enum([
+        "TAX_CALCULATION",
+        "SIP_CALCULATION",
+        "REVERSE_SIP_CALCULATION",
+        "EMI_CALCULATION",
+        "COMPOUND_INTEREST_CALCULATION",
+        "BUDGET_CALCULATION",
+        "FD_CALCULATION",
+        "RD_CALCULATION",
+        "GENERAL_KNOWLEDGE",
+        "DYNAMIC_DATA_QUERY"
+    ]).describe("The user's intent."),
     income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
@@ -74,19 +86,19 @@ const intentSchema = z.object({
 // Production-ready system prompt based on the user's detailed blueprint.
 const generalResponsePrompt = ai.definePrompt({
     name: 'generalResponsePrompt',
+    tools: [searchKnowledgeBase, getDynamicData],
     prompt: `SYSTEM:
-You are Jarvis, a professional India-first Finance Copilot. For conceptual/evergreen finance questions, use ONLY the Static Rulebook entries provided in the STATIC_RULEBOOK injection. Never invent or assume static rules. If a short_answer exists, prefer it for quick replies. If the question requires dynamic data (rates, NAVs, tax slabs), DO NOT use the static rulebook — instead respond with directive to fetch dynamic data.
-
-STATIC_RULEBOOK is a list of documents with fields: slug, title, short_answer, detailed_markdown, formulas, examples, version, references.
+You are Jarvis, a professional India-first Finance Copilot. Your primary goal is to provide accurate and helpful answers. You have access to two types of information:
+1. STATIC_RULEBOOK: A database of evergreen financial rules, principles, and FAQs. Use this for conceptual questions.
+2. DYNAMIC_CONTEXT: A database of data that changes over time, like interest rates, tax slabs, and market data. Use this for questions about current numbers.
 
 Rules:
-1. If user intent is a conceptual/FAQ question (e.g., "What is SIP?", "How much emergency fund?"), pick the best matching rulebook slug and answer using short_answer + 2-3 bullets from detailed_markdown.
-2. Cite the rulebook slug and version in the "sources" field of the response JSON.
-3. If user asks for current figures (rates, NAVs, slabs), reply with: "DYNAMIC_DATA_REQUIRED" and do not attempt to guess.
-4. Output must be a clear, conversational, and helpful text response based on the provided STATIC_RULEBOOK.
-
-STATIC_RULEBOOK:
-{{{STATIC_RULEBOOK}}}
+1.  **Analyze the user's query to determine if it's a conceptual question or a request for current data.**
+2.  For conceptual/FAQ questions (e.g., "What is SIP?", "How should I choose a mutual fund?"), use the 'searchKnowledgeBase' tool. If the tool returns relevant entries, base your answer on the provided 'short_answer' and 'excerpt'. Always cite the 'slug' and 'version' as a source.
+3.  For questions about current figures (e.g., "What is the current repo rate?", "Latest tax slabs?"), use the 'getDynamicData' tool. Always state the value and the 'last_updated' date from the tool's response.
+4.  **CRITICAL FALLBACK**: If the tools return no relevant information, use your own general knowledge to provide the best possible answer. DO NOT MAKE UP NUMBERS OR SPECIFIC RULES. State that you are providing a general answer.
+5.  If you use a tool, extract the source information (slug, version, last_updated) and include it in your response.
+6.  Maintain a conversational, professional, and helpful tone. Never give a blank or empty reply.
 
 USER:
 {{{query}}}
@@ -97,38 +109,33 @@ const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: intentSchema },
-    prompt: `You are an expert at analyzing user queries about Indian personal finance, including queries in English, Hindi, and Hinglish. Your task is to determine the user's intent and extract relevant entities.
+    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities.
 
-    **IMPORTANT RULE**: Default to "GENERAL" for any informational question, even if it contains financial terms. Only use a calculator intent (TAX, SIP, EMI, etc.) if the user is explicitly asking for a calculation.
+    **Intent Hierarchy (Most to Least Specific):**
+    1.  **CALCULATOR**: If the user is explicitly asking for a calculation (e.g., "calculate", "how much tax on X", "what is the EMI for Y"), use a specific calculator intent.
+    2.  **DYNAMIC_DATA_QUERY**: If the user is asking for a specific, current number that changes over time (e.g., "what is the current repo rate?", "latest PPF interest rate", "current NAV of SBI Bluechip").
+    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question (e.g., "What is a mutual fund?", "Explain the new tax regime", "How do I save for retirement?").
 
-    Analyze the query and determine the following:
-    1.  intent:
-        - "TAX": User wants to **calculate** income tax. Query MUST contain an income figure. (e.g., "tax on 15L", "12 lakh pe kitna tax").
-        - "SIP": User wants to **calculate** returns for a Systematic Investment Plan. (e.g. "if I invest 5000 a month...").
-        - "REVERSE_SIP": User has a target amount and wants to **calculate** the required monthly SIP.
-        - "EMI": User wants to **calculate** a loan EMI.
-        - "COMPOUND_INTEREST": User wants to **calculate** compound interest or lump sum growth.
-        - "BUDGET": User wants to **calculate** a budget allocation for a given income.
-        - "FD": User wants to **calculate** Fixed Deposit returns.
-        - "RD": User wants to **calculate** Recurring Deposit returns.
-        - "GENERAL": **DEFAULT**. Use for any other question, especially informational ones. (e.g. "What is a mutual fund?", "Explain the new tax regime", "How are mutual funds taxed?", "Do I need a Will?").
-    2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
-    3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
+    **Intents:**
+    - "TAX_CALCULATION": User wants to **calculate** income tax. Query MUST contain an income figure. (e.g., "tax on 15L").
+    - "SIP_CALCULATION": User wants to **calculate** SIP returns. (e.g., "if I invest 5000 a month...").
+    - "REVERSE_SIP_CALCULATION": User wants to **calculate** the required monthly SIP for a target.
+    - "EMI_CALCULATION": User wants to **calculate** a loan EMI.
+    - "COMPOUND_INTEREST_CALCULATION": User wants to **calculate** compound interest.
+    - "BUDGET_CALCULATION": User wants to **calculate** a budget allocation.
+    - "FD_CALCULATION": User wants to **calculate** Fixed Deposit returns.
+    - "RD_CALCULATION": User wants to **calculate** Recurring Deposit returns.
+    - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value. (e.g., "current repo rate", "latest tax slabs for FY 24-25", "HDFC FD rates").
+    - "GENERAL_KNOWLEDGE": **DEFAULT**. Use for any other question. (e.g., "What is a mutual fund?", "Explain 80C deductions", "Do I need a Will?").
     
     Examples:
-    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
-    - "15L pe kitna tax lagega?" -> intent: "TAX", income: 1500000, regime: 'new'
-    - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
-    - "Explain the new tax regime" -> intent: "GENERAL"
-    - "How are mutual fund gains taxed?" -> intent: "GENERAL"
-    - "What deductions can I claim under Section 80C?" -> intent: "GENERAL"
-    - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
-    - "How much should I invest monthly to get ₹1 crore in 25 years at 10%?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
-    - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
-    - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
-    - "FD of 50000 for 5 years at 7%" -> intent: "FD", fd_principal: 50000, fd_years: 5, fd_rate: 7
-    - "What is a mutual fund?" -> intent: "GENERAL"
-    - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
+    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000
+    - "What are the latest tax slabs for the new regime?" -> intent: "DYNAMIC_DATA_QUERY"
+    - "Explain the new tax regime" -> intent: "GENERAL_KNOWLEDGE"
+    - "What is the current PPF interest rate?" -> intent: "DYNAMIC_DATA_QUERY"
+    - "What is PPF?" -> intent: "GENERAL_KNOWLEDGE"
+    - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
+    - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
     `,
 });
 
@@ -136,7 +143,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     const intentResult = await intentPrompt(input);
     const intent = intentResult.output;
 
-    if (intent?.intent === "TAX" && intent.income) {
+    if (intent?.intent === "TAX_CALCULATION" && intent.income) {
         const fy = '2024-25';
         const regime = intent.regime || 'new';
 
@@ -175,7 +182,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
     }
 
-    if (intent?.intent === "SIP" && intent.sip_monthly && intent.sip_years) {
+    if (intent?.intent === "SIP_CALCULATION" && intent.sip_monthly && intent.sip_years) {
         const rate = intent.sip_rate || 12; // Default rate if not specified
         const sipResult = calculateSip(intent.sip_monthly, intent.sip_years, rate);
         
@@ -187,7 +194,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "REVERSE_SIP" && intent.sip_target && intent.sip_years) {
+    if (intent?.intent === "REVERSE_SIP_CALCULATION" && intent.sip_target && intent.sip_years) {
         const rate = intent.sip_rate || 12;
         const reverseSipResult = calculateReverseSip(intent.sip_target, intent.sip_years, rate);
         
@@ -199,7 +206,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "EMI" && intent.emi_principal && intent.emi_years && intent.emi_rate) {
+    if (intent?.intent === "EMI_CALCULATION" && intent.emi_principal && intent.emi_years && intent.emi_rate) {
         const emiResult = calculateEMI(intent.emi_principal, intent.emi_rate, intent.emi_years);
         
         const explanation = `For a loan of ₹${intent.emi_principal.toLocaleString('en-IN')} over ${intent.emi_years} years at ${intent.emi_rate}% interest, your Equated Monthly Installment (EMI) would be ₹${emiResult.emi.toLocaleString('en-IN')}.`;
@@ -210,7 +217,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "COMPOUND_INTEREST" && intent.ci_principal && intent.ci_years && intent.ci_rate) {
+    if (intent?.intent === "COMPOUND_INTEREST_CALCULATION" && intent.ci_principal && intent.ci_years && intent.ci_rate) {
         const frequency = intent.ci_frequency || 1;
         const futureValue = compoundFutureValue(intent.ci_principal, intent.ci_rate, intent.ci_years, frequency);
         const totalInterest = futureValue - intent.ci_principal;
@@ -232,7 +239,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "BUDGET" && intent.income) {
+    if (intent?.intent === "BUDGET_CALCULATION" && intent.income) {
         const budgetResult = budgetAllocation(intent.income);
         
         const explanation = `Here is a suggested budget allocation for your monthly income of ₹${intent.income.toLocaleString('en-IN')} based on the 50/30/20 rule. This is a guideline to help you manage your finances.`;
@@ -243,7 +250,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "FD" && intent.fd_principal && intent.fd_years && intent.fd_rate) {
+    if (intent?.intent === "FD_CALCULATION" && intent.fd_principal && intent.fd_years && intent.fd_rate) {
         const fdResult = calculateFd(intent.fd_principal, intent.fd_rate, intent.fd_years, 4); // Default quarterly compounding
         
         const explanation = `A Fixed Deposit of ₹${intent.fd_principal.toLocaleString('en-IN')} for ${intent.fd_years} years at an annual rate of ${intent.fd_rate}% would give you a maturity value of ₹${fdResult.future_value.toLocaleString('en-IN')}.`;
@@ -254,7 +261,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
     
-    if (intent?.intent === "RD" && intent.rd_monthly && intent.rd_months && intent.rd_rate) {
+    if (intent?.intent === "RD_CALCULATION" && intent.rd_monthly && intent.rd_months && intent.rd_rate) {
         const rdResult = calculateRd(intent.rd_monthly, intent.rd_rate, intent.rd_months);
         
         const explanation = `A monthly Recurring Deposit of ₹${intent.rd_monthly.toLocaleString('en-IN')} for ${intent.rd_months} months at an annual rate of ${intent.rd_rate}% would result in a maturity value of ₹${rdResult.future_value.toLocaleString('en-IN')}.`;
@@ -265,36 +272,33 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    // This is the default path for GENERAL questions
-    // Implements the "Retrieval & Injection Strategy" from the blueprint
-    
-    // 1. Retrieve relevant rulebook entries
-    const rulebookEntries = await searchKnowledgeBase({ query: input.query });
-
-    // 2. Build the injection string
-    const staticInjection = rulebookEntries.length > 0
-      ? JSON.stringify(rulebookEntries.map(d => ({
-          slug: d.slug,
-          version: d.version,
-          short_answer: d.short_answer,
-          // Extracting a small excerpt to save tokens, as per blueprint
-          excerpt: d.detailed_markdown.split('\n').slice(0, 5).join('\n')
-        })), null, 2)
-      : "No relevant rulebook entries found.";
-
-    // 3. Call the LLM with the injected context
-    const result = await generalResponsePrompt({ 
-        STATIC_RULEBOOK: staticInjection,
-        query: input.query 
-    });
-    
+    // This is the default path for GENERAL and DYNAMIC questions
+    const result = await generalResponsePrompt(input);
     const outputText = result.output as string;
     
-    const responseSources = rulebookEntries.map(doc => ({
-        name: `${doc.slug} (v${doc.version})`,
-        url: doc.references[0]?.url || '#',
-        last_updated: doc.last_updated,
-    }));
+    // Attempt to extract sources from tool calls if they exist
+    let responseSources: OrchestratorOutput['sources'] = [];
+    if (result.references) {
+        for (const ref of result.references) {
+            const toolOutput = ref.output;
+            if (ref.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
+                 responseSources = toolOutput.map(doc => ({
+                    name: `${doc.slug} (v${doc.version})`,
+                    url: doc.references?.[0]?.url || '#',
+                    last_updated: doc.last_updated,
+                }));
+                break;
+            }
+             if (ref.toolRequest.name === 'getDynamicData' && toolOutput) {
+                responseSources = [{
+                    name: `Source: ${toolOutput.source}`,
+                    url: '#',
+                    last_updated: toolOutput.last_updated,
+                }];
+                break;
+            }
+        }
+    }
 
     return {
         response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
