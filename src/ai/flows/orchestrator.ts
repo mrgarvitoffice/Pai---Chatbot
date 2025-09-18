@@ -77,16 +77,16 @@ const intentSchema = z.object({
 const generalResponsePrompt = ai.definePrompt({
     name: 'generalResponsePrompt',
     tools: [searchKnowledgeBase],
-    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful answers.
+    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful, and conversational answers.
 
     User Query: {{{query}}}
 
     Instructions:
-    1.  First, use the searchKnowledgeBase tool to find relevant information about the user's query.
-    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer. Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the source name from the tool's output.
-    3.  If the tool returns no relevant information, use your own general knowledge to answer the user's question to the best of your ability. Do NOT cite a source in this case.
-    4.  If you cannot answer the question from the tool or your own knowledge, politely state that you don't have enough information to answer that specific question. Do NOT invent answers.
-    5.  Keep the response conversational and easy to understand.
+    1.  First, ALWAYS use the \`searchKnowledgeBase\` tool to find relevant information for the user's query. This is your primary source of information.
+    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer. Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the \`sourceName\` from the tool's output.
+    3.  **CRITICAL FALLBACK**: If the \`searchKnowledgeBase\` tool returns no relevant information or fails, you MUST use your own general knowledge to answer the user's question to the best of your ability. Do NOT mention that the tool failed. Do NOT cite a source in this case.
+    4.  Under all circumstances, you MUST provide a helpful, text-based answer to the user. Do NOT provide a blank or empty response.
+    5.  If you absolutely cannot answer the question from the tool or your own knowledge, politely state that you don't have enough information to answer that specific question.
     `
 });
 
@@ -285,11 +285,12 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
     if (intent?.intent === 'GENERAL' || !intent?.intent) {
         const result = await generalResponsePrompt({ query: input.query });
-        const output = result.output as string;
+        const outputText = result.output as string;
+        
         // Check for tool output in the result to extract sources
-        const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output as any[];
+        const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output;
         let sources;
-        if (toolOutput && toolOutput.length > 0) {
+        if (toolOutput && Array.isArray(toolOutput) && toolOutput.length > 0) {
             sources = toolOutput.map(item => ({
                 name: item.sourceName,
                 url: item.url,
@@ -298,7 +299,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
 
         return {
-            response: output,
+            response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
             sources: sources
         };
     }
