@@ -77,15 +77,15 @@ const intentSchema = z.object({
 const generalResponsePrompt = ai.definePrompt({
     name: 'generalResponsePrompt',
     tools: [searchKnowledgeBase],
-    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful answers based on the information provided by the searchKnowledgeBase tool.
+    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful answers.
 
     User Query: {{{query}}}
 
     Instructions:
-    1.  Use the searchKnowledgeBase tool to find relevant information about the user's query.
-    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer.
-    3.  Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the source name from the tool's output.
-    4.  If the tool returns no relevant information or you cannot answer based on the provided context, politely state that you don't have enough information to answer that specific question. Do NOT invent answers.
+    1.  First, use the searchKnowledgeBase tool to find relevant information about the user's query.
+    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer. Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the source name from the tool's output.
+    3.  If the tool returns no relevant information, use your own general knowledge to answer the user's question to the best of your ability. Do NOT cite a source in this case.
+    4.  If you cannot answer the question from the tool or your own knowledge, politely state that you don't have enough information to answer that specific question. Do NOT invent answers.
     5.  Keep the response conversational and easy to understand.
     `
 });
@@ -100,7 +100,7 @@ const intentPrompt = ai.definePrompt({
 
     Analyze the query and determine the following:
     1.  intent:
-        - "TAX": Calculating Indian income tax. Also for questions about tax regimes, deductions (80C, 80D), HRA, and how investments are taxed.
+        - "TAX": Use for queries that are clearly asking to **calculate** income tax and include a number (e.g., "tax on 15L", "12 lakh pe kitna tax").
         - "SIP": Calculating returns for a Systematic Investment Plan.
         - "REVERSE_SIP": User has a target amount and wants to know the required monthly SIP.
         - "EMI": Calculating a loan EMI.
@@ -109,7 +109,7 @@ const intentPrompt = ai.definePrompt({
         - "FD": Fixed Deposit calculation.
         - "RD": Recurring Deposit calculation.
         - "RETIREMENT_CORPUS": Calculating the total amount needed for retirement. Look for phrases like "how much do I need to retire", "retirement corpus", "retire at 60".
-        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?", "Is term insurance better than ULIP?").
+        - "GENERAL": Use for any other question, especially informational ones even if they contain financial terms. Examples: "What is a mutual fund?", "Explain the new tax regime", "How are mutual funds taxed?", "Do I need a Will?".
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
     
@@ -117,6 +117,7 @@ const intentPrompt = ai.definePrompt({
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "15L pe kitna tax lagega?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
+    - "Explain the new tax regime" -> intent: "GENERAL"
     - "How are mutual fund gains taxed?" -> intent: "GENERAL"
     - "What deductions can I claim under Section 80C?" -> intent: "GENERAL"
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
@@ -282,10 +283,23 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === 'GENERAL') {
+    if (intent?.intent === 'GENERAL' || !intent?.intent) {
         const result = await generalResponsePrompt({ query: input.query });
+        const output = result.output as string;
+        // Check for tool output in the result to extract sources
+        const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output as any[];
+        let sources;
+        if (toolOutput && toolOutput.length > 0) {
+            sources = toolOutput.map(item => ({
+                name: item.sourceName,
+                url: item.url,
+                last_updated: '', // The tool output doesn't provide this
+            }));
+        }
+
         return {
-            response: result.output as string,
+            response: output,
+            sources: sources
         };
     }
 
