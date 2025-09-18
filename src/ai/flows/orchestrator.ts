@@ -323,7 +323,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         const llmResponse = await generalResponsePrompt(input);
         const response = llmResponse.output;
 
-        if (!response) {
+        if (!response || !response.response) {
             return {
                 response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
             };
@@ -331,28 +331,30 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
         let responseSources: OrchestratorOutput['sources'] = [];
         const references = llmResponse.references;
-        for (const part of references) {
-            const toolOutput = part.output;
-            if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
-                responseSources = toolOutput.map(doc => ({
-                    name: `${doc.slug} (v${doc.version})`,
-                    url: doc.references?.[0]?.url || '#',
-                    last_updated: doc.last_updated,
-                }));
-                break;
-            }
-            if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
-                responseSources = [{
-                    name: `Source: ${toolOutput.source}`,
-                    url: '#',
-                    last_updated: toolOutput.last_updated,
-                }];
-                break;
+        if (references) {
+            for (const part of references) {
+                const toolOutput = part.output;
+                if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
+                    responseSources = toolOutput.map(doc => ({
+                        name: `${doc.slug} (v${doc.version})`,
+                        url: doc.references?.[0]?.url || '#',
+                        last_updated: doc.last_updated,
+                    }));
+                    break;
+                }
+                if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
+                    responseSources = [{
+                        name: `Source: ${toolOutput.source}`,
+                        url: '#',
+                        last_updated: toolOutput.last_updated,
+                    }];
+                    break;
+                }
             }
         }
-
+        
         return {
-            response: response.response || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
+            response: response.response,
             sources: responseSources.length > 0 ? responseSources : undefined,
         };
     } catch (e) {
