@@ -95,8 +95,8 @@ const generalResponsePrompt = ai.definePrompt({
 
     Instructions:
     1.  Use the searchKnowledgeBase tool to find relevant information about the user's query.
-    2.  If the tool returns relevant information, use it to construct a clear and concise answer.
-    3.  ALWAYS cite your sources by mentioning the source name and URL from the tool's output.
+    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer.
+    3.  Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the source name from the tool's output.
     4.  If the tool returns no relevant information or you cannot answer based on the provided context, politely state that you don't have enough information to answer that specific question. Do NOT invent answers.
     5.  Keep the response conversational and easy to understand.
     `
@@ -112,9 +112,7 @@ const intentPrompt = ai.definePrompt({
 
     Analyze the query and determine the following:
     1.  intent:
-        - "TAX": Calculating Indian income tax.
-        - "HRA": Calculating HRA exemption.
-        - "80C_PLANNING": User wants to know how much to invest in 80C.
+        - "TAX": Calculating Indian income tax. Also for questions about tax regimes, deductions (80C, 80D), HRA, and how investments are taxed.
         - "SIP": Calculating returns for a Systematic Investment Plan.
         - "REVERSE_SIP": User has a target amount and wants to know the required monthly SIP.
         - "EMI": Calculating a loan EMI.
@@ -127,36 +125,20 @@ const intentPrompt = ai.definePrompt({
         - "CAGR": Calculating Compound Annual Growth Rate.
         - "REAL_RETURN": Calculating inflation-adjusted return.
         - "RETIREMENT_CORPUS": Calculating how much money is needed for retirement.
-        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?").
+        - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?", "Is term insurance better than ULIP?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
-    4. HRA details (monthly_rent, metro_city, basic_salary): Extract for HRA intent. If basic salary is not given, assume it's 50% of total income.
-    5. 80C investment: Extract if the intent is 80C planning.
     
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "15L pe kitna tax lagega?" -> intent: "TAX", income: 1500000, regime: 'new'
-    - "₹15 लाख पर कितना टैक्स लगेगा?" -> intent: "TAX", income: 1500000, regime: 'new'
     - "compare tax on 12 lakh for old vs new regime" -> intent: "TAX", income: 1200000, regime: 'both'
-    - "12 lakh par old aur new regime me tax compare karo" -> intent: "TAX", income: 1200000, regime: 'both'
-    - "HRA exemption on 8L salary with 20k monthly rent" -> intent: "HRA", income: 800000, monthly_rent: 20000
-    - "How much should I invest in 80C if I earn 10L" -> intent: "80C_PLANNING", income: 1000000
+    - "How are mutual fund gains taxed?" -> intent: "GENERAL"
+    - "What deductions can I claim under Section 80C?" -> intent: "GENERAL"
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
-    - "Agar main 10 saal ke liye 5000 mahine ka SIP karu to kitna milega?" -> intent: "SIP", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "How much should I invest monthly to get ₹1 crore in 25 years at 10%?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
-    - "1 crore paane ke liye 25 saal tak kitna invest karna padega?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
-    - "monthly sip to reach ₹3 crore in 35 years at 12%" -> intent: "REVERSE_SIP", sip_target: 30000000, sip_years: 35, sip_rate: 12
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
-    - "50 lakh home loan ka EMI kitna hoga 20 saal ke liye?" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
-    - "Distribute my 80000 salary with 50-30-20 rule" -> intent: "BUDGET", income: 80000
-    - "FD of 1 lakh for 5 years at 7%" -> intent: "FD", fd_principal: 100000, fd_years: 5, fd_rate: 7
-    - "RD of 2000 for 24 months at 6.5%" -> intent: "RD", rd_monthly: 2000, rd_months: 24, rd_rate: 6.5
-    - "My income is ₹1 lakh, savings ₹25k — savings ratio?" -> intent: "SAVINGS_RATIO", income: 100000, savings_monthly: 25000
-    - "My EMI is ₹30k on ₹1 lakh income — what is my DTI ratio?" -> intent: "DTI_RATIO", income: 100000, dti_emi: 30000
-    - "Is 35% DTI safe or risky?" -> intent: "DTI_RATIO", dti_ratio_value: 35
-    - "What is CAGR if investment grew from ₹1 lakh to ₹2 lakh in 5 years?" -> intent: "CAGR", cagr_start_value: 100000, cagr_end_value: 200000, cagr_years: 5
-    - "real return if mutual fund gives 14% and inflation is 6%" -> intent: "REAL_RETURN", real_return_nominal: 14, real_return_inflation: 6
     - "How much do I need to retire? I am 30 and want to retire at 60. My expenses are 50k a month" -> intent: "RETIREMENT_CORPUS", current_age: 30, retirement_age: 60, monthly_expenses: 50000
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
@@ -404,3 +386,5 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'What is a mutual fund?'."
     };
 }
+
+    
