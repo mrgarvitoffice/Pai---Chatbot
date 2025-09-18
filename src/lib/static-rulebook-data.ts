@@ -107,5 +107,22 @@ export const documents: RulebookDocument[] = [
         "references": [{ "name": "Standard financial mathematics formulas" }],
         "locale": "en-IN",
         "read_time_seconds": 90
+    },
+    {
+        "slug": "tax-regime-explainer",
+        "title": "Explanation of New vs. Old Tax Regimes",
+        "category": "Tax",
+        "tags": ["tax", "tax-regime", "new-regime", "old-regime", "deductions", "80c"],
+        "short_answer": "The New Tax Regime offers lower tax rates but removes most deductions, making it simpler. The Old Tax Regime has higher rates but allows various deductions like 80C, HRA, and home loan interest.",
+        "detailed_markdown": "## Comparing the New and Old Tax Regimes\n\nIndia offers two tax regimes for individuals to choose from each financial year. The best choice depends on your income and the deductions you are eligible to claim.\n\n### 🧾 New Tax Regime (Default)\nThis is the default regime since FY 2023-24. It is designed for simplicity.\n\n- **Lower Tax Slabs**: The tax rates are generally lower across different income brackets compared to the old regime.\n- **No Major Deductions**: Most common deductions and exemptions are not allowed. This includes Section 80C (PPF, ELSS, EPF), Section 80D (Health Insurance), HRA, and home loan interest on self-occupied property.\n- **Standard Deduction**: A standard deduction of ₹50,000 is available for salaried individuals.\n- **Best For**: Individuals with few investments or deductions to claim. It simplifies tax filing significantly.\n\n### 🧾 Old Tax Regime (Opt-in)\nYou can choose to opt into this regime if it is more beneficial for you.\n\n- **Higher Tax Slabs**: The tax rates are higher compared to the new regime.\n- **Allows Deductions**: You can claim over 70 deductions and exemptions to reduce your taxable income. Key ones include:\n  - **Section 80C**: Up to ₹1.5 Lakh (PPF, ELSS, EPF, Life Insurance, etc.)\n  - **Section 80D**: Health insurance premiums.\n  - **HRA**: House Rent Allowance.\n  - **Home Loan**: Interest on home loan.\n  - **NPS**: Contribution to National Pension System.\n- **Best For**: Individuals who make significant use of tax-saving investment and expenditure options. If your total deductions are high (typically over ₹2.5 - ₹3.75 Lakhs), this regime is often more tax-efficient.",
+        "author": "System",
+        "approver": "System",
+        "version": "1.1",
+        "status": "published",
+        "created_at": "2024-09-01T10:00:00Z",
+        "last_updated": "2024-09-01T10:00:00Z",
+        "references": [{ "name": "Income Tax Department of India" }],
+        "locale": "en-IN",
+        "read_time_seconds": 150
       }
 ];
