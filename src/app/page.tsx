@@ -22,6 +22,7 @@ import { ReverseSipResultCard } from '@/components/reverse-sip-result-card';
 import { RetirementResultCard } from '@/components/retirement-result-card';
 import { DtiResultCard } from '@/components/dti-result-card';
 import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
+import { PortfolioAllocationResultCard } from '@/components/portfolio-allocation-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -95,6 +96,8 @@ export default function Home() {
         content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'savings_ratio') {
         content = <SavingsRatioResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'portfolio_allocation') {
+        content = <PortfolioAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else {
         content = result.response;
       }

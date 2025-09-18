@@ -12,13 +12,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio } from '@/lib/calculators';
+import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation } from '@/lib/calculators';
 import { calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult, TermInsuranceResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult, TermInsuranceResult, PortfolioAllocationResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 
@@ -63,6 +63,7 @@ const intentSchema = z.object({
         "DTI_CALCULATION",
         "SAVINGS_RATIO_CALCULATION",
         "TERM_INSURANCE_CALCULATION",
+        "PORTFOLIO_ALLOCATION",
         "GENERAL_KNOWLEDGE",
         "DYNAMIC_DATA_QUERY"
     ]).describe("The user's intent."),
@@ -90,6 +91,8 @@ const intentSchema = z.object({
     retire_monthly_expenses: z.number().optional().describe("Current monthly expenses for retirement calculation."),
     dti_monthly_emi: z.number().optional().describe("Total monthly EMI for DTI calculation."),
     savings_monthly: z.number().optional().describe("Total monthly savings for savings ratio calculation."),
+    age: z.number().optional().describe("The user's current age for portfolio allocation."),
+    risk_appetite: z.enum(['low', 'medium', 'high']).optional().describe("The user's risk appetite (low, medium, or high)."),
 });
 
 
@@ -123,33 +126,39 @@ const intentPrompt = ai.definePrompt({
     output: { schema: intentSchema },
     prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities.
 
+    **CRITICAL: Distinguish between calculation requests and general knowledge.**
+    - If the user asks "how should I...", "what is the best way to...", "explain...", or asks a conceptual question, it is **GENERAL_KNOWLEDGE**.
+    - Only use a calculator intent when specific numbers are provided AND a calculation is explicitly or implicitly requested.
+
     **Intent Hierarchy (Most to Least Specific):**
-    1.  **CALCULATOR**: If the user is explicitly asking for a calculation (e.g., "calculate tax on 15L", "how much EMI for 50L", "SIP of 5k for 10 years"), use a specific calculator intent. The query MUST contain numbers and calculation-related keywords.
+    1.  **CALCULATOR**: If the user is explicitly asking for a calculation and provides numbers. (e.g., "calculate tax on 15L", "how much EMI for 50L", "SIP of 5k for 10 years").
     2.  **DYNAMIC_DATA_QUERY**: If the user is asking for a specific, current number that changes over time (e.g., "what is the current repo rate?", "latest PPF interest rate", "current NAV of SBI Bluechip").
-    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question, even if it contains financial terms. (e.g., "What is a mutual fund?", "Explain the new tax regime", "How do I save for retirement?", "How are mutual funds taxed?").
+    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question.
 
     **Intents:**
-    - "TAX_CALCULATION": User wants to **calculate** income tax. Query MUST contain an income figure and words like "tax on".
-    - "SIP_CALCULATION": User wants to **calculate** SIP returns. (e.g., "if I invest 5000 a month...").
-    - "REVERSE_SIP_CALCULATION": User wants to **calculate** the required monthly SIP for a target.
-    - "EMI_CALCULATION": User wants to **calculate** a loan EMI.
-    - "COMPOUND_INTEREST_CALCULATION": User wants to **calculate** compound interest.
-    - "BUDGET_CALCULATION": User wants to **calculate** a budget allocation.
-    - "FD_CALCULATION": User wants to **calculate** Fixed Deposit returns.
-    - "RD_CALCULATION": User wants to **calculate** Recurring Deposit returns.
+    - "TAX_CALCULATION": User wants to calculate income tax. Query MUST contain an income figure.
+    - "SIP_CALCULATION": User wants to calculate SIP returns.
+    - "REVERSE_SIP_CALCULATION": User wants to calculate the required monthly SIP for a target.
+    - "EMI_CALCULATION": User wants to calculate a loan EMI.
+    - "COMPOUND_INTEREST_CALCULATION": User wants to calculate compound interest.
+    - "BUDGET_CALCULATION": User wants to calculate a budget allocation.
+    - "FD_CALCULATION": User wants to calculate Fixed Deposit returns.
+    - "RD_CALCULATION": User wants to calculate Recurring Deposit returns.
     - "RETIREMENT_CORPUS_CALCULATION": User wants to calculate their retirement corpus.
     - "DTI_CALCULATION": User wants to calculate their debt-to-income ratio.
     - "SAVINGS_RATIO_CALCULATION": User wants to calculate their savings ratio.
     - "TERM_INSURANCE_CALCULATION": User wants to know how much term insurance they need.
-    - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value. (e.g., "current repo rate", "latest tax slabs for FY 24-25", "HDFC FD rates").
-    - "GENERAL_KNOWLEDGE": **DEFAULT**. Use for any other question. (e.g., "What is a mutual fund?", "Explain 80C deductions", "Do I need a Will?").
+    - "PORTFOLIO_ALLOCATION": User wants a recommended portfolio/asset allocation based on age and risk.
+    - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value.
+    - "GENERAL_KNOWLEDGE": **DEFAULT**. Use for any other question.
     
     Examples:
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000
+    - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
+    - "How should I split my money between equity and debt?" -> intent: "GENERAL_KNOWLEDGE"
+    - "What is the best way to save for retirement?" -> intent: "GENERAL_KNOWLEDGE"
     - "What are the latest tax slabs for the new regime?" -> intent: "DYNAMIC_DATA_QUERY"
     - "Explain the new tax regime" -> intent: "GENERAL_KNOWLEDGE"
-    - "What is the current PPF interest rate?" -> intent: "DYNAMIC_DATA_QUERY"
-    - "What is PPF?" -> intent: "GENERAL_KNOWLEDGE"
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
     - "How are mutual funds taxed?" -> intent: "GENERAL_KNOWLEDGE"
@@ -197,6 +206,15 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
                 calculationResult: { type: 'tax', data: calculationResult }
             };
         }
+    }
+    
+    if (intent?.intent === "PORTFOLIO_ALLOCATION" && intent.age && intent.risk_appetite) {
+        const allocationResult = calculatePortfolioAllocation(intent.age, intent.risk_appetite);
+        const explanation = `Based on your age of ${intent.age} and a '${intent.risk_appetite}' risk appetite, here is a suggested asset allocation. This is a guideline based on standard financial principles.`;
+        return {
+            response: explanation,
+            calculationResult: { type: 'portfolio_allocation', data: allocationResult }
+        };
     }
 
     if (intent?.intent === "SIP_CALCULATION" && intent.sip_monthly && intent.sip_years) {
@@ -324,6 +342,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         const response = llmResponse.output;
 
         if (!response || !response.response) {
+            // Fallback if the model returns an empty response for some reason
             return {
                 response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
             };

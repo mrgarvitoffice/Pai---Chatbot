@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, SavingsRatioResult, TaxCalculationResult } from './types';
+import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, PortfolioAllocationResult, SavingsRatioResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -177,5 +177,48 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     needs,
     wants,
     savings
+  };
+}
+
+/**
+ * Calculates a recommended portfolio allocation based on age and risk appetite.
+ * @param age The user's current age.
+ * @param riskAppetite The user's risk appetite ('low', 'medium', 'high').
+ * @returns An object with the recommended allocation percentages.
+ */
+export function calculatePortfolioAllocation(age: number, riskAppetite: 'low' | 'medium' | 'high'): PortfolioAllocationResult {
+  // Start with the '100 - age' rule for a baseline equity allocation
+  let baseEquity = Math.max(20, 100 - age);
+
+  // Adjust equity based on risk appetite
+  let equityPct: number;
+  switch (riskAppetite) {
+    case 'low':
+      equityPct = Math.max(20, baseEquity - 20);
+      break;
+    case 'high':
+      equityPct = Math.min(90, baseEquity + 15);
+      break;
+    case 'medium':
+    default:
+      equityPct = baseEquity;
+      break;
+  }
+  
+  // Ensure equity is within a sane range (e.g., 20% to 90%)
+  equityPct = Math.min(90, Math.max(20, equityPct));
+  
+  // Allocate to gold
+  const goldPct = 10;
+  
+  // The rest goes to debt
+  const debtPct = 100 - equityPct - goldPct;
+
+  return {
+    age,
+    riskAppetite,
+    equity: Math.round(equityPct),
+    debt: Math.round(debtPct),
+    gold: Math.round(goldPct)
   };
 }

@@ -115,6 +115,14 @@ export interface TermInsuranceResult {
     recommendedCover: number;
 }
 
+export interface PortfolioAllocationResult {
+    age: number;
+    riskAppetite: 'low' | 'medium' | 'high';
+    equity: number;
+    debt: number;
+    gold: number;
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'tax_comparison', data: TaxComparisonResult }
@@ -128,4 +136,5 @@ export type CalculationResult =
   | { type: 'retirement', data: RetirementCorpusResult }
   | { type: 'dti', data: DtiResult }
   | { type: 'savings_ratio', data: SavingsRatioResult }
-  | { type: 'term_insurance', data: TermInsuranceResult };
+  | { type: 'term_insurance', data: TermInsuranceResult }
+  | { type: 'portfolio_allocation', data: PortfolioAllocationResult };
