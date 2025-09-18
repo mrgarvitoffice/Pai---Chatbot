@@ -12,13 +12,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA, savingsRatio, debtToIncomeRatio, inflationAdjustedReturn, calculateRetirementCorpus } from '@/lib/calculators';
-import { calculateSip, calculateFd, calculateRd, calculateReverseSip, calculateCAGR } from '@/lib/investment-calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
+import { calculateSip, calculateFd, calculateRd, calculateReverseSip } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, SavingsRatioResult, DtiResult, ReverseSipResult, RetirementCorpusResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 
 const OrchestratorInputSchema = z.object({
@@ -49,13 +49,9 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "SAVINGS_RATIO", "DTI_RATIO", "CAGR", "REAL_RETURN", "RETIREMENT_CORPUS", "GENERAL"]).describe("The user's intent."),
+    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "GENERAL"]).describe("The user's intent."),
     income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
-    monthly_rent: z.number().optional().describe("Monthly rent paid for HRA calculation."),
-    metro_city: z.boolean().optional().describe("Whether the user lives in a metro city for HRA calculation."),
-    basic_salary: z.number().optional().describe("User's basic annual salary for HRA calculation."),
-    investment_80c: z.number().optional().describe("Amount to invest under section 80C."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
     sip_years: z.number().optional().describe("The duration of the SIP in years."),
     sip_rate: z.number().optional().describe("The expected annual rate of return for the SIP."),
@@ -73,17 +69,6 @@ const intentSchema = z.object({
     rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
     rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
-    savings_monthly: z.number().optional().describe("The user's monthly savings amount."),
-    dti_emi: z.number().optional().describe("The user's total monthly EMI payments for DTI calculation."),
-    dti_ratio_value: z.number().optional().describe("A pre-calculated DTI ratio provided by the user."),
-    cagr_start_value: z.number().optional().describe("The starting value of an investment for CAGR."),
-    cagr_end_value: z.number().optional().describe("The ending value of an investment for CAGR."),
-    cagr_years: z.number().optional().describe("The duration in years for CAGR calculation."),
-    real_return_nominal: z.number().optional().describe("The nominal rate of return."),
-    real_return_inflation: z.number().optional().describe("The rate of inflation."),
-    retirement_age: z.number().optional().describe("The user's desired retirement age."),
-    current_age: z.number().optional().describe("The user's current age."),
-    monthly_expenses: z.number().optional().describe("The user's current monthly expenses for retirement planning."),
 });
 
 const generalResponsePrompt = ai.definePrompt({
@@ -120,11 +105,6 @@ const intentPrompt = ai.definePrompt({
         - "BUDGET": Allocating monthly income (e.g., 50/30/20 rule).
         - "FD": Fixed Deposit calculation.
         - "RD": Recurring Deposit calculation.
-        - "SAVINGS_RATIO": Calculating the personal savings ratio.
-        - "DTI_RATIO": Calculating the Debt-to-Income ratio.
-        - "CAGR": Calculating Compound Annual Growth Rate.
-        - "REAL_RETURN": Calculating inflation-adjusted return.
-        - "RETIREMENT_CORPUS": Calculating how much money is needed for retirement.
         - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?", "Is term insurance better than ULIP?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
@@ -139,7 +119,7 @@ const intentPrompt = ai.definePrompt({
     - "How much should I invest monthly to get ₹1 crore in 25 years at 10%?" -> intent: "REVERSE_SIP", sip_target: 10000000, sip_years: 25, sip_rate: 10
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
-    - "How much do I need to retire? I am 30 and want to retire at 60. My expenses are 50k a month" -> intent: "RETIREMENT_CORPUS", current_age: 30, retirement_age: 60, monthly_expenses: 50000
+    - "FD of 50000 for 5 years at 7%" -> intent: "FD", fd_principal: 50000, fd_years: 5, fd_rate: 7
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
     `,
@@ -188,28 +168,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
     }
 
-    if (intent?.intent === "HRA" && intent.income && intent.monthly_rent) {
-        const basicSalary = intent.basic_salary || intent.income * 0.5; // Assume 50% if not provided
-        const metro = intent.metro_city ?? false; // Assume non-metro if not specified
-        const hraExemption = calculateHRA(basicSalary, intent.income, intent.monthly_rent * 12, metro);
-        const explanation = `Based on a basic salary of ₹${basicSalary.toLocaleString('en-IN')} and annual rent of ₹${(intent.monthly_rent * 12).toLocaleString('en-IN')}, your estimated HRA exemption is ₹${hraExemption.toLocaleString('en-IN')}.`;
-        return {
-            response: explanation
-        };
-    }
-    
-    if (intent?.intent === "80C_PLANNING") {
-        const income = intent.income || 1000000; // Assume 10L if not provided
-        const maxInvestment = 150000;
-        const oldRegimeResult = calculateTax(income, '2024-25', 'old', 0);
-        const oldRegimeWith80C = calculateTax(income, '2024-25', 'old', maxInvestment);
-        const taxSaving = oldRegimeResult.total_tax - oldRegimeWith80C.total_tax;
-        const explanation = `By investing the full ₹${maxInvestment.toLocaleString('en-IN')} under Section 80C, you could potentially save up to ₹${taxSaving.toLocaleString('en-IN')} in taxes under the Old Regime. The New Regime does not offer 80C deductions.`;
-        return {
-            response: explanation
-        };
-    }
-
     if (intent?.intent === "SIP" && intent.sip_monthly && intent.sip_years) {
         const rate = intent.sip_rate || 12; // Default rate if not specified
         const sipResult = calculateSip(intent.sip_monthly, intent.sip_years, rate);
@@ -231,41 +189,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         return {
             response: explanation,
             calculationResult: { type: 'reverse_sip', data: reverseSipResult }
-        };
-    }
-
-    if (intent?.intent === "CAGR" && intent.cagr_start_value && intent.cagr_end_value && intent.cagr_years) {
-        const cagr = calculateCAGR(intent.cagr_start_value, intent.cagr_end_value, intent.cagr_years);
-        const explanation = `An investment that grew from ₹${intent.cagr_start_value.toLocaleString('en-IN')} to ₹${intent.cagr_end_value.toLocaleString('en-IN')} over ${intent.cagr_years} years has a Compound Annual Growth Rate (CAGR) of ${cagr.toFixed(2)}%.`;
-        return {
-            response: explanation
-        };
-    }
-    
-    if (intent?.intent === "RETIREMENT_CORPUS" && intent.current_age && intent.retirement_age && intent.monthly_expenses) {
-        const retirementResult = calculateRetirementCorpus(
-            intent.current_age,
-            intent.retirement_age,
-            intent.monthly_expenses,
-            6,  // Assumed inflation
-            85, // Assumed life expectancy
-            12, // Assumed pre-retirement return
-            7   // Assumed post-retirement return
-        );
-
-        const explanation = `To maintain your current lifestyle in retirement, you'll need a corpus of approximately ₹${retirementResult.requiredCorpus.toLocaleString('en-IN')}. This is based on a set of standard financial assumptions.`;
-
-        return {
-            response: explanation,
-            calculationResult: { type: 'retirement_corpus', data: retirementResult }
-        };
-    }
-
-    if (intent?.intent === "REAL_RETURN" && intent.real_return_nominal && intent.real_return_inflation) {
-        const realReturn = inflationAdjustedReturn(intent.real_return_nominal, intent.real_return_inflation);
-        const explanation = `With a nominal return of ${intent.real_return_nominal}% and an inflation rate of ${intent.real_return_inflation}%, your inflation-adjusted (real) rate of return is approximately ${realReturn.toFixed(2)}%.`;
-        return {
-            response: explanation
         };
     }
 
@@ -335,46 +258,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "SAVINGS_RATIO" && intent.income && intent.savings_monthly) {
-        const ratio = savingsRatio(intent.income, intent.savings_monthly);
-        const srResult: SavingsRatioResult = {
-            monthlyIncome: intent.income,
-            monthlySavings: intent.savings_monthly,
-            savingsRatio: ratio
-        };
-        const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and savings of ₹${intent.savings_monthly.toLocaleString('en-IN')}, your savings ratio is ${ratio}%.`;
-        return {
-            response: explanation,
-            calculationResult: { type: 'savings_ratio', data: srResult }
-        };
-    }
-
-    if (intent?.intent === "DTI_RATIO") {
-        if (intent.income && intent.dti_emi) {
-            const ratio = debtToIncomeRatio(intent.income, intent.dti_emi);
-            const dtiResult: DtiResult = {
-                monthlyIncome: intent.income,
-                monthlyEmi: intent.dti_emi,
-                dtiRatio: ratio
-            };
-            const explanation = `With a monthly income of ₹${intent.income.toLocaleString('en-IN')} and total EMIs of ₹${intent.dti_emi.toLocaleString('en-IN')}, your Debt-to-Income (DTI) ratio is ${ratio}%.`;
-            return {
-                response: explanation,
-                calculationResult: { type: 'dti_ratio', data: dtiResult }
-            };
-        } else if (intent.dti_ratio_value) {
-            const ratio = intent.dti_ratio_value;
-            let riskLevel = "safe";
-            if (ratio > 40) riskLevel = "high risk";
-            else if (ratio > 30) riskLevel = "moderate";
-            
-            const explanation = `A Debt-to-Income (DTI) ratio of ${ratio}% is generally considered to be in the ${riskLevel} category. Lenders prefer a DTI ratio below 30-35% for the best loan terms.`;
-            return {
-                response: explanation
-            };
-        }
-    }
-
     if (intent?.intent === 'GENERAL') {
         const result = await generalResponsePrompt({ query: input.query });
         return {
@@ -386,5 +269,3 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'What is a mutual fund?'."
     };
 }
-
-    

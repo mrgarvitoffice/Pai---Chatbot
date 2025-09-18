@@ -98,21 +98,6 @@ export function calculateReverseSip(
 
 
 /**
- * Calculates the Compound Annual Growth Rate (CAGR).
- * @param start_value The initial value of the investment.
- * @param end_value The final value of the investment.
- * @param years The number of years over which the investment grew.
- * @returns The CAGR as a percentage.
- */
-export function calculateCAGR(start_value: number, end_value: number, years: number): number {
-    if (start_value <= 0 || years <= 0) {
-        return 0;
-    }
-    const cagr = Math.pow(end_value / start_value, 1 / years) - 1;
-    return round2(cagr * 100);
-}
-
-/**
  * Calculates the future value of a Fixed Deposit (FD).
  * @param principal The initial amount invested.
  * @param annual_rate The annual interest rate.
