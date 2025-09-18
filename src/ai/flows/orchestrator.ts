@@ -71,20 +71,26 @@ const intentSchema = z.object({
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
 });
 
+// Production-ready system prompt based on the user's detailed blueprint.
 const generalResponsePrompt = ai.definePrompt({
     name: 'generalResponsePrompt',
-    tools: [searchKnowledgeBase],
-    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate, helpful, and conversational answers.
+    prompt: `SYSTEM:
+You are Jarvis, a professional India-first Finance Copilot. For conceptual/evergreen finance questions, use ONLY the Static Rulebook entries provided in the STATIC_RULEBOOK injection. Never invent or assume static rules. If a short_answer exists, prefer it for quick replies. If the question requires dynamic data (rates, NAVs, tax slabs), DO NOT use the static rulebook — instead respond with directive to fetch dynamic data.
 
-    User Query: {{{query}}}
+STATIC_RULEBOOK is a list of documents with fields: slug, title, short_answer, detailed_markdown, formulas, examples, version, references.
 
-    Instructions:
-    1.  First, ALWAYS use the \`searchKnowledgeBase\` tool to find relevant information for the user's query. This is your primary source of information.
-    2.  If the tool returns relevant information, synthesize it to construct a clear and concise answer. Crucially, you MUST cite your sources. At the end of your response, add a "Source: [Source Name]" line, using the \`sourceName\` from the tool's output.
-    3.  **CRITICAL FALLBACK**: If the \`searchKnowledgeBase\` tool returns no relevant information or fails, you MUST use your own general knowledge to answer the user's question to the best of your ability. Do NOT mention that the tool failed. Do NOT cite a source in this case.
-    4.  Under all circumstances, you MUST provide a helpful, text-based answer to the user. Do NOT provide a blank or empty response.
-    5.  If you absolutely cannot answer the question from the tool or your own knowledge, politely state that you don't have enough information to answer that specific question.
-    `
+Rules:
+1. If user intent is a conceptual/FAQ question (e.g., "What is SIP?", "How much emergency fund?"), pick the best matching rulebook slug and answer using short_answer + 2-3 bullets from detailed_markdown.
+2. Cite the rulebook slug and version in the "sources" field of the response JSON.
+3. If user asks for current figures (rates, NAVs, slabs), reply with: "DYNAMIC_DATA_REQUIRED" and do not attempt to guess.
+4. Output must be a clear, conversational, and helpful text response based on the provided STATIC_RULEBOOK.
+
+STATIC_RULEBOOK:
+{{{STATIC_RULEBOOK}}}
+
+USER:
+{{{query}}}
+`,
 });
 
 const intentPrompt = ai.definePrompt({
@@ -92,8 +98,6 @@ const intentPrompt = ai.definePrompt({
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: intentSchema },
     prompt: `You are an expert at analyzing user queries about Indian personal finance, including queries in English, Hindi, and Hinglish. Your task is to determine the user's intent and extract relevant entities.
-
-    User Query: {{{query}}}
 
     **IMPORTANT RULE**: Default to "GENERAL" for any informational question, even if it contains financial terms. Only use a calculator intent (TAX, SIP, EMI, etc.) if the user is explicitly asking for a calculation.
 
@@ -262,22 +266,38 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     }
 
     // This is the default path for GENERAL questions
-    const result = await generalResponsePrompt({ query: input.query });
+    // Implements the "Retrieval & Injection Strategy" from the blueprint
+    
+    // 1. Retrieve relevant rulebook entries
+    const rulebookEntries = await searchKnowledgeBase({ query: input.query });
+
+    // 2. Build the injection string
+    const staticInjection = rulebookEntries.length > 0
+      ? JSON.stringify(rulebookEntries.map(d => ({
+          slug: d.slug,
+          version: d.version,
+          short_answer: d.short_answer,
+          // Extracting a small excerpt to save tokens, as per blueprint
+          excerpt: d.detailed_markdown.split('\n').slice(0, 5).join('\n')
+        })), null, 2)
+      : "No relevant rulebook entries found.";
+
+    // 3. Call the LLM with the injected context
+    const result = await generalResponsePrompt({ 
+        STATIC_RULEBOOK: staticInjection,
+        query: input.query 
+    });
+    
     const outputText = result.output as string;
     
-    // Check for tool output in the result to extract sources
-    const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output;
-    let sources;
-    if (toolOutput && Array.isArray(toolOutput) && toolOutput.length > 0) {
-        sources = toolOutput.map(item => ({
-            name: item.sourceName,
-            url: item.url,
-            last_updated: '', // The tool output doesn't provide this
-        }));
-    }
+    const responseSources = rulebookEntries.map(doc => ({
+        name: `${doc.slug} (v${doc.version})`,
+        url: doc.references[0]?.url || '#',
+        last_updated: doc.last_updated,
+    }));
 
     return {
         response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
-        sources: sources
+        sources: responseSources.length > 0 ? responseSources : undefined,
     };
 }
