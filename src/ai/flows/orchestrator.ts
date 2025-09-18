@@ -98,18 +98,20 @@ const intentPrompt = ai.definePrompt({
 
     User Query: {{{query}}}
 
+    **IMPORTANT RULE**: Default to "GENERAL" for any informational question, even if it contains financial terms. Only use a calculator intent (TAX, SIP, EMI, etc.) if the user is explicitly asking for a calculation.
+
     Analyze the query and determine the following:
     1.  intent:
-        - "TAX": Use for queries that are clearly asking to **calculate** income tax and include a number (e.g., "tax on 15L", "12 lakh pe kitna tax").
-        - "SIP": Calculating returns for a Systematic Investment Plan.
-        - "REVERSE_SIP": User has a target amount and wants to know the required monthly SIP.
-        - "EMI": Calculating a loan EMI.
-        - "COMPOUND_INTEREST": Calculating compound interest or lump sum growth.
-        - "BUDGET": Allocating monthly income (e.g., 50/30/20 rule).
-        - "FD": Fixed Deposit calculation.
-        - "RD": Recurring Deposit calculation.
-        - "RETIREMENT_CORPUS": Calculating the total amount needed for retirement. Look for phrases like "how much do I need to retire", "retirement corpus", "retire at 60".
-        - "GENERAL": Use for any other question, especially informational ones even if they contain financial terms. Examples: "What is a mutual fund?", "Explain the new tax regime", "How are mutual funds taxed?", "Do I need a Will?".
+        - "TAX": User wants to **calculate** income tax. Query MUST contain an income figure. (e.g., "tax on 15L", "12 lakh pe kitna tax").
+        - "SIP": User wants to **calculate** returns for a Systematic Investment Plan. (e.g. "if I invest 5000 a month...").
+        - "REVERSE_SIP": User has a target amount and wants to **calculate** the required monthly SIP.
+        - "EMI": User wants to **calculate** a loan EMI.
+        - "COMPOUND_INTEREST": User wants to **calculate** compound interest or lump sum growth.
+        - "BUDGET": User wants to **calculate** a budget allocation for a given income.
+        - "FD": User wants to **calculate** Fixed Deposit returns.
+        - "RD": User wants to **calculate** Recurring Deposit returns.
+        - "RETIREMENT_CORPUS": User wants to **calculate** the total amount needed for retirement. (e.g. "how much do I need to retire").
+        - "GENERAL": **DEFAULT**. Use for any other question, especially informational ones. (e.g. "What is a mutual fund?", "Explain the new tax regime", "How are mutual funds taxed?", "Do I need a Will?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
     
@@ -283,28 +285,25 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === 'GENERAL' || !intent?.intent) {
-        const result = await generalResponsePrompt({ query: input.query });
-        const outputText = result.output as string;
-        
-        // Check for tool output in the result to extract sources
-        const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output;
-        let sources;
-        if (toolOutput && Array.isArray(toolOutput) && toolOutput.length > 0) {
-            sources = toolOutput.map(item => ({
-                name: item.sourceName,
-                url: item.url,
-                last_updated: '', // The tool output doesn't provide this
-            }));
-        }
-
-        return {
-            response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
-            sources: sources
-        };
+    // This is the default path for GENERAL questions
+    const result = await generalResponsePrompt({ query: input.query });
+    const outputText = result.output as string;
+    
+    // Check for tool output in the result to extract sources
+    const toolOutput = result.history?.[0]?.toolRequest?.[0]?.output;
+    let sources;
+    if (toolOutput && Array.isArray(toolOutput) && toolOutput.length > 0) {
+        sources = toolOutput.map(item => ({
+            name: item.sourceName,
+            url: item.url,
+            last_updated: '', // The tool output doesn't provide this
+        }));
     }
 
     return {
-        response: "I can help with Indian income tax, SIP, EMI, compound interest, and budget planning. Please ask me a question like 'How much tax on ₹15L' or 'What is a mutual fund?'."
+        response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
+        sources: sources
     };
 }
+
+    
