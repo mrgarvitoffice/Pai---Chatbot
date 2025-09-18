@@ -18,7 +18,7 @@ import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult, TermInsuranceResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 
@@ -97,6 +97,8 @@ const intentSchema = z.object({
 const generalResponsePrompt = ai.definePrompt({
     name: 'generalResponsePrompt',
     tools: [searchKnowledgeBase, getDynamicData],
+    input: { schema: OrchestratorInputSchema },
+    output: { schema: OrchestratorOutputSchema },
     prompt: `SYSTEM:
 You are Jarvis, a professional India-first Finance Copilot. Your primary goal is to provide accurate and helpful answers. You have access to two types of information:
 1. STATIC_RULEBOOK: A database of evergreen financial rules, principles, and FAQs. Use this for conceptual questions.
@@ -318,11 +320,17 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     }
 
     try {
-        const llmResponse = await generalResponsePrompt.generate(input);
-        const outputText = llmResponse.text();
+        const llmResponse = await generalResponsePrompt(input);
+        const response = llmResponse.output;
+
+        if (!response) {
+            return {
+                response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
+            };
+        }
 
         let responseSources: OrchestratorOutput['sources'] = [];
-        const references = llmResponse.references();
+        const references = llmResponse.references;
         for (const part of references) {
             const toolOutput = part.output;
             if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
@@ -344,13 +352,13 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
 
         return {
-            response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
+            response: response.response || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
             sources: responseSources.length > 0 ? responseSources : undefined,
         };
     } catch (e) {
         console.error("Error during general response generation:", e);
         return {
-            response: "I'm sorry, I encountered an error while trying to find an answer. Please try again later.",
+            response: "I'm sorry, I encountered an error while trying to find an answer. Please try again.",
         };
     }
 }
