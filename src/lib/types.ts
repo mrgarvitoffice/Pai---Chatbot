@@ -85,6 +85,32 @@ export interface RdCalculationResult {
     total_interest: number;
 }
 
+export interface DtiResult {
+    monthlyIncome: number;
+    monthlyEmi: number;
+    dtiRatio: number;
+}
+
+export interface SavingsRatioResult {
+    monthlyIncome: number;
+    monthlySavings: number;
+    savingsRatio: number;
+}
+
+export interface RetirementCorpusResult {
+    requiredCorpus: number;
+    monthlySip: number; // Placeholder for now
+    assumptions: {
+        currentAge: number;
+        retirementAge: number;
+        monthlyExpenses: number;
+        inflationRate: number;
+        lifeExpectancy: number;
+        preRetirementReturn: number;
+        postRetirementReturn: number;
+    }
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'tax_comparison', data: TaxComparisonResult }
@@ -94,4 +120,7 @@ export type CalculationResult =
   | { type: 'compound_interest', data: CompoundInterestResult }
   | { type: 'budget', data: BudgetAllocationResult }
   | { type: 'fd', data: FdCalculationResult }
-  | { type: 'rd', data: RdCalculationResult };
+  | { type: 'rd', data: RdCalculationResult }
+  | { type: 'dti', data: DtiResult }
+  | { type: 'savings_ratio', data: SavingsRatioResult }
+  | { type: 'retirement_corpus', data: RetirementCorpusResult };
