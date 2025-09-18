@@ -263,34 +263,40 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    // This is the default path for GENERAL and DYNAMIC questions
-    const llmResponse = await generalResponsePrompt.generate(input);
-    const outputText = llmResponse.text;
+    try {
+        const llmResponse = await generalResponsePrompt.generate(input);
+        const outputText = llmResponse.text();
 
-    // Attempt to extract sources from tool calls if they exist
-    let responseSources: OrchestratorOutput['sources'] = [];
-    for (const part of llmResponse.references) {
-      const toolOutput = part.output;
-      if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
-          responseSources = toolOutput.map(doc => ({
-            name: `${doc.slug} (v${doc.version})`,
-            url: doc.references?.[0]?.url || '#',
-            last_updated: doc.last_updated,
-          }));
-          break;
-      }
-      if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
-          responseSources = [{
-            name: `Source: ${toolOutput.source}`,
-            url: '#',
-            last_updated: toolOutput.last_updated,
-          }];
-          break;
-      }
+        let responseSources: OrchestratorOutput['sources'] = [];
+        const references = llmResponse.references();
+        for (const part of references) {
+            const toolOutput = part.output;
+            if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
+                responseSources = toolOutput.map(doc => ({
+                    name: `${doc.slug} (v${doc.version})`,
+                    url: doc.references?.[0]?.url || '#',
+                    last_updated: doc.last_updated,
+                }));
+                break;
+            }
+            if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
+                responseSources = [{
+                    name: `Source: ${toolOutput.source}`,
+                    url: '#',
+                    last_updated: toolOutput.last_updated,
+                }];
+                break;
+            }
+        }
+
+        return {
+            response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
+            sources: responseSources.length > 0 ? responseSources : undefined,
+        };
+    } catch (e) {
+        console.error("Error during general response generation:", e);
+        return {
+            response: "I'm sorry, I encountered an error while trying to find an answer. Please try again later.",
+        };
     }
-
-    return {
-        response: outputText || "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
-        sources: responseSources.length > 0 ? responseSources : undefined,
-    };
 }
