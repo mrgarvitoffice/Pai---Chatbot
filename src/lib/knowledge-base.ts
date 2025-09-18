@@ -11,6 +11,13 @@ interface Document {
 
 const documents: Document[] = [
     {
+        id: 'tax-regimes-explained',
+        sourceName: 'Income Tax Department of India',
+        url: 'https://incometaxindia.gov.in/',
+        content: 'India offers two tax regimes for individuals: the Old Regime and the New Regime. The New Regime is the default option but you can opt for the Old Regime. The New Regime offers lower, simplified tax slabs but disallows most common deductions and exemptions like those under Section 80C (PPF, ELSS), 80D (health insurance), and HRA. It includes a standard deduction of ₹50,000. The Old Regime has higher tax slabs but allows you to claim over 70 deductions and exemptions to reduce your taxable income. The choice depends on your financial profile. If you have significant investments in tax-saving instruments and claim deductions like HRA, the Old Regime may be more beneficial. If you have minimal deductions, the New Regime\'s lower rates might save you more tax.',
+        keywords: ['tax regime', 'new regime', 'old regime', 'compare', 'deductions', 'slabs', '80c', '80d', 'hra']
+    },
+    {
         id: 'mutual-funds-101',
         sourceName: 'AMFI (Association of Mutual Funds in India)',
         url: 'https://www.amfiindia.com/investor-corner/knowledge-center/what-are-mutual-funds',
