@@ -12,13 +12,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateRetirementCorpus } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
 import { calculateSip, calculateFd, calculateRd, calculateReverseSip } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 
 const OrchestratorInputSchema = z.object({
@@ -49,7 +49,7 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "RETIREMENT_CORPUS", "GENERAL"]).describe("The user's intent."),
+    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "GENERAL"]).describe("The user's intent."),
     income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
     sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
@@ -69,9 +69,6 @@ const intentSchema = z.object({
     rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
     rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
     rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
-    ret_current_age: z.number().optional().describe("User's current age for retirement calculation."),
-    ret_retire_age: z.number().optional().describe("User's desired retirement age."),
-    ret_monthly_exp: z.number().optional().describe("User's current monthly expenses for retirement planning."),
 });
 
 const generalResponsePrompt = ai.definePrompt({
@@ -110,7 +107,6 @@ const intentPrompt = ai.definePrompt({
         - "BUDGET": User wants to **calculate** a budget allocation for a given income.
         - "FD": User wants to **calculate** Fixed Deposit returns.
         - "RD": User wants to **calculate** Recurring Deposit returns.
-        - "RETIREMENT_CORPUS": User wants to **calculate** the total amount needed for retirement. (e.g. "how much do I need to retire").
         - "GENERAL": **DEFAULT**. Use for any other question, especially informational ones. (e.g. "What is a mutual fund?", "Explain the new tax regime", "How are mutual funds taxed?", "Do I need a Will?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
@@ -127,7 +123,6 @@ const intentPrompt = ai.definePrompt({
     - "EMI on 50 lakh home loan for 20 years at 8.5%" -> intent: "EMI", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "Compound interest on 1 lakh for 10 years at 8%" -> intent: "COMPOUND_INTEREST", ci_principal: 100000, ci_years: 10, ci_rate: 8, ci_frequency: 1
     - "FD of 50000 for 5 years at 7%" -> intent: "FD", fd_principal: 50000, fd_years: 5, fd_rate: 7
-    - "I am 30 and want to retire at 60 with monthly expenses of 50k" -> intent: "RETIREMENT_CORPUS", ret_current_age: 30, ret_retire_age: 60, ret_monthly_exp: 50000
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
     `,
@@ -216,7 +211,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         const futureValue = compoundFutureValue(intent.ci_principal, intent.ci_rate, intent.ci_years, frequency);
         const totalInterest = futureValue - intent.ci_principal;
 
-        const ciResult: CompoundInterestResult = {
+        const ciResult = {
             principal: intent.ci_principal,
             annual_rate: intent.ci_rate,
             years: intent.ci_years,
@@ -266,25 +261,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
-    if (intent?.intent === "RETIREMENT_CORPUS" && intent.ret_current_age && intent.ret_retire_age && intent.ret_monthly_exp) {
-        const result = calculateRetirementCorpus(
-            intent.ret_current_age,
-            intent.ret_retire_age,
-            intent.ret_monthly_exp,
-            6,  // Assumed inflation
-            85, // Assumed life expectancy
-            12, // Assumed pre-retirement return
-            7   // Assumed post-retirement return
-        );
-
-        const explanation = `To maintain your current lifestyle in retirement, you will need a corpus of approximately ₹${result.requiredCorpus.toLocaleString('en-IN')}. This is based on a set of standard financial assumptions.`;
-
-        return {
-            response: explanation,
-            calculationResult: { type: 'retirement_corpus', data: result }
-        };
-    }
-
     // This is the default path for GENERAL questions
     const result = await generalResponsePrompt({ query: input.query });
     const outputText = result.output as string;
@@ -305,5 +281,3 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         sources: sources
     };
 }
-
-    
