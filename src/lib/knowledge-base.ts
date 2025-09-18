@@ -18,6 +18,13 @@ const documents: Document[] = [
         keywords: ['mutual fund', 'investment', 'sip', 'nav', 'portfolio', 'securities', 'stp', 'swp', 'direct', 'regular', 'beginner', 'index', 'nifty', 's&p 500']
     },
     {
+        id: 'goal-based-investing',
+        sourceName: 'SEBI Investor Education',
+        url: 'https://investor.sebi.gov.in/',
+        content: 'Goal-based investing is a strategy where you invest for specific financial goals, such as buying a house, funding a child\'s education, or retirement. Each goal has a target amount and a time horizon. This is better than random investing because it provides a clear purpose and discipline. You should ideally have separate portfolios or SIPs for each major goal to track progress effectively. Common mistakes include not accounting for inflation, choosing overly conservative or aggressive investments for the goal\'s timeframe, and not increasing SIPs with income growth. The priority of goals is personal, but a widely accepted hierarchy is: 1) Emergency Fund, 2) Retirement, 3) Other long-term goals (e.g., child\'s education), and 4) Short-term goals (e.g., car, vacation).',
+        keywords: ['goal-based', 'goal', 'investing', 'sip', 'mistakes', 'priority', 'retirement', 'child', 'house']
+    },
+    {
         id: 'inflation-basics',
         sourceName: 'Reserve Bank of India (RBI)',
         url: 'https://www.rbi.org.in/commonperson/English/Scripts/Notification.aspx?Id=3031',
