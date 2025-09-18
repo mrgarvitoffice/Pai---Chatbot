@@ -70,8 +70,8 @@ const documents: Document[] = [
         id: 'retirement-planning',
         sourceName: 'NPS & PFRDA',
         url: 'https://www.pfrda.org.in/',
-        content: 'Retirement planning involves determining your retirement income goals and the actions needed to achieve them. The required corpus depends on your post-retirement expenses, inflation, and life expectancy. A common goal is to build a corpus that allows for a Safe Withdrawal Rate (SWR) of 3-4% per year. For retirement, a mix of investments is recommended. NPS offers tax benefits and market-linked returns. PPF provides guaranteed returns and is tax-free. Equity mutual funds offer the potential for higher long-term growth. FDs are safe but may not beat inflation.',
-        keywords: ['retirement', 'corpus', 'nps', 'ppf', 'swr', 'safe withdrawal rate', 'pension', 'withdrawals']
+        content: 'Retirement planning involves creating a corpus to be financially independent post-retirement. Key considerations are your current expenses, inflation, and life expectancy. A Safe Withdrawal Rate (SWR) is the percentage you can withdraw annually from your corpus without depleting it. In India, a SWR of 3-4% is often considered safe. For retirement, a diversified portfolio is crucial. Do not put all your money in FDs as they may not beat inflation long-term. A mix of Equity Mutual Funds (for growth), PPF (for tax-free, guaranteed returns), and NPS (for tax benefits and market-linked returns) is a robust strategy. After retirement, you can use Systematic Withdrawal Plans (SWP) from your mutual funds to create a regular income stream.',
+        keywords: ['retirement', 'corpus', 'nps', 'ppf', 'swr', 'safe withdrawal rate', 'pension', 'withdrawals', 'swp', 'fds']
     },
     {
         id: 'emergency-fund',
