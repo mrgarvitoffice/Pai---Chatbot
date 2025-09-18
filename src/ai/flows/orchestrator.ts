@@ -264,31 +264,29 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     }
 
     // This is the default path for GENERAL and DYNAMIC questions
-    const result = await generalResponsePrompt(input);
-    const outputText = result.output;
-    
+    const llmResponse = await generalResponsePrompt.generate(input);
+    const outputText = llmResponse.text;
+
     // Attempt to extract sources from tool calls if they exist
     let responseSources: OrchestratorOutput['sources'] = [];
-    if (result.references) {
-        for (const ref of result.references) {
-            const toolOutput = ref.output;
-            if (ref.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
-                 responseSources = toolOutput.map(doc => ({
-                    name: `${doc.slug} (v${doc.version})`,
-                    url: doc.references?.[0]?.url || '#',
-                    last_updated: doc.last_updated,
-                }));
-                break;
-            }
-             if (ref.toolRequest.name === 'getDynamicData' && toolOutput) {
-                responseSources = [{
-                    name: `Source: ${toolOutput.source}`,
-                    url: '#',
-                    last_updated: toolOutput.last_updated,
-                }];
-                break;
-            }
-        }
+    for (const part of llmResponse.references) {
+      const toolOutput = part.output;
+      if (part.toolRequest.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
+          responseSources = toolOutput.map(doc => ({
+            name: `${doc.slug} (v${doc.version})`,
+            url: doc.references?.[0]?.url || '#',
+            last_updated: doc.last_updated,
+          }));
+          break;
+      }
+      if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
+          responseSources = [{
+            name: `Source: ${toolOutput.source}`,
+            url: '#',
+            last_updated: toolOutput.last_updated,
+          }];
+          break;
+      }
     }
 
     return {
@@ -296,5 +294,3 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         sources: responseSources.length > 0 ? responseSources : undefined,
     };
 }
-
-    
