@@ -1,4 +1,4 @@
-import type { SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult } from './types';
+import type { SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult } from './types';
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 
 /**
@@ -167,3 +167,28 @@ export function calculateRd(
         total_interest: round2(total_interest)
     };
 }
+
+/**
+ * Compound interest general calculator (compounding frequency m per year)
+ */
+export function compoundFutureValue(principal: number, annualRate: number, years: number, compoundingFreq: number = 1): CompoundInterestResult {
+  if (years <= 0) {
+    const fv = round2(principal);
+    return { principal, annual_rate: annualRate, years, compounding_frequency: compoundingFreq, future_value: fv, total_interest: 0 };
+  }
+  const r = annualRate / 100;
+  const m = compoundingFreq;
+  const fv = principal * Math.pow(1 + r / m, m * years);
+  const roundedFv = round2(fv);
+  
+  return {
+    principal,
+    annual_rate: annualRate,
+    years,
+    compounding_frequency: compoundingFreq,
+    future_value: roundedFv,
+    total_interest: round2(roundedFv - principal)
+  };
+}
+
+    

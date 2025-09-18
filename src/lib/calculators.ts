@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, CompoundInterestResult, EmiCalculationResult, TaxCalculationResult } from './types';
+import type { BudgetAllocationResult, EmiCalculationResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -137,26 +137,6 @@ export function calculateEMI(principal: number, annualRate: number, years: numbe
   };
 }
 
-/** --------------- WEALTH & GROWTH --------------- **/
-
-/**
- * Compound interest general calculator (compounding frequency m per year)
- */
-export function compoundFutureValue(principal: number, annualRate: number, years: number, compoundingFreq: number = 1): number {
-  if (years <= 0) return round2(principal);
-  const r = annualRate / 100;
-  const m = compoundingFreq;
-  const fv = principal * Math.pow(1 + r / m, m * years);
-  return round2(fv);
-}
-
-/**
- * Inflation-adjusted (real) return percentage
- */
-export function inflationAdjustedReturn(nominalAnnualPct: number, inflationPct: number): number {
-  const real = ( (1 + nominalAnnualPct/100) / (1 + inflationPct/100) - 1) * 100;
-  return round2(real);
-}
 
 /** --------------- PERSONAL FINANCE UTILITIES --------------- **/
 
@@ -197,3 +177,5 @@ export function budgetAllocation(monthlyIncome: number, custom?: {needsPct?: num
     savings
   };
 }
+
+    

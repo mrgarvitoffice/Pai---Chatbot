@@ -12,8 +12,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation } from '@/lib/calculators';
-import { calculateSip, calculateFd, calculateRd, calculateReverseSip } from '@/lib/investment-calculators';
+import { calculateTax, calculateEMI, budgetAllocation } from '@/lib/calculators';
+import { calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
@@ -265,7 +265,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
     // This is the default path for GENERAL and DYNAMIC questions
     const result = await generalResponsePrompt(input);
-    const outputText = result.output as string;
+    const outputText = result.output;
     
     // Attempt to extract sources from tool calls if they exist
     let responseSources: OrchestratorOutput['sources'] = [];
@@ -296,3 +296,5 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         sources: responseSources.length > 0 ? responseSources : undefined,
     };
 }
+
+    
