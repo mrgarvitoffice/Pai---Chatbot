@@ -21,6 +21,7 @@ import { RdResultCard } from '@/components/rd-result-card';
 import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
 import { DtiResultCard } from '@/components/dti-result-card';
 import { ReverseSipResultCard } from '@/components/reverse-sip-result-card';
+import { RetirementResultCard } from '@/components/retirement-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -92,6 +93,8 @@ export default function Home() {
         content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'reverse_sip') {
         content = <ReverseSipResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'retirement_corpus') {
+        content = <RetirementResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else {
         content = result.response;
       }
@@ -196,7 +199,7 @@ export default function Home() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
-                        className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base"
+                        className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base md:text-sm"
                         disabled={isLoading}
                       />
                       <Button

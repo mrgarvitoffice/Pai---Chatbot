@@ -12,13 +12,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA, savingsRatio, debtToIncomeRatio, inflationAdjustedReturn } from '@/lib/calculators';
+import { calculateTax, calculateEMI, compoundFutureValue, budgetAllocation, calculateHRA, savingsRatio, debtToIncomeRatio, inflationAdjustedReturn, calculateRetirementCorpus } from '@/lib/calculators';
 import { calculateSip, calculateFd, calculateRd, calculateReverseSip, calculateCAGR } from '@/lib/investment-calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, SavingsRatioResult, DtiResult, ReverseSipResult } from '@/lib/types';
+import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, SavingsRatioResult, DtiResult, ReverseSipResult, RetirementCorpusResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 
 const OrchestratorInputSchema = z.object({
@@ -49,7 +49,7 @@ const sources = [
 ];
 
 const intentSchema = z.object({
-    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "SAVINGS_RATIO", "DTI_RATIO", "CAGR", "REAL_RETURN", "GENERAL"]).describe("The user's intent."),
+    intent: z.enum(["TAX", "SIP", "REVERSE_SIP", "EMI", "COMPOUND_INTEREST", "BUDGET", "FD", "RD", "HRA", "80C_PLANNING", "SAVINGS_RATIO", "DTI_RATIO", "CAGR", "REAL_RETURN", "RETIREMENT_CORPUS", "GENERAL"]).describe("The user's intent."),
     income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
     monthly_rent: z.number().optional().describe("Monthly rent paid for HRA calculation."),
@@ -81,6 +81,9 @@ const intentSchema = z.object({
     cagr_years: z.number().optional().describe("The duration in years for CAGR calculation."),
     real_return_nominal: z.number().optional().describe("The nominal rate of return."),
     real_return_inflation: z.number().optional().describe("The rate of inflation."),
+    retirement_age: z.number().optional().describe("The user's desired retirement age."),
+    current_age: z.number().optional().describe("The user's current age."),
+    monthly_expenses: z.number().optional().describe("The user's current monthly expenses for retirement planning."),
 });
 
 const generalResponsePrompt = ai.definePrompt({
@@ -123,6 +126,7 @@ const intentPrompt = ai.definePrompt({
         - "DTI_RATIO": Calculating the Debt-to-Income ratio.
         - "CAGR": Calculating Compound Annual Growth Rate.
         - "REAL_RETURN": Calculating inflation-adjusted return.
+        - "RETIREMENT_CORPUS": Calculating how much money is needed for retirement.
         - "GENERAL": For anything else (e.g., "What is a mutual fund?", "Explain inflation", "म्यूचुअल फंड क्या है?").
     2. income: Extract the annual income as a number. 'L' or 'lakh' means 100,000. 'k' means 1000. 'cr' or 'crore' means 10,000,000.
     3. regime: If the user mentions 'old', 'new', 'purani', 'naya', or wants to 'compare' or 'tulna', set to 'old', 'new', or 'both'. Default to 'new' if not specified for a simple tax query.
@@ -153,6 +157,7 @@ const intentPrompt = ai.definePrompt({
     - "Is 35% DTI safe or risky?" -> intent: "DTI_RATIO", dti_ratio_value: 35
     - "What is CAGR if investment grew from ₹1 lakh to ₹2 lakh in 5 years?" -> intent: "CAGR", cagr_start_value: 100000, cagr_end_value: 200000, cagr_years: 5
     - "real return if mutual fund gives 14% and inflation is 6%" -> intent: "REAL_RETURN", real_return_nominal: 14, real_return_inflation: 6
+    - "How much do I need to retire? I am 30 and want to retire at 60. My expenses are 50k a month" -> intent: "RETIREMENT_CORPUS", current_age: 30, retirement_age: 60, monthly_expenses: 50000
     - "What is a mutual fund?" -> intent: "GENERAL"
     - "म्यूचुअल फंड क्या है?" -> intent: "GENERAL"
     `,
@@ -252,6 +257,25 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         const explanation = `An investment that grew from ₹${intent.cagr_start_value.toLocaleString('en-IN')} to ₹${intent.cagr_end_value.toLocaleString('en-IN')} over ${intent.cagr_years} years has a Compound Annual Growth Rate (CAGR) of ${cagr.toFixed(2)}%.`;
         return {
             response: explanation
+        };
+    }
+    
+    if (intent?.intent === "RETIREMENT_CORPUS" && intent.current_age && intent.retirement_age && intent.monthly_expenses) {
+        const retirementResult = calculateRetirementCorpus(
+            intent.current_age,
+            intent.retirement_age,
+            intent.monthly_expenses,
+            6,  // Assumed inflation
+            85, // Assumed life expectancy
+            12, // Assumed pre-retirement return
+            7   // Assumed post-retirement return
+        );
+
+        const explanation = `To maintain your current lifestyle in retirement, you'll need a corpus of approximately ₹${retirementResult.requiredCorpus.toLocaleString('en-IN')}. This is based on a set of standard financial assumptions.`;
+
+        return {
+            response: explanation,
+            calculationResult: { type: 'retirement_corpus', data: retirementResult }
         };
     }
 

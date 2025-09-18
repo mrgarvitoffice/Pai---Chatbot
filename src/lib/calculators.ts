@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, CompoundInterestResult, DtiResult, EmiCalculationResult, SavingsRatioResult, TaxCalculationResult } from './types';
+import type { BudgetAllocationResult, CompoundInterestResult, DtiResult, EmiCalculationResult, RetirementCorpusResult, SavingsRatioResult, TaxCalculationResult } from './types';
 
 export function calculateTax(
   income: number,
@@ -148,6 +148,43 @@ export function compoundFutureValue(principal: number, annualRate: number, years
   const m = compoundingFreq;
   const fv = principal * Math.pow(1 + r / m, m * years);
   return round2(fv);
+}
+
+/**
+ * Calculates the required retirement corpus.
+ */
+export function calculateRetirementCorpus(
+    currentAge: number,
+    retirementAge: number,
+    monthlyExpenses: number,
+    inflationRate: number,
+    lifeExpectancy: number,
+    preRetirementReturn: number,
+    postRetirementReturn: number,
+): RetirementCorpusResult {
+    const yearsToRetire = retirementAge - currentAge;
+    const retirementDuration = lifeExpectancy - retirementAge;
+
+    const futureMonthlyExpenses = monthlyExpenses * Math.pow(1 + inflationRate / 100, yearsToRetire);
+    
+    // Using the formula for present value of a growing annuity
+    const realReturnRate = ((1 + postRetirementReturn / 100) / (1 + inflationRate / 100)) - 1;
+    
+    const requiredCorpus = (futureMonthlyExpenses * 12) * ( (1 - Math.pow(1 + realReturnRate, -retirementDuration)) / realReturnRate );
+
+    return {
+        requiredCorpus: round2(requiredCorpus),
+        monthlySip: 0, // SIP calculation is separate
+        assumptions: {
+            currentAge,
+            retirementAge,
+            monthlyExpenses,
+            inflationRate,
+            lifeExpectancy,
+            preRetirementReturn,
+            postRetirementReturn
+        }
+    };
 }
 
 /**

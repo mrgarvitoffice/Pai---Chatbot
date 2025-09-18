@@ -97,6 +97,20 @@ export interface DtiResult {
     dtiRatio: number;
 }
 
+export interface RetirementCorpusResult {
+    requiredCorpus: number;
+    monthlySip: number;
+    assumptions: {
+        currentAge: number;
+        retirementAge: number;
+        monthlyExpenses: number;
+        inflationRate: number;
+        lifeExpectancy: number;
+        preRetirementReturn: number;
+        postRetirementReturn: number;
+    };
+}
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'tax_comparison', data: TaxComparisonResult }
@@ -108,4 +122,5 @@ export type CalculationResult =
   | { type: 'fd', data: FdCalculationResult }
   | { type: 'rd', data: RdCalculationResult }
   | { type: 'savings_ratio', data: SavingsRatioResult }
-  | { type: 'dti_ratio', data: DtiResult };
+  | { type: 'dti_ratio', data: DtiResult }
+  | { type: 'retirement_corpus', data: RetirementCorpusResult };
