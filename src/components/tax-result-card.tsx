@@ -18,7 +18,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
     if (!result) return null;
 
     return (
-        <div className="p-4 bg-transparent rounded-b-2xl rounded-tr-2xl space-y-4">
+        <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl space-y-4">
              <div className="grid grid-cols-2 gap-4 text-center">
               <div>
                 <p className="text-sm text-muted-foreground">Taxable Income</p>
@@ -30,7 +30,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-background/50">
+            <div className="p-4 rounded-xl bg-background">
                 <div className="whitespace-pre-wrap text-sm text-foreground">{explanation}</div>
             </div>
             
@@ -63,8 +63,8 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
     const { new: newRegime, old: oldRegime } = result;
     
     return (
-         <div className="p-4 bg-transparent rounded-b-2xl rounded-tr-2xl">
-            <div className="p-4 rounded-xl bg-background/50">
+         <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl">
+            <div className="p-4 rounded-xl bg-background">
                 <div className="whitespace-pre-wrap text-sm text-foreground">{explanation}</div>
             </div>
         </div>
