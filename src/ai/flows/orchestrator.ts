@@ -66,33 +66,33 @@ const intentSchema = z.object({
         "PORTFOLIO_ALLOCATION",
         "GENERAL_KNOWLEDGE",
         "DYNAMIC_DATA_QUERY"
-    ]).describe("The user's intent."),
-    income: z.number().optional().describe("The user's annual or monthly income. For example, '15L' or '10 lakhs' becomes 1500000. '80k salary' becomes 80000."),
-    regime: z.enum(['new', 'old', 'both']).optional().describe("The tax regime. 'both' if the user wants to compare."),
-    sip_monthly: z.number().optional().describe("The monthly investment amount for a SIP."),
-    sip_years: z.number().optional().describe("The duration of the SIP in years."),
-    sip_rate: z.number().optional().describe("The expected annual rate of return for the SIP."),
-    sip_target: z.number().optional().describe("The target corpus for a reverse SIP calculation."),
-    emi_principal: z.number().optional().describe("The principal loan amount for an EMI calculation."),
-    emi_years: z.number().optional().describe("The duration of the loan in years."),
-    emi_rate: z.number().optional().describe("The annual interest rate for the loan."),
-    ci_principal: z.number().optional().describe("The principal amount for compound interest calculation."),
-    ci_years: z.number().optional().describe("The duration in years for compound interest calculation."),
-    ci_rate: z.number().optional().describe("The annual interest rate for compound interest calculation."),
-    ci_frequency: z.number().optional().describe("The compounding frequency per year."),
-    fd_principal: z.number().optional().describe("The principal amount for a Fixed Deposit."),
-    fd_years: z.number().optional().describe("The duration in years for a Fixed Deposit."),
-    fd_rate: z.number().optional().describe("The annual interest rate for a Fixed Deposit."),
-    rd_monthly: z.number().optional().describe("The monthly investment amount for a Recurring Deposit."),
-    rd_months: z.number().optional().describe("The duration in months for a Recurring Deposit."),
-    rd_rate: z.number().optional().describe("The annual interest rate for a Recurring Deposit."),
-    retire_age: z.number().optional().describe("The current age of the user for retirement calculation."),
-    retire_target_age: z.number().optional().describe("The target retirement age."),
-    retire_monthly_expenses: z.number().optional().describe("Current monthly expenses for retirement calculation."),
+    ]).describe("The user's primary intent."),
+    income: z.number().optional().describe("Annual income for tax/insurance, or monthly for budget/DTI/savings. Extracted from user query (e.g., '15L', '10 lakhs' -> 1500000; '80k salary' -> 80000)."),
+    regime: z.enum(['new', 'old', 'both']).optional().describe("Tax regime. 'both' if the user wants a comparison."),
+    sip_monthly: z.number().optional().describe("Monthly SIP investment amount."),
+    sip_years: z.number().optional().describe("Duration of SIP in years."),
+    sip_rate: z.number().optional().describe("Expected annual rate of return for SIP (default to 12% if not specified)."),
+    sip_target: z.number().optional().describe("Target corpus for a reverse SIP calculation."),
+    emi_principal: z.number().optional().describe("The principal loan amount for EMI (e.g., '50L loan' -> 5000000)."),
+    emi_years: z.number().optional().describe("Loan duration in years."),
+    emi_rate: z.number().optional().describe("Annual interest rate for the loan."),
+    ci_principal: z.number().optional().describe("Principal for compound interest."),
+    ci_years: z.number().optional().describe("Duration for compound interest."),
+    ci_rate: z.number().optional().describe("Annual rate for compound interest."),
+    ci_frequency: z.number().optional().describe("Compounding frequency per year."),
+    fd_principal: z.number().optional().describe("Principal for Fixed Deposit."),
+    fd_years: z.number().optional().describe("Duration for Fixed Deposit."),
+    fd_rate: z.number().optional().describe("Annual rate for Fixed Deposit."),
+    rd_monthly: z.number().optional().describe("Monthly amount for Recurring Deposit."),
+    rd_months: z.number().optional().describe("Duration in months for Recurring Deposit."),
+    rd_rate: z.number().optional().describe("Annual rate for Recurring Deposit."),
+    retire_age: z.number().optional().describe("Current age for retirement calculation."),
+    retire_target_age: z.number().optional().describe("Target retirement age."),
+    retire_monthly_expenses: z.number().optional().describe("Current monthly expenses for retirement."),
     dti_monthly_emi: z.number().optional().describe("Total monthly EMI for DTI calculation."),
-    savings_monthly: z.number().optional().describe("Total monthly savings for savings ratio calculation."),
-    age: z.number().optional().describe("The user's current age for portfolio allocation."),
-    risk_appetite: z.enum(['low', 'medium', 'high']).optional().describe("The user's risk appetite (low, medium, or high)."),
+    savings_monthly: z.number().optional().describe("Total monthly savings for savings ratio."),
+    age: z.number().optional().describe("User's current age for portfolio allocation."),
+    risk_appetite: z.enum(['low', 'medium', 'high']).optional().describe("User's risk appetite (low, medium, or high)."),
 });
 
 
@@ -124,24 +124,29 @@ const intentPrompt = ai.definePrompt({
     name: 'intentPrompt',
     input: { schema: z.object({ query: z.string() }) },
     output: { schema: intentSchema },
-    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities.
+    prompt: `You are an expert at analyzing user queries about Indian personal finance. Your task is to determine the user's intent and extract relevant entities with high accuracy.
 
-    **CRITICAL: Distinguish between calculation requests and general knowledge.**
-    - If the user asks "how should I...", "what is the best way to...", "explain...", or asks a conceptual question, it is **GENERAL_KNOWLEDGE**.
-    - Only use a calculator intent when specific numbers are provided AND a calculation is explicitly or implicitly requested.
+    **INTENT DETECTION RULES:**
+    1.  **PRIORITIZE CALCULATORS:** If the query contains specific numbers and asks for a calculation (e.g., "how much", "calculate", "what if"), you MUST choose a specific calculator intent.
+    2.  **KEYWORDS & SYNONYMS:** Pay close attention to keywords.
+        - "tax", "salary" -> TAX_CALCULATION
+        - "SIP", "monthly investment" -> SIP_CALCULATION
+        - "EMI", "loan", "installment" -> EMI_CALCULATION
+        - "FD", "fixed deposit" -> FD_CALCULATION
+        - "RD", "recurring deposit" -> RD_CALCULATION
+    3.  **GENERAL_KNOWLEDGE is the FALLBACK:** Only use "GENERAL_KNOWLEDGE" if the query is conceptual and DOES NOT contain numbers for a calculation (e.g., "what is the best way...", "explain...", "how does... work?").
+    
+    **ENTITY EXTRACTION RULES:**
+    - Convert amounts in "lakh" or "crore" to numbers (e.g., "15 lakh" -> 1500000, "2 cr" -> 20000000).
+    - If a rate of return is not provided for SIP, default to 12.
 
-    **Intent Hierarchy (Most to Least Specific):**
-    1.  **CALCULATOR**: If the user is explicitly asking for a calculation and provides numbers. (e.g., "calculate tax on 15L", "how much EMI for 50L", "SIP of 5k for 10 years").
-    2.  **DYNAMIC_DATA_QUERY**: If the user is asking for a specific, current number that changes over time (e.g., "what is the current repo rate?", "latest PPF interest rate", "current NAV of SBI Bluechip").
-    3.  **GENERAL_KNOWLEDGE**: **DEFAULT**. Use this for any conceptual or informational question.
-
-    **Intents:**
-    - "TAX_CALCULATION": User wants to calculate income tax. Query MUST contain an income figure.
+    **INTENTS:**
+    - "TAX_CALCULATION": User wants to calculate income tax. Query must contain an income figure.
     - "SIP_CALCULATION": User wants to calculate SIP returns.
-    - "REVERSE_SIP_CALCULATION": User wants to calculate the required monthly SIP for a target.
-    - "EMI_CALCULATION": User wants to calculate a loan EMI.
+    - "REVERSE_SIP_CALCULATION": User wants to calculate the required monthly SIP for a target amount.
+    - "EMI_CALCULATION": User wants to calculate a loan EMI. Synonyms: "installment", "loan payment".
     - "COMPOUND_INTEREST_CALCULATION": User wants to calculate compound interest.
-    - "BUDGET_CALCULATION": User wants to calculate a budget allocation.
+    - "BUDGET_CALCULATION": User wants a budget allocation.
     - "FD_CALCULATION": User wants to calculate Fixed Deposit returns.
     - "RD_CALCULATION": User wants to calculate Recurring Deposit returns.
     - "RETIREMENT_CORPUS_CALCULATION": User wants to calculate their retirement corpus.
@@ -149,19 +154,18 @@ const intentPrompt = ai.definePrompt({
     - "SAVINGS_RATIO_CALCULATION": User wants to calculate their savings ratio.
     - "TERM_INSURANCE_CALCULATION": User wants to know how much term insurance they need.
     - "PORTFOLIO_ALLOCATION": User wants a recommended portfolio/asset allocation based on age and risk.
-    - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value.
-    - "GENERAL_KNOWLEDGE": **DEFAULT**. Use for any other question.
+    - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value (e.g., "what is the current repo rate?").
+    - "GENERAL_KNOWLEDGE": **FALLBACK ONLY**. Use for conceptual questions without specific numbers for calculation.
     
-    Examples:
+    **EXAMPLES:**
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000
-    - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
-    - "How should I split my money between equity and debt?" -> intent: "GENERAL_KNOWLEDGE"
-    - "What is the best way to save for retirement?" -> intent: "GENERAL_KNOWLEDGE"
-    - "What are the latest tax slabs for the new regime?" -> intent: "DYNAMIC_DATA_QUERY"
-    - "Explain the new tax regime" -> intent: "GENERAL_KNOWLEDGE"
+    - "calculate my tax if my salary is 20 lakhs" -> intent: "TAX_CALCULATION", income: 2000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
+    - "What is the EMI for a 50 lakh home loan for 20 years at 8.5%?" -> intent: "EMI_CALCULATION", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
     - "How are mutual funds taxed?" -> intent: "GENERAL_KNOWLEDGE"
+    - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
+    - "What is the best way to save for retirement?" -> intent: "GENERAL_KNOWLEDGE"
     `,
 });
 
@@ -337,12 +341,13 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 
+    // Fallback to general response prompt if no calculator intent is matched
     try {
         const llmResponse = await generalResponsePrompt(input);
         const response = llmResponse.output;
 
         if (!response || !response.response) {
-            // Fallback if the model returns an empty response for some reason
+            // Fallback if the model returns an empty response
             return {
                 response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?",
             };
@@ -359,15 +364,13 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
                         url: doc.references?.[0]?.url || '#',
                         last_updated: doc.last_updated,
                     }));
-                    break;
                 }
                 if (part.toolRequest.name === 'getDynamicData' && toolOutput) {
-                    responseSources = [{
+                     responseSources = [{
                         name: `Source: ${toolOutput.source}`,
                         url: '#',
                         last_updated: toolOutput.last_updated,
                     }];
-                    break;
                 }
             }
         }
