@@ -4,6 +4,11 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: ReactNode;
+  sources?: {
+      name: string;
+      url: string;
+      last_updated: string;
+  }[];
 }
 
 export interface TaxCalculationResult {
@@ -138,3 +143,5 @@ export type CalculationResult =
   | { type: 'savings_ratio', data: SavingsRatioResult }
   | { type: 'term_insurance', data: TermInsuranceResult }
   | { type: 'portfolio_allocation', data: PortfolioAllocationResult };
+
+    

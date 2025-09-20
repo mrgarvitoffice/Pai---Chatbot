@@ -109,6 +109,7 @@ export default function Home() {
         id: uuidv4(),
         role: 'assistant',
         content: content,
+        sources: result.sources
       };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
@@ -237,3 +238,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

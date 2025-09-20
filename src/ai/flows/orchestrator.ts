@@ -140,6 +140,7 @@ const intentPrompt = ai.definePrompt({
     **ENTITY EXTRACTION RULES:**
     - Convert amounts in "lakh" or "crore" to numbers (e.g., "15 lakh" -> 1500000, "2 cr" -> 20000000).
     - If a rate of return is not provided for SIP, default to 12.
+    - If the user does not specify a tax regime, assume 'both' for a comparison.
 
     **INTENTS:**
     - "TAX_CALCULATION": User wants to calculate income tax. Query must contain an income figure and keywords like 'tax', 'salary', 'income'.
@@ -159,14 +160,14 @@ const intentPrompt = ai.definePrompt({
     - "GENERAL_KNOWLEDGE": **FALLBACK ONLY**. Use for conceptual questions without specific numbers for calculation.
     
     **EXAMPLES:**
-    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
-    - "calculate my tax if my salary is 20 lakhs" -> intent: "TAX_CALCULATION", income: 2000000
+    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25", regime: "both"
+    - "calculate my tax if my salary is 20 lakhs" -> intent: "TAX_CALCULATION", income: 2000000, regime: "both"
     - "how much term insurance for 15 lakhs annual income" -> intent: "TERM_INSURANCE_CALCULATION", income: 1500000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "What is the EMI for a 50 lakh home loan for 20 years at 8.5%?" -> intent: "EMI_CALCULATION", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
     - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
-    - "Tax on ₹15L for FY 25–26" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
+    - "Tax on ₹15L" -> intent: "TAX_CALCULATION", income: 1500000, regime: "both"
     `,
 });
 
@@ -176,7 +177,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
     if (intent?.intent === "TAX_CALCULATION" && intent.income) {
         const fy = intent.fy || '2024-25'; // Default to current FY
-        const regime = intent.regime || 'new';
+        const regime = intent.regime || 'both';
 
         if (regime === 'both') {
             const newRegimeResult = calculateTax(intent.income, fy, 'new');
@@ -387,3 +388,5 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 }
+
+    

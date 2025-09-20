@@ -2,10 +2,17 @@ import type { FC } from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { User, FileText } from 'lucide-react';
 import { PaiLogo } from './icons';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
+
+export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => {
   const isAssistant = role === 'assistant';
 
   return (
@@ -30,6 +37,30 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
         ) : (
           content
         )}
+         {isAssistant && sources && sources.length > 0 && (
+            <div className="p-2 border-t mt-2">
+                <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-muted-foreground px-2">SOURCES:</p>
+                    <div className="flex items-center gap-1">
+                        <TooltipProvider>
+                            {sources.map((source, index) => (
+                                <Tooltip key={index}>
+                                    <TooltipTrigger asChild>
+                                        <a href={source.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted/50">
+                                            <FileText className="size-4 text-muted-foreground" />
+                                        </a>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-xs">{source.name}</p>
+                                        <p className="text-xs text-muted-foreground">Updated: {source.last_updated}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ))}
+                        </TooltipProvider>
+                    </div>
+                </div>
+            </div>
+         )}
       </div>
        {!isAssistant && (
         <Avatar className="size-8 border flex-shrink-0 bg-user-bubble shadow-md">
@@ -41,3 +72,5 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content }) => {
     </div>
   );
 };
+
+    
