@@ -23,6 +23,7 @@ import { RetirementResultCard } from '@/components/retirement-result-card';
 import { DtiResultCard } from '@/components/dti-result-card';
 import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
 import { PortfolioAllocationResultCard } from '@/components/portfolio-allocation-result-card';
+import { TermInsuranceResultCard } from '@/components/term-insurance-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -98,6 +99,8 @@ export default function Home() {
         content = <SavingsRatioResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else if (result.calculationResult?.type === 'portfolio_allocation') {
         content = <PortfolioAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
+      } else if (result.calculationResult?.type === 'term_insurance') {
+        content = <TermInsuranceResultCard result={result.calculationResult.data} explanation={result.response} />;
       } else {
         content = result.response;
       }
