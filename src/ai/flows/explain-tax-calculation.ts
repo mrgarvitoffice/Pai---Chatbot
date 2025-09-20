@@ -44,6 +44,9 @@ export async function explainTaxCalculation(input: ExplainTaxCalculationInput): 
   return explainTaxCalculationFlow(input);
 }
 
+// Helper to capitalize the first letter of a string for the prompt
+const ucfirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 const prompt = ai.definePrompt({
   name: 'explainTaxCalculationPrompt',
   input: {schema: ExplainTaxCalculationInputSchema},
@@ -58,14 +61,26 @@ Total Tax: ₹{{{total_tax}}}
 Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text, hashtags, or asterisks.
 Based on the provided regime ('{{regime}}'), include the correct tax slab information.
 
-💰 Income Tax Summary — FY {{{fy}}} ({{regime}} Regime)
+💰 Income Tax Summary — FY {{{fy}}} ({{ucfirst regime}} Regime)
 
 🧮 Your Income
 ₹{{{income}}}
 
 🧾 Tax Slabs
 Based on the '{{regime}}' regime, here are the applicable tax slabs for FY {{{fy}}}:
-[Dynamically insert the correct slabs here. For 'new' regime: ₹0–₹3L → Nil, ₹3L–₹6L → 5%, etc. For 'old' regime: ₹0–₹2.5L → Nil, ₹2.5L–₹5L → 5%, etc.]
+{{#if (eq regime "new")}}
+- ₹0 – ₹3L → Nil
+- ₹3L – ₹6L → 5%
+- ₹6L – ₹9L → 10%
+- ₹9L – ₹12L → 15%
+- ₹12L – ₹15L → 20%
+- Above ₹15L → 30%
+{{else}}
+- ₹0 – ₹2.5L → Nil
+- ₹2.5L – ₹5L → 5%
+- ₹5L – ₹10L → 20%
+- Above ₹10L → 30%
+{{/if}}
 
 👉 Tax Payable
 ₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
@@ -73,6 +88,9 @@ Based on the '{{regime}}' regime, here are the applicable tax slabs for FY {{{fy
 ---
 ⚠️ Note: This is an illustrative calculation based on the {{regime}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
+  customHelpers: {
+    ucfirst: ucfirst,
+  }
 });
 
 const explainTaxCalculationFlow = ai.defineFlow(
@@ -83,6 +101,11 @@ const explainTaxCalculationFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    // Ensure sources are passed through, as the AI might omit them from the output object.
+    const finalOutput = output!;
+    if (!finalOutput.sources || finalOutput.sources.length === 0) {
+      finalOutput.sources = input.sources;
+    }
+    return finalOutput;
   }
 );
