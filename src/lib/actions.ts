@@ -7,6 +7,7 @@ import { orchestrate, OrchestratorInput, OrchestratorOutput } from '@/ai/flows/o
 type TaxExplanationInput = {
     income: number;
     fy: string;
+    regime: 'new' | 'old';
     tax_breakdown: Record<string, number>;
     total_tax: number;
 }
