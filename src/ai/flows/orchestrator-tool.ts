@@ -123,6 +123,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
                     ...toolOutput,
                     income: toolCall.input.income,
                     fy: toolCall.input.fy,
+                    regime: toolCall.input.regime,
                     sources,
                  };
                  const explanationResult = await explainTaxCalculation(explanationInput);
@@ -154,7 +155,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         
         if (toolCall.name === 'searchKnowledgeBase' || toolCall.name === 'getDynamicData') {
              // Let the LLM generate a response based on the tool's output
-             const finalResponse = await llmResponse.run();
+             const finalResponseText = llmResponse.text;
              let responseSources: OrchestratorOutput['sources'] = [];
               if (toolCall.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
                     responseSources = toolOutput.map(doc => ({
@@ -172,18 +173,18 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
                 }
              
              return {
-                 response: finalResponse.text,
+                 response: finalResponseText,
                  sources: responseSources.length > 0 ? responseSources : undefined,
              }
         }
     }
 
     // Fallback if no tool is called
-    const fallbackResponse = await llmResponse.run();
-    if (!fallbackResponse.text) {
+    const fallbackResponseText = llmResponse.text;
+    if (!fallbackResponseText) {
         return { response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?" };
     }
-    return { response: fallbackResponse.text };
+    return { response: fallbackResponseText };
   } catch (error) {
     console.error("Critical error in orchestrator:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
