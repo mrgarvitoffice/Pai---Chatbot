@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool } from '../tools/calculators';
+import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool } from '../tools/calculators';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 import type { CalculationResult } from '@/lib/types';
@@ -54,6 +54,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             savingsRatioCalculatorTool,
             portfolioAllocatorTool,
             termInsuranceCalculatorTool,
+            compoundInterestCalculatorTool,
             searchKnowledgeBase, 
             getDynamicData
         ],
@@ -116,7 +117,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             let explanation = `Here are the results for your calculation.`;
             const resultType = toolCall.name.replace('Tool', '').replace('calculator', '_').replace('allocator', '_').replace(/_$/, "");
             
-            // Generate a simple explanation based on the tool used.
             if (toolCall.name === 'taxCalculatorTool') {
                  const sources = [{ name: "Income Tax Department", url: "https://www.incometax.gov.in/", last_updated: "2024-04-01" }];
                  const explanationInput: ExplainTaxCalculationInput = {
@@ -138,6 +138,12 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
              if (toolCall.name === 'termInsuranceCalculatorTool') explanation = `Based on the rule of thumb of having a life cover of at least 10-15 times your annual income, a suitable term insurance cover has been calculated.`;
              if (toolCall.name === 'reverseSipCalculatorTool') explanation = `To reach your goal of ₹${toolCall.input.future_value.toLocaleString('en-IN')} in ${toolCall.input.years} years with an expected return of ${toolCall.input.annual_rate}%, you would need to invest approximately the following amount per month.`;
              if (toolCall.name === 'retirementCalculatorTool') explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of ${toolCall.input.retirementAge}.`;
+             if (toolCall.name === 'budgetCalculatorTool') explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of ₹${toolCall.input.monthlyIncome.toLocaleString('en-IN')}.`;
+             if (toolCall.name === 'fdCalculatorTool') explanation = `Here is the calculated maturity value for your Fixed Deposit.`;
+             if (toolCall.name === 'rdCalculatorTool') explanation = `Here is the calculated maturity value for your Recurring Deposit.`;
+             if (toolCall.name === 'dtiCalculatorTool') explanation = `Your Debt-to-Income (DTI) ratio has been calculated based on your provided income and EMI details.`;
+             if (toolCall.name === 'savingsRatioCalculatorTool') explanation = `Your Savings Ratio has been calculated based on your provided income and savings details.`;
+             if (toolCall.name === 'compoundInterestCalculatorTool') explanation = `The future value of your investment has been calculated with compound interest.`;
 
 
             return {

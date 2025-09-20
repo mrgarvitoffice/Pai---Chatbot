@@ -113,6 +113,7 @@ export default function Home() {
       };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
+      console.error(error);
       const errorResponse: ChatMessageType = {
         id: uuidv4(),
         role: 'assistant',
@@ -238,5 +239,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

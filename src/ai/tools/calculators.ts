@@ -181,3 +181,19 @@ export const termInsuranceCalculatorTool = ai.defineTool(
     },
     async (input) => calculateTermInsuranceCover(input.annualIncome)
 );
+
+// Compound Interest Calculator Tool
+export const compoundInterestCalculatorTool = ai.defineTool(
+    {
+        name: 'compoundInterestCalculatorTool',
+        description: 'Calculates future value with compound interest.',
+        inputSchema: z.object({
+            principal: z.number(),
+            annualRate: z.number(),
+            years: z.number(),
+            compoundingFreq: z.number().default(1),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => compoundFutureValue(input.principal, input.annualRate, input.years, input.compoundingFreq)
+);

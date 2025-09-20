@@ -143,5 +143,3 @@ export type CalculationResult =
   | { type: 'savings_ratio', data: SavingsRatioResult }
   | { type: 'term_insurance', data: TermInsuranceResult }
   | { type: 'portfolio_allocation', data: PortfolioAllocationResult };
-
-    
