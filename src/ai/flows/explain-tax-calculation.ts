@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type {TaxCalculationResult} from '@/lib/types';
 
 const ExplainTaxCalculationInputSchema = z.object({
   income: z.number().describe('The income for which to calculate tax.'),
@@ -44,9 +43,6 @@ export async function explainTaxCalculation(input: ExplainTaxCalculationInput): 
   return explainTaxCalculationFlow(input);
 }
 
-// Helper to capitalize the first letter of a string for the prompt
-const ucfirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-
 const prompt = ai.definePrompt({
   name: 'explainTaxCalculationPrompt',
   input: {schema: ExplainTaxCalculationInputSchema},
@@ -59,28 +55,33 @@ Regime: {{{regime}}}
 Total Tax: ₹{{{total_tax}}}
 
 Provide a clear and concise explanation. Structure your response EXACTLY as follows, using the provided emojis and formatting. Do NOT add any extra text, hashtags, or asterisks.
-Based on the provided regime ('{{regime}}'), include the correct tax slab information.
+Based on the provided regime ('{{regime}}'), include the correct tax slab information from the lists below.
 
-💰 Income Tax Summary — FY {{{fy}}} ({{ucfirst regime}} Regime)
-
-🧮 Your Income
-₹{{{income}}}
-
-🧾 Tax Slabs
-Based on the '{{regime}}' regime, here are the applicable tax slabs for FY {{{fy}}}:
-{{#if (eq regime "new")}}
+--- START OF REGIME-SPECIFIC INSTRUCTIONS ---
+IF the regime is 'new', use these slabs:
 - ₹0 – ₹3L → Nil
 - ₹3L – ₹6L → 5%
 - ₹6L – ₹9L → 10%
 - ₹9L – ₹12L → 15%
 - ₹12L – ₹15L → 20%
 - Above ₹15L → 30%
-{{else}}
+
+IF the regime is 'old', use these slabs:
 - ₹0 – ₹2.5L → Nil
 - ₹2.5L – ₹5L → 5%
 - ₹5L – ₹10L → 20%
 - Above ₹10L → 30%
-{{/if}}
+--- END OF REGIME-SPECIFIC INSTRUCTIONS ---
+
+
+💰 Income Tax Summary — FY {{{fy}}} ({{regime}} Regime)
+
+🧮 Your Income
+₹{{{income}}}
+
+🧾 Tax Slabs
+Based on the '{{regime}}' regime, here are the applicable tax slabs for FY {{{fy}}}:
+[Insert the correct slabs here based on the instructions above]
 
 👉 Tax Payable
 ₹{{{total_tax}}} (Inclusive of 4% Health & Education Cess)
@@ -88,9 +89,6 @@ Based on the '{{regime}}' regime, here are the applicable tax slabs for FY {{{fy
 ---
 ⚠️ Note: This is an illustrative calculation based on the {{regime}} Tax Regime for FY {{{fy}}}. It is not financial advice — please consult a tax professional for personalised guidance.
 `,
-  customHelpers: {
-    ucfirst: ucfirst,
-  }
 });
 
 const explainTaxCalculationFlow = ai.defineFlow(
@@ -101,11 +99,6 @@ const explainTaxCalculationFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    // Ensure sources are passed through, as the AI might omit them from the output object.
-    const finalOutput = output!;
-    if (!finalOutput.sources || finalOutput.sources.length === 0) {
-      finalOutput.sources = input.sources;
-    }
-    return finalOutput;
+    return output!;
   }
 );
