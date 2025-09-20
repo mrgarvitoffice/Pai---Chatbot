@@ -37,51 +37,51 @@ const OrchestratorOutputSchema = z.object({
 });
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
+const orchestratorPrompt = ai.definePrompt({
+    name: 'orchestratorPrompt',
+    tools: [
+        taxCalculatorTool, 
+        sipCalculatorTool, 
+        emiCalculatorTool,
+        budgetCalculatorTool,
+        fdCalculatorTool,
+        rdCalculatorTool,
+        reverseSipCalculatorTool,
+        retirementCalculatorTool,
+        dtiCalculatorTool,
+        savingsRatioCalculatorTool,
+        portfolioAllocatorTool,
+        termInsuranceCalculatorTool,
+        compoundInterestCalculatorTool,
+        searchKnowledgeBase, 
+        getDynamicData
+    ],
+    prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate and helpful answers by using the correct tool based on the user's EXACT query.
+
+    **Analyze the user's query and decide which tool to use. Follow these rules precisely:**
+
+    **RULE 1: PRIORITIZE CALCULATORS**
+    If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000", "what is the EMI for 50 lakh"), you MUST use one of the available calculator tools. Do NOT use the knowledge base for these.
+
+    **RULE 2: TAX CALCULATION LOGIC (Follow this strictly)**
+    - If the user asks for a tax calculation **without specifying a regime** (e.g., "tax on 15L"), you MUST call the 'taxCalculatorTool' with **regime='new'**.
+    - If the user explicitly asks for the **'old regime'** (e.g., "tax on 15L under old regime"), you MUST call the 'taxCalculatorTool' with **regime='old'**.
+    - If the user asks to **compare regimes** or uses words like "vs", "or", "which is better", "comparison" (e.g., "tax on 15L old vs new"), you MUST call the 'taxCalculatorTool' TWICE: once with regime='new' and once with regime='old'. Do NOT compare if the user does not ask for it.
+
+    **RULE 3: OTHER TOOLS**
+    - For conceptual questions (e.g., "what is SIP?", "how to save tax?"), use the 'searchKnowledgeBase' tool.
+    - For questions about current rates or values (e.g., "latest PPF rate"), use the 'getDynamicData' tool.
+
+    **RULE 4: FALLBACK**
+    If no tool is appropriate, provide a helpful answer from your own knowledge. Do not invent numbers or financial data.
+
+    USER QUERY:
+    {{{query}}}
+    `,
+});
+
 export async function orchestrate(input: OrchestratorInput): Promise<OrchestratorOutput> {
-
-    const orchestratorPrompt = ai.definePrompt({
-        name: 'orchestratorPrompt',
-        tools: [
-            taxCalculatorTool, 
-            sipCalculatorTool, 
-            emiCalculatorTool,
-            budgetCalculatorTool,
-            fdCalculatorTool,
-            rdCalculatorTool,
-            reverseSipCalculatorTool,
-            retirementCalculatorTool,
-            dtiCalculatorTool,
-            savingsRatioCalculatorTool,
-            portfolioAllocatorTool,
-            termInsuranceCalculatorTool,
-            compoundInterestCalculatorTool,
-            searchKnowledgeBase, 
-            getDynamicData
-        ],
-        prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate and helpful answers by using the correct tool based on the user's EXACT query.
-
-        **Analyze the user's query and decide which tool to use. Follow these rules precisely:**
-
-        **RULE 1: PRIORITIZE CALCULATORS**
-        If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000", "what is the EMI for 50 lakh"), you MUST use one of the available calculator tools. Do NOT use the knowledge base for these.
-
-        **RULE 2: TAX CALCULATION LOGIC (Follow this strictly)**
-        - If the user asks for a tax calculation **without specifying a regime** (e.g., "tax on 15L"), you MUST call the 'taxCalculatorTool' with **regime='new'**.
-        - If the user explicitly asks for the **'old regime'** (e.g., "tax on 15L under old regime"), you MUST call the 'taxCalculatorTool' with **regime='old'**.
-        - If the user asks to **compare regimes** or uses words like "vs", "or", "which is better", "comparison" (e.g., "tax on 15L old vs new"), you MUST call the 'taxCalculatorTool' TWICE: once with regime='new' and once with regime='old'. Do NOT compare if the user does not ask for it.
-
-        **RULE 3: OTHER TOOLS**
-        - For conceptual questions (e.g., "what is SIP?", "how to save tax?"), use the 'searchKnowledgeBase' tool.
-        - For questions about current rates or values (e.g., "latest PPF rate"), use the 'getDynamicData' tool.
-
-        **RULE 4: FALLBACK**
-        If no tool is appropriate, provide a helpful answer from your own knowledge. Do not invent numbers or financial data.
-
-        USER QUERY:
-        {{{query}}}
-        `,
-    });
-    
+  try {
     const llmResponse = await orchestratorPrompt(input);
     const toolCalls = llmResponse.toolRequests;
 
@@ -184,4 +184,11 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         return { response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?" };
     }
     return { response: fallbackResponse.text };
+  } catch (error) {
+    console.error("Critical error in orchestrator:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    return {
+      response: `I'm very sorry, but I encountered a critical error while processing your request. Please try again later. \n\n**Error Details:** ${errorMessage}`,
+    };
+  }
 }
