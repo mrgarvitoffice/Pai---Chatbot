@@ -124,7 +124,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
                     calculationResult: { type: 'tax', data: toolOutput },
                  }
             }
-             if (toolCall.name === 'sipCalculatorTool') explanation = `Based on your inputs, here is the projected future value of your SIP investment.`;
+             if (toolCall.name === 'sipCalculatorTool') explanation = `Based on your inputs, here is the projected future value of your SIP investment of ₹${toolCall.input.monthly_investment}/month for ${toolCall.input.years} years.`;
              if (toolCall.name === 'emiCalculatorTool') explanation = `For the given loan details, your Equated Monthly Installment (EMI) has been calculated.`;
              if (toolCall.name === 'portfolioAllocatorTool') explanation = `Based on your age and risk appetite, here is a suggested asset allocation.`;
              if (toolCall.name === 'termInsuranceCalculatorTool') explanation = `A suitable term insurance cover has been calculated based on your annual income.`;
