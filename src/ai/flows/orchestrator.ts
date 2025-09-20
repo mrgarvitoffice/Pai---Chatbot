@@ -167,6 +167,7 @@ const intentPrompt = ai.definePrompt({
     - "How are mutual funds taxed?" -> intent: "GENERAL_KNOWLEDGE"
     - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
     - "What is the best way to save for retirement?" -> intent: "GENERAL_KNOWLEDGE"
+    - "Tax on ₹15L for FY 25–26" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
     `,
 });
 
