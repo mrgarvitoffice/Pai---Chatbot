@@ -12,13 +12,12 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation } from '@/lib/calculators';
-import { calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover } from '@/lib/investment-calculators';
+import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation, calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover } from '@/lib/calculators';
 import { explainTaxCalculation } from './explain-tax-calculation';
 import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
-import type { TaxCalculationResult, SipCalculationResult, EmiCalculationResult, CompoundInterestResult, BudgetAllocationResult, FdCalculationResult, RdCalculationResult, CalculationResult, ReverseSipResult, RetirementCorpusResult, DtiResult, SavingsRatioResult, TermInsuranceResult, PortfolioAllocationResult } from '@/lib/types';
+import type { CalculationResult } from '@/lib/types';
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 
