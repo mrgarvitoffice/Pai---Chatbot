@@ -69,6 +69,7 @@ const intentSchema = z.object({
     ]).describe("The user's primary intent."),
     income: z.number().optional().describe("Annual income for tax/insurance, or monthly for budget/DTI/savings. Extracted from user query (e.g., '15L', '10 lakhs' -> 1500000; '80k salary' -> 80000)."),
     regime: z.enum(['new', 'old', 'both']).optional().describe("Tax regime. 'both' if the user wants a comparison."),
+    fy: z.string().optional().describe("Fiscal year for tax calculations (e.g., 'FY 25-26' -> '2024-25'). Default to current FY if not specified."),
     sip_monthly: z.number().optional().describe("Monthly SIP investment amount."),
     sip_years: z.number().optional().describe("Duration of SIP in years."),
     sip_rate: z.number().optional().describe("Expected annual rate of return for SIP (default to 12% if not specified)."),
@@ -158,7 +159,7 @@ const intentPrompt = ai.definePrompt({
     - "GENERAL_KNOWLEDGE": **FALLBACK ONLY**. Use for conceptual questions without specific numbers for calculation.
     
     **EXAMPLES:**
-    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000
+    - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
     - "calculate my tax if my salary is 20 lakhs" -> intent: "TAX_CALCULATION", income: 2000000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "What is the EMI for a 50 lakh home loan for 20 years at 8.5%?" -> intent: "EMI_CALCULATION", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
@@ -174,7 +175,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     const intent = intentResult.output;
 
     if (intent?.intent === "TAX_CALCULATION" && intent.income) {
-        const fy = '2024-25';
+        const fy = intent.fy || '2024-25'; // Default to current FY
         const regime = intent.regime || 'new';
 
         if (regime === 'both') {
