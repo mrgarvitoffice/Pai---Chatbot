@@ -87,9 +87,7 @@ You can lower this tax by claiming deductions like:
 
 ✅ Key Takeaway:
 
-- The **New Regime** is better for you if you have minimal deductions, saving you **₹${
-  '{{#if (gt oldRegimeResult.total_tax newRegimeResult.total_tax)}}'
-}{{subtract oldRegimeResult.total_tax newRegimeResult.total_tax}}{{#else}}0{{/if}}** upfront.
+- The **New Regime** is better for you if you have minimal deductions, saving you **₹{{#if (oldRegimeResult.total_tax > newRegimeResult.total_tax)}}{{subtract oldRegimeResult.total_tax newRegimeResult.total_tax}}{{else}}0{{/if}}** upfront.
 - The **Old Regime** becomes more beneficial if your total claimed deductions significantly exceed **~₹2.5 Lakhs**.
 
 This is an illustrative calculation. For personalized advice, please consult a tax professional.
