@@ -130,7 +130,8 @@ const intentPrompt = ai.definePrompt({
     **INTENT DETECTION RULES:**
     1.  **PRIORITIZE CALCULATORS:** If the query contains specific numbers and asks for a calculation (e.g., "how much", "calculate", "what if"), you MUST choose a specific calculator intent.
     2.  **KEYWORDS & SYNONYMS:** Pay close attention to keywords.
-        - "tax", "salary" -> TAX_CALCULATION
+        - "tax", "salary", "income" -> TAX_CALCULATION. Do not confuse with insurance.
+        - "insurance", "life cover", "term plan" -> TERM_INSURANCE_CALCULATION.
         - "SIP", "monthly investment" -> SIP_CALCULATION
         - "EMI", "loan", "installment" -> EMI_CALCULATION
         - "FD", "fixed deposit" -> FD_CALCULATION
@@ -142,7 +143,8 @@ const intentPrompt = ai.definePrompt({
     - If a rate of return is not provided for SIP, default to 12.
 
     **INTENTS:**
-    - "TAX_CALCULATION": User wants to calculate income tax. Query must contain an income figure.
+    - "TAX_CALCULATION": User wants to calculate income tax. Query must contain an income figure and keywords like 'tax', 'salary', 'income'.
+    - "TERM_INSURANCE_CALCULATION": User wants to know how much term insurance they need. Triggered by 'insurance', 'life cover'.
     - "SIP_CALCULATION": User wants to calculate SIP returns.
     - "REVERSE_SIP_CALCULATION": User wants to calculate the required monthly SIP for a target amount.
     - "EMI_CALCULATION": User wants to calculate a loan EMI. Synonyms: "installment", "loan payment".
@@ -153,7 +155,6 @@ const intentPrompt = ai.definePrompt({
     - "RETIREMENT_CORPUS_CALCULATION": User wants to calculate their retirement corpus.
     - "DTI_CALCULATION": User wants to calculate their debt-to-income ratio.
     - "SAVINGS_RATIO_CALCULATION": User wants to calculate their savings ratio.
-    - "TERM_INSURANCE_CALCULATION": User wants to know how much term insurance they need.
     - "PORTFOLIO_ALLOCATION": User wants a recommended portfolio/asset allocation based on age and risk.
     - "DYNAMIC_DATA_QUERY": User is asking for a specific, current value (e.g., "what is the current repo rate?").
     - "GENERAL_KNOWLEDGE": **FALLBACK ONLY**. Use for conceptual questions without specific numbers for calculation.
@@ -161,12 +162,11 @@ const intentPrompt = ai.definePrompt({
     **EXAMPLES:**
     - "How much tax on ₹15L for FY 25-26?" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
     - "calculate my tax if my salary is 20 lakhs" -> intent: "TAX_CALCULATION", income: 2000000
+    - "how much term insurance for 15 lakhs annual income" -> intent: "TERM_INSURANCE_CALCULATION", income: 1500000
     - "If I invest 5000 a month for 10 years what will I get?" -> intent: "SIP_CALCULATION", sip_monthly: 5000, sip_years: 10, sip_rate: 12
     - "What is the EMI for a 50 lakh home loan for 20 years at 8.5%?" -> intent: "EMI_CALCULATION", emi_principal: 5000000, emi_years: 20, emi_rate: 8.5
     - "What is a mutual fund?" -> intent: "GENERAL_KNOWLEDGE"
-    - "How are mutual funds taxed?" -> intent: "GENERAL_KNOWLEDGE"
     - "Calculate a portfolio for a 30 year old with high risk appetite" -> intent: "PORTFOLIO_ALLOCATION", age: 30, risk_appetite: "high"
-    - "What is the best way to save for retirement?" -> intent: "GENERAL_KNOWLEDGE"
     - "Tax on ₹15L for FY 25–26" -> intent: "TAX_CALCULATION", income: 1500000, fy: "2024-25"
     `,
 });
