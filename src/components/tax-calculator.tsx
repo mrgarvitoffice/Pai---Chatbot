@@ -71,33 +71,30 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
   const handleExplain = async () => {
     if (!result || !form.getValues().income) return;
     setIsExplaining(true);
+    
+    // Placeholder for real source fetching
+    const sources = [
+        {
+          name: "Income Tax Department of India",
+          url: "https://www.incometax.gov.in/",
+          last_updated: "2024-04-01"
+        }
+    ];
+
     const explanationResult = await getTaxExplanationAction({
       income: form.getValues().income,
       fy: form.getValues().fy,
+      regime: form.getValues().regime,
       tax_breakdown: result.tax_breakdown,
       total_tax: result.total_tax,
+      sources: sources,
     });
     
     const explanationMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: (
-            <div>
-                <p>{explanationResult.explanation}</p>
-                <div className="mt-4 text-xs">
-                    <p className="font-semibold">Sources:</p>
-                    <ul className="list-disc pl-4">
-                        {explanationResult.sources.map(source => (
-                            <li key={source.url}>
-                                <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-                                    {source.name} (Updated: {source.last_updated})
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
-        )
+        content: explanationResult.explanation,
+        sources: explanationResult.sources,
     };
     setMessages(prev => [...prev, explanationMessage]);
     setIsExplaining(false);

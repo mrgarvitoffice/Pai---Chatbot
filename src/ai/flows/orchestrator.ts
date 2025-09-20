@@ -39,15 +39,6 @@ const OrchestratorOutputSchema = z.object({
 });
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
-// A simple mock for sources as we don't have a DB set up
-const sources = [
-    {
-      name: "Income Tax Department of India",
-      url: "https://www.incometax.gov.in/",
-      last_updated: "2024-04-01"
-    }
-];
-
 const intentSchema = z.object({
     intent: z.enum([
         "TAX_CALCULATION",
@@ -178,6 +169,16 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     if (intent?.intent === "TAX_CALCULATION" && intent.income) {
         const fy = intent.fy || '2024-25'; // Default to current FY
         const regime = intent.regime || 'both';
+
+        // Placeholder for real source fetching logic
+        const sources = [
+            {
+              name: "Income Tax Department of India",
+              url: "https://www.incometax.gov.in/",
+              last_updated: "2024-04-01"
+            }
+        ];
+
 
         if (regime === 'both') {
             const newRegimeResult = calculateTax(intent.income, fy, 'new');
@@ -388,5 +389,3 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         };
     }
 }
-
-    
