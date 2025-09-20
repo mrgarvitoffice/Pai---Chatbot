@@ -12,8 +12,6 @@ import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculat
 import { searchKnowledgeBase } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 import type { CalculationResult } from '@/lib/types';
-import { explainTaxCalculation } from './explain-tax-calculation';
-import type { ExplainTaxCalculationInput } from './explain-tax-calculation';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
 import { calculateTax } from '@/lib/calculators';
@@ -118,18 +116,9 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             const resultType = toolCall.name.replace('Tool', '').replace('calculator', '_').replace('allocator', '_').replace(/_$/, "");
             
             if (toolCall.name === 'taxCalculatorTool') {
-                 const sources = [{ name: "Income Tax Department", url: "https://www.incometax.gov.in/", last_updated: "2024-04-01" }];
-                 const explanationInput: ExplainTaxCalculationInput = {
-                    ...toolOutput,
-                    income: toolCall.input.income,
-                    fy: toolCall.input.fy,
-                    regime: toolCall.input.regime,
-                    sources,
-                 };
-                 const explanationResult = await explainTaxCalculation(explanationInput);
+                 explanation = `💰 Here's the income tax summary for your query.`;
                  return {
-                    response: explanationResult.explanation,
-                    sources: explanationResult.sources,
+                    response: explanation,
                     calculationResult: { type: 'tax', data: toolOutput },
                  }
             }
