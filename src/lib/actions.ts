@@ -2,7 +2,7 @@
 
 import { explainTaxCalculation } from '@/ai/flows/explain-tax-calculation';
 import type { ExplainTaxCalculationInput, ExplainTaxCalculationOutput } from '@/ai/flows/explain-tax-calculation';
-import { orchestrate, OrchestratorInput, OrchestratorOutput } from '@/ai/flows/orchestrator';
+import { orchestrate, OrchestratorInput, OrchestratorOutput } from '@/ai/flows/orchestrator-tool';
 
 type TaxExplanationInput = {
     income: number;
