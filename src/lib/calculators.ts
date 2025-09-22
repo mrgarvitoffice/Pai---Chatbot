@@ -8,48 +8,74 @@ export function calculateTax(
   regime: 'new' | 'old',
   deductions80C: number = 0,
 ): TaxCalculationResult {
+  // NOTE: This function currently uses FY 2024-25 tax rules for all calculations.
+  // A production system would need a rules engine to handle different fiscal years.
+  const rules = {
+      new: {
+          slabs: [
+              { from: 0, to: 300000, rate: 0 },
+              { from: 300001, to: 600000, rate: 0.05 },
+              { from: 600001, to: 900000, rate: 0.10 },
+              { from: 900001, to: 1200000, rate: 0.15 },
+              { from: 1200001, to: 1500000, rate: 0.20 },
+              { from: 1500001, to: Infinity, rate: 0.30 },
+          ],
+          standardDeduction: 50000,
+          rebateLimit: 700000,
+      },
+      old: {
+          slabs: [
+              { from: 0, to: 250000, rate: 0 },
+              { from: 250001, to: 500000, rate: 0.05 },
+              { from: 500001, to: 1000000, rate: 0.20 },
+              { from: 1000001, to: Infinity, rate: 0.30 },
+          ],
+          standardDeduction: 50000,
+          rebateLimit: 500000,
+      }
+  };
+
+  const selectedRules = rules[regime];
   const breakdown: Record<string, number> = {};
   breakdown['Gross Income'] = income;
 
   let taxable_income = income;
   let tax = 0;
-  
+
   if (regime === 'new') {
-    const standardDeduction = 50000; // As per FY 2024-25 for new regime
-    taxable_income = Math.max(0, income - standardDeduction);
-    breakdown['Standard Deduction'] = -standardDeduction;
+    taxable_income = Math.max(0, income - selectedRules.standardDeduction);
+    breakdown['Standard Deduction'] = -selectedRules.standardDeduction;
     
-    if (taxable_income <= 700000) {
+    if (taxable_income <= selectedRules.rebateLimit) {
       tax = 0; // Tax rebate u/s 87A
     } else {
         let tempTax = 0;
-        if (taxable_income > 300000)  tempTax += Math.min(300000, taxable_income - 300000) * 0.05;
-        if (taxable_income > 600000)  tempTax += Math.min(300000, taxable_income - 600000) * 0.10;
-        if (taxable_income > 900000)  tempTax += Math.min(300000, taxable_income - 900000) * 0.15;
-        if (taxable_income > 1200000) tempTax += Math.min(300000, taxable_income - 1200000) * 0.20;
-        if (taxable_income > 1500000) tempTax += (taxable_income - 1500000) * 0.30;
+        selectedRules.slabs.forEach(slab => {
+            if (taxable_income > slab.from) {
+                const taxableInSlab = Math.min(slab.to, taxable_income) - slab.from;
+                tempTax += taxableInSlab * slab.rate;
+            }
+        });
         tax = tempTax;
     }
 
   } else { // Old Regime
-    const standardDeduction = 50000;
-    const totalDeductions = standardDeduction + deductions80C;
+    const totalDeductions = selectedRules.standardDeduction + deductions80C;
     taxable_income = Math.max(0, income - totalDeductions);
-    breakdown['Standard Deduction'] = -standardDeduction;
+    breakdown['Standard Deduction'] = -selectedRules.standardDeduction;
     if (deductions80C > 0) breakdown['80C Deductions'] = -deductions80C;
     
-    const taxBeforeRebate = (() => {
-        let tempTax = 0;
-        if (taxable_income > 1000000) tempTax += (taxable_income - 1000000) * 0.30;
-        if (taxable_income > 500000) tempTax += (Math.min(taxable_income, 1000000) - 500000) * 0.20;
-        if (taxable_income > 250000) tempTax += (Math.min(taxable_income, 500000) - 250000) * 0.05;
-        return tempTax;
-    })();
-
-    if (taxable_income <= 500000) {
+    if (taxable_income <= selectedRules.rebateLimit) {
         tax = 0; // Rebate makes it zero
     } else {
-        tax = taxBeforeRebate;
+        let tempTax = 0;
+        selectedRules.slabs.forEach(slab => {
+            if (taxable_income > slab.from) {
+                const taxableInSlab = Math.min(slab.to, taxable_income) - slab.from;
+                tempTax += taxableInSlab * slab.rate;
+            }
+        });
+        tax = tempTax;
     }
   }
   

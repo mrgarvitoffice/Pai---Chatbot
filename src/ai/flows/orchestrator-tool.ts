@@ -116,7 +116,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             const resultType = toolCall.name.replace('Tool', '').replace('calculator', '_').replace('allocator', '_').replace(/_$/, "");
             
             if (toolCall.name === 'taxCalculatorTool') {
-                 explanation = `💰 Here's the income tax summary for your query.`;
+                 explanation = `💰 Here's the income tax summary for FY ${toolCall.input.fy} under the ${toolCall.input.regime} regime.`;
                  return {
                     response: explanation,
                     calculationResult: { type: 'tax', data: toolOutput },
@@ -143,7 +143,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
         
         if (toolCall.name === 'searchKnowledgeBase' || toolCall.name === 'getDynamicData') {
-             // Let the LLM generate a response based on the tool's output
              const finalResponseText = llmResponse.text;
              let responseSources: OrchestratorOutput['sources'] = [];
               if (toolCall.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
@@ -168,7 +167,6 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
         }
     }
 
-    // Fallback if no tool is called
     const fallbackResponseText = llmResponse.text;
     if (!fallbackResponseText) {
         return { response: "I'm sorry, I couldn't find an answer to that. Could you please rephrase?" };

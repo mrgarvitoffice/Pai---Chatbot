@@ -11,6 +11,8 @@ interface TaxResultCardProps {
 }
 
 const getTaxSlabs = (regime: 'new' | 'old') => {
+    // Note: These slabs are for FY 2024-25. The calculator logic is currently
+    // simplified and uses these for any future year as well.
     if (regime === 'new') {
         return [
             "₹0 – ₹3L → Nil",
@@ -42,20 +44,18 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
         <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl space-y-4">
             <div className="p-4 rounded-xl bg-background space-y-4">
                 <div className="text-center">
-                     <p className="text-sm text-muted-foreground">Total Tax Payable</p>
+                     <p className="text-sm text-muted-foreground">Total Tax Payable (FY {fy})</p>
                      <p className="font-semibold text-3xl text-primary">₹{total_tax.toLocaleString('en-IN')}</p>
                 </div>
                 
                 <div className="text-sm font-sans">
-                     <p className="font-semibold">💰 Income Tax Summary — FY {fy} ({regime} Regime)</p>
-                     <p className="mt-2">🧮 <span className="font-semibold">Your Income:</span> ₹{income.toLocaleString('en-IN')}</p>
+                     <p className="whitespace-pre-wrap">{explanation}</p>
                      <div className="mt-2">
-                        <p>🧾 <span className="font-semibold">Tax Slabs:</span></p>
+                        <p>🧾 <span className="font-semibold">Tax Slabs ({regime} Regime):</span></p>
                         <ul className="list-disc pl-8 mt-1 text-muted-foreground">
                             {taxSlabs.map(slab => <li key={slab}>{slab}</li>)}
                         </ul>
                      </div>
-                      <p className="mt-2">👉 <span className="font-semibold">Tax Payable:</span> ₹{total_tax.toLocaleString('en-IN')} <span className="text-muted-foreground">(Inclusive of 4% Cess)</span></p>
                      <Separator className="my-3"/>
                      <p className="text-xs text-muted-foreground">⚠️ Note: This is an illustrative calculation. For personalized advice, please consult a tax professional.</p>
                 </div>
