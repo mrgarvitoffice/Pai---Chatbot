@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import ReactMarkdown from 'react-markdown';
 
 
 export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => {
@@ -33,7 +34,9 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
         )}
       >
         {typeof content === 'string' ? (
-          <div className="p-4 whitespace-pre-wrap font-sans">{content}</div>
+          <div className="p-4 prose prose-sm dark:prose-invert prose-p:my-2 prose-headings:my-3 prose-ul:my-2 max-w-none">
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </div>
         ) : (
           content
         )}
@@ -72,5 +75,3 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
     </div>
   );
 };
-
-    

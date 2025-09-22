@@ -3,6 +3,7 @@
 import type { TaxCalculationResult, TaxComparisonResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
+import ReactMarkdown from "react-markdown";
 
 interface TaxResultCardProps {
     result?: TaxCalculationResult;
@@ -48,8 +49,8 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                      <p className="font-semibold text-3xl text-primary">₹{total_tax.toLocaleString('en-IN')}</p>
                 </div>
                 
-                <div className="text-sm font-sans">
-                     <p className="whitespace-pre-wrap">{explanation}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                     <ReactMarkdown>{explanation}</ReactMarkdown>
                      <div className="mt-2">
                         <p>🧾 <span className="font-semibold">Tax Slabs ({regime} Regime):</span></p>
                         <ul className="list-disc pl-8 mt-1 text-muted-foreground">
@@ -91,7 +92,9 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
     return (
          <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl">
             <div className="p-4 rounded-xl bg-background">
-                <div className="whitespace-pre-wrap text-sm text-foreground">{explanation}</div>
+                 <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown>{explanation}</ReactMarkdown>
+                </div>
             </div>
         </div>
     );
