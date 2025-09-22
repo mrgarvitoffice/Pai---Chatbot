@@ -91,7 +91,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
 
             if (newRegimeInput && oldRegimeInput) {
                 const newRegimeResult = calculateTax(newRegimeInput.income, newRegimeInput.fy, 'new');
-                const oldRegimeResult = calculateTax(oldRegimeInput.income, oldRegimeInput.fy, 'old');
+                const oldRegimeResult = calculateTax(oldRegimeInput.income, newRegimeInput.fy, 'old');
 
                 const comparisonInput: CompareTaxRegimesInput = {
                     income: newRegimeInput.income,
