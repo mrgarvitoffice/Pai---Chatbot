@@ -1,7 +1,7 @@
 // This file contains the data that you should upload to your Firestore "static_rulebook" collection.
 // This data structure and content are based on the user's detailed production-ready guide.
 
-interface RulebookDocument {
+export interface RulebookDocument {
     slug: string;
     title: string;
     category: string;

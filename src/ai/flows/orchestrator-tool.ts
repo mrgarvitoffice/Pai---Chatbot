@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool } from '../tools/calculators';
-import { searchKnowledgeBase } from '../tools/knowledge-base';
+import { searchKnowledgeBase, generateAndStoreKnowledge } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 import type { CalculationResult } from '@/lib/types';
 import { compareTaxRegimes } from './compare-tax-regimes';
@@ -51,7 +51,8 @@ const orchestratorPrompt = ai.definePrompt({
         portfolioAllocatorTool,
         termInsuranceCalculatorTool,
         compoundInterestCalculatorTool,
-        searchKnowledgeBase, 
+        searchKnowledgeBase,
+        generateAndStoreKnowledge,
         getDynamicData
     ],
     prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate and helpful answers by using the correct tool based on the user's EXACT query.
@@ -59,16 +60,17 @@ const orchestratorPrompt = ai.definePrompt({
     **Analyze the user's query and decide which tool to use. Follow these rules precisely:**
 
     **RULE 1: PRIORITIZE CALCULATORS**
-    If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000", "what is the EMI for 50 lakh"), you MUST use one of the available calculator tools. Do NOT use the knowledge base for these.
+    If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000"), you MUST use one of the available calculator tools.
 
-    **RULE 2: TAX CALCULATION LOGIC (Follow this strictly)**
+    **RULE 2: KNOWLEDGE BASE**
+    - For conceptual or informational questions (e.g., "what is SIP?", "how to save tax?"), you MUST FIRST use the 'searchKnowledgeBase' tool.
+    - **If 'searchKnowledgeBase' returns an empty result**, you MUST THEN use the 'generateAndStoreKnowledge' tool to create a new answer.
+    - For questions about current rates or values (e.g., "latest PPF rate"), use the 'getDynamicData' tool.
+
+    **RULE 3: TAX CALCULATION LOGIC (Follow this strictly)**
     - If the user asks for a tax calculation **without specifying a regime** (e.g., "tax on 15L"), you MUST call the 'taxCalculatorTool' with **regime='new'**.
     - If the user explicitly asks for the **'old regime'** (e.g., "tax on 15L under old regime"), you MUST call the 'taxCalculatorTool' with **regime='old'**.
     - If the user asks to **compare regimes** or uses words like "vs", "or", "which is better", "comparison" (e.g., "tax on 15L old vs new"), you MUST call the 'taxCalculatorTool' TWICE: once with regime='new' and once with regime='old'. Do NOT compare if the user does not ask for it.
-
-    **RULE 3: OTHER TOOLS**
-    - For conceptual questions (e.g., "what is SIP?", "how to save tax?"), use the 'searchKnowledgeBase' tool.
-    - For questions about current rates or values (e.g., "latest PPF rate"), use the 'getDynamicData' tool.
 
     **RULE 4: FALLBACK**
     If no tool is appropriate, provide a helpful answer from your own knowledge. Do not invent numbers or financial data.
@@ -142,16 +144,23 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             };
         }
         
-        if (toolCall.name === 'searchKnowledgeBase' || toolCall.name === 'getDynamicData') {
+        if (toolCall.name === 'searchKnowledgeBase' || toolCall.name === 'getDynamicData' || toolCall.name === 'generateAndStoreKnowledge') {
              const finalResponseText = llmResponse.text;
              let responseSources: OrchestratorOutput['sources'] = [];
-              if (toolCall.name === 'searchKnowledgeBase' && Array.isArray(toolOutput)) {
+              if (toolCall.name === 'searchKnowledgeBase' && Array.isArray(toolOutput) && toolOutput.length > 0) {
                     responseSources = toolOutput.map(doc => ({
                         name: `${doc.slug} (v${doc.version})`,
                         url: doc.references?.[0]?.url || '#',
                         last_updated: doc.last_updated,
                     }));
                 }
+              if (toolCall.name === 'generateAndStoreKnowledge' && toolOutput) {
+                   responseSources = [{
+                        name: `AI Generated: ${toolOutput.slug}`,
+                        url: '#',
+                        last_updated: new Date().toISOString().split('T')[0],
+                    }];
+              }
                 if (toolCall.name === 'getDynamicData' && toolOutput) {
                      responseSources = [{
                         name: `Source: ${toolOutput.source}`,

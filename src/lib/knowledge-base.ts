@@ -1,58 +1,49 @@
 // In a real app, you'd remove the local data and the check.
-import { documents as localDocuments } from './static-rulebook-data'; 
+import { documents as localDocuments, RulebookDocument } from './static-rulebook-data'; 
+
+// This will act as our in-memory database, starting with the static data.
+let documentStore: RulebookDocument[] = [...localDocuments];
 
 /**
  * Searches the document store for content relevant to the query.
- * This is a basic keyword search simulation based on tags. A real implementation 
- * would use Firestore's native capabilities or semantic vector search as per the blueprint.
  * @param query The user's search query.
  * @returns A list of relevant document chunks.
  */
-export async function searchDocuments(query: string) {
+export async function searchDocuments(query: string): Promise<RulebookDocument[]> {
     console.log("Searching for rulebook entries related to:", query);
-    
-    // This is a simple fallback to use local data as we cannot connect to a real DB.
-    // In a production app, you would replace the call to `searchLocalDocuments`
-    // with your actual Firestore query logic.
-    try {
-        // NOTE: The Firestore implementation would go here.
-        // const { db } = await import('./firebase');
-        // ... Firestore query logic ...
-        
-        // Simulating a "not found" scenario to rely on the local fallback
-        if (false) {
-            // This block is intentionally unreachable to demonstrate the fallback.
-            // In a real app, you'd have your Firestore logic here.
-            return []; 
-        }
-
-        return searchLocalDocuments(query);
-
-    } catch (error) {
-        console.warn("Firestore search failed, falling back to local data:", (error as Error).message);
-        return searchLocalDocuments(query);
-    }
-}
-
-
-/**
- * Local fallback search function.
- */
-function searchLocalDocuments(query: string) {
     const queryKeywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 2);
     
-    // Find documents where at least one tag matches a keyword in the query.
-    const relevantDocs = localDocuments.filter(doc => 
-        doc.tags.some(tag => queryKeywords.some(queryWord => tag.includes(queryWord)))
+    const relevantDocs = documentStore.filter(doc => 
+        doc.tags.some(tag => queryKeywords.some(queryWord => tag.includes(queryWord))) ||
+        queryKeywords.some(queryWord => doc.title.toLowerCase().includes(queryWord))
     );
 
     if (relevantDocs.length > 0) {
-        console.log(`Found ${relevantDocs.length} documents in local data.`);
-        // Return top 3 matches as per blueprint
+        console.log(`Found ${relevantDocs.length} documents in the store.`);
         return relevantDocs.slice(0, 3);
     }
     
-    console.log("No relevant documents found in local data.");
+    console.log("No relevant documents found in the store.");
     return [];
 }
 
+/**
+ * Adds a new document to our in-memory store.
+ * In a real app, this would write to a Firestore collection.
+ * @param newDoc The new document to add.
+ */
+export async function addDocument(newDoc: RulebookDocument): Promise<void> {
+    console.log(`Adding new document to store with slug: ${newDoc.slug}`);
+    
+    // Prevent duplicates by checking slug
+    const exists = documentStore.some(doc => doc.slug === newDoc.slug);
+    if (!exists) {
+        documentStore.unshift(newDoc); // Add to the beginning of the array
+        console.log(`Document added. Store size is now ${documentStore.length}`);
+    } else {
+        console.log(`Document with slug ${newDoc.slug} already exists. Not adding.`);
+    }
+}
+
+
+export type { RulebookDocument };
