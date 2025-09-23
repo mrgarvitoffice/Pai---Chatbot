@@ -48,6 +48,7 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        'user-bubble': 'hsl(var(--user-bubble))',
       },
       borderRadius: {
         '2xl': 'calc(var(--radius) * 2)',
