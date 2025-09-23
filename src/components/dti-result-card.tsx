@@ -37,7 +37,7 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
                 </div>
 
                 <div>
-                    <p className="text-xs text-muted-foreground mb-1">Risk Levels: &lt;30% (Safe), 30-40% (Moderate), &gt;40% (High Risk)</p>
+                    <p className="text-xs text-muted-foreground mb-1">Risk Levels: <30% (Safe), 30-40% (Moderate), >40% (High Risk)</p>
                     <Progress value={result.dtiRatio} className="h-2 [&>div]:bg-primary" />
                 </div>
 
