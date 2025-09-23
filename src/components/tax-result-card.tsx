@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Banknote, FileText, Minus, Plus } from 'lucide-react';
+import { Banknote, Minus, Plus } from 'lucide-react';
 
 interface TaxResultCardProps {
     result?: TaxCalculationResult;
@@ -29,7 +29,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                     ₹{total_tax.toLocaleString('en-IN')}
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
                 <div className="p-4 rounded-xl bg-background border shadow-inner">
                     <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 text-foreground/90">
                          <ReactMarkdown>{explanation}</ReactMarkdown>
@@ -72,14 +72,14 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
 
 function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResult, explanation: string }) {
     return (
-         <Card className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl border-0 shadow-none">
-            <CardContent className="p-0">
+         <Card className="bg-background/50 border-0 shadow-none">
+            <CardContent className="p-4">
                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2">
                     <ReactMarkdown>{explanation}</ReactMarkdown>
                 </div>
             </CardContent>
-             <CardFooter className="pt-4 px-0 pb-0">
-                <p className="text-xs text-muted-foreground">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
+             <CardFooter className="pt-0 px-4 pb-4">
+                <p className="text-xs text-muted-foreground w-full">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
             </CardFooter>
         </Card>
     );
