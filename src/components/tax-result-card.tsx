@@ -59,7 +59,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                         </ul>
                  </div>
                  <Separator className="my-3"/>
-                 <p className="text-xs text-muted-foreground">⚠️ Note: This is an illustrative calculation. For personalized advice, please consult a tax professional.</p>
+                 <p className="text-xs text-muted-foreground">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
             </div>
             
             <Accordion type="single" collapsible className="w-full">
@@ -94,6 +94,7 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2">
                     <ReactMarkdown>{explanation}</ReactMarkdown>
                 </div>
+                 <p className="mt-4 text-xs text-muted-foreground">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
             </div>
         </div>
     );

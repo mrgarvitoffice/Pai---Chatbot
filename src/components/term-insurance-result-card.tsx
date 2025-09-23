@@ -31,11 +31,12 @@ export function TermInsuranceResultCard({ result, explanation }: TermInsuranceRe
 
             <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
                 <p>{explanation}</p>
+                 <p className="mt-4 text-xs">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
             </div>
             
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1" className="border-t">
-                <AccordionTrigger className="font-code text-sm">How is this calculated?</AccordionTrigger>
+                <AccordionTrigger className="font-code text-sm">How we calculated this</AccordionTrigger>
                 <AccordionContent>
                     <p className="text-sm font-code text-muted-foreground">
                         This is a general guideline suggesting a life cover of 10-15 times your annual income. It ensures your family can maintain their lifestyle and meet future goals. It's recommended to add any outstanding loans (like a home loan) to this amount for complete protection.

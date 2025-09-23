@@ -42,6 +42,7 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
 
             <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
                 <p>{explanation}</p>
+                 <p className="mt-4 text-xs">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
             </div>
         </div>
     );

@@ -43,11 +43,12 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
 
             <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
                 <p>{explanation}</p>
+                 <p className="mt-4 text-xs">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
             </div>
             
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1" className="border-t">
-                <AccordionTrigger className="font-code text-sm">About the 50/30/20 Rule</AccordionTrigger>
+                <AccordionTrigger className="font-code text-sm">How we calculated this</AccordionTrigger>
                 <AccordionContent>
                     <p className="text-sm font-code text-muted-foreground">
                         The 50/30/20 rule is a simple budgeting guideline. It suggests allocating 50% of your after-tax income to 'Needs' (essentials like rent, groceries), 30% to 'Wants' (lifestyle expenses like dining out), and 20% to 'Savings' (investments, debt repayment).
