@@ -32,7 +32,7 @@ export const sipCalculatorTool = ai.defineTool(
     inputSchema: z.object({
       monthly_investment: z.number().describe('Monthly investment amount.'),
       years: z.number().describe('Investment duration in years.'),
-      annual_rate: z.number().describe('Expected annual rate of return (default to 12% if not specified).'),
+      annual_rate: z.number().optional().default(12).describe('Expected annual rate of return (defaults to 12% if not specified).'),
     }),
     outputSchema: z.any(),
   },
