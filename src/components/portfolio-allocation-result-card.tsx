@@ -2,8 +2,7 @@
 
 import type { PortfolioAllocationResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { PieChart, TrendingUp, ShieldCheck, Gem } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, ShieldCheck, Gem } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -22,13 +21,13 @@ interface PortfolioAllocationResultCardProps {
 const chartData = (result: PortfolioAllocationResult) => [
   { name: "Equity", value: result.equity, fill: "hsl(var(--primary))" },
   { name: "Debt", value: result.debt, fill: "hsl(var(--secondary))" },
-  { name: "Gold", value: result.gold, fill: "hsl(var(--chart-3))" },
+  { name: "Gold", value: result.gold, fill: "hsl(var(--accent))" },
 ];
 
 const chartConfig = {
   equity: { label: "Equity", color: "hsl(var(--primary))" },
   debt: { label: "Debt", color: "hsl(var(--secondary))" },
-  gold: { label: "Gold", color: "hsl(var(--chart-3))" },
+  gold: { label: "Gold", color: "hsl(var(--accent))" },
 };
 
 
@@ -69,7 +68,7 @@ export function PortfolioAllocationResultCard({ result, explanation }: Portfolio
             </div>
 
 
-            <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground">
+            <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
                 <p>{explanation}</p>
             </div>
             

@@ -50,7 +50,7 @@ export function ReverseSipResultCard({ result, explanation }: ReverseSipResultCa
                 </div>
             </div>
 
-            <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground">
+            <div className="py-2 whitespace-pre-wrap text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
                 <p>{explanation}</p>
             </div>
             

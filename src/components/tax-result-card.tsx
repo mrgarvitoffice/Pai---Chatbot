@@ -49,18 +49,17 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                      <p className="font-semibold text-3xl text-primary">₹{total_tax.toLocaleString('en-IN')}</p>
                 </div>
                 
-                <div className="prose prose-sm dark:prose-invert max-w-none">
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2">
                      <ReactMarkdown>{explanation}</ReactMarkdown>
-                     <div className="mt-2">
-                        <p>🧾 <span className="font-semibold">Tax Slabs ({regime} Regime):</span></p>
-                        <ul className="list-disc pl-8 mt-1 text-muted-foreground">
+                </div>
+                 <div className="text-sm">
+                        <p className="font-semibold">🧾 Tax Slabs ({regime} Regime):</p>
+                        <ul className="list-disc pl-5 mt-1 text-muted-foreground">
                             {taxSlabs.map(slab => <li key={slab}>{slab}</li>)}
                         </ul>
-                     </div>
-                     <Separator className="my-3"/>
-                     <p className="text-xs text-muted-foreground">⚠️ Note: This is an illustrative calculation. For personalized advice, please consult a tax professional.</p>
-                </div>
-
+                 </div>
+                 <Separator className="my-3"/>
+                 <p className="text-xs text-muted-foreground">⚠️ Note: This is an illustrative calculation. For personalized advice, please consult a tax professional.</p>
             </div>
             
             <Accordion type="single" collapsible className="w-full">
@@ -92,7 +91,7 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
     return (
          <div className="p-4 bg-background/50 rounded-b-2xl rounded-tr-2xl">
             <div className="p-4 rounded-xl bg-background">
-                 <div className="prose prose-sm dark:prose-invert max-w-none">
+                 <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2">
                     <ReactMarkdown>{explanation}</ReactMarkdown>
                 </div>
             </div>
