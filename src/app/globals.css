@@ -150,3 +150,13 @@ body {
 .prose li::marker {
     color: hsl(var(--primary));
 }
+
+.prose p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
