@@ -14,9 +14,9 @@ interface SipResultCardProps {
 export function SipResultCard({ result, explanation }: SipResultCardProps) {
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center">
+            <CardHeader className="text-center pb-4">
                 <CardDescription>Projected Value</CardDescription>
-                <CardTitle className="text-3xl text-primary">₹{result.future_value.toLocaleString('en-IN')}</CardTitle>
+                <CardTitle className="text-3xl font-bold text-primary">₹{result.future_value.toLocaleString('en-IN')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

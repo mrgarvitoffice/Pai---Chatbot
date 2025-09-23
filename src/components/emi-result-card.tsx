@@ -13,9 +13,9 @@ interface EmiResultCardProps {
 export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center">
+            <CardHeader className="text-center pb-4">
                 <CardDescription>Monthly EMI</CardDescription>
-                <CardTitle className="text-3xl text-primary">₹{result.emi.toLocaleString('en-IN')}</CardTitle>
+                <CardTitle className="text-3xl font-bold text-primary">₹{result.emi.toLocaleString('en-IN')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

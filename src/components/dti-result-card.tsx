@@ -19,9 +19,9 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
 
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center">
+            <CardHeader className="text-center pb-4">
                 <CardDescription>Debt-to-Income (DTI) Ratio</CardDescription>
-                <CardTitle className="text-3xl text-primary">{result.dtiRatio}%</CardTitle>
+                <CardTitle className="text-3xl font-bold text-primary">{result.dtiRatio}%</CardTitle>
                 <p className={`text-sm font-semibold ${risk.color}`}>{risk.label}</p>
             </CardHeader>
             <CardContent className="space-y-4">

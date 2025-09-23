@@ -19,9 +19,9 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
 
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center">
+            <CardHeader className="text-center pb-4">
                 <CardDescription>Your Savings Ratio</CardDescription>
-                <CardTitle className="text-3xl text-primary">{result.savingsRatio}%</CardTitle>
+                <CardTitle className="text-3xl font-bold text-primary">{result.savingsRatio}%</CardTitle>
                 <p className={`text-sm font-semibold ${benchmark.color}`}>{benchmark.label}</p>
             </CardHeader>
             <CardContent className="space-y-4">

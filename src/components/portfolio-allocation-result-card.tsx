@@ -37,9 +37,9 @@ export function PortfolioAllocationResultCard({ result, explanation }: Portfolio
 
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-             <CardHeader className="text-center">
+             <CardHeader className="text-center pb-4">
                 <CardDescription>Recommended Asset Allocation</CardDescription>
-                <CardTitle className="text-xl">For a {result.age}-year-old with '{result.riskAppetite}' risk</CardTitle>
+                <CardTitle className="text-xl font-bold">For a {result.age}-year-old with '{result.riskAppetite}' risk</CardTitle>
             </CardHeader>
              <CardContent className="space-y-4">
                  <div className="h-[200px] w-full">

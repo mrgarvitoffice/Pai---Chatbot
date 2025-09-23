@@ -16,9 +16,9 @@ export function RetirementResultCard({ result, explanation }: RetirementResultCa
 
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center">
+            <CardHeader className="text-center pb-4">
                 <CardDescription>Required Retirement Corpus</CardDescription>
-                <CardTitle className="text-3xl text-primary">₹{result.requiredCorpus.toLocaleString('en-IN')}</CardTitle>
+                <CardTitle className="text-3xl font-bold text-primary">₹{result.requiredCorpus.toLocaleString('en-IN')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 text-sm">
