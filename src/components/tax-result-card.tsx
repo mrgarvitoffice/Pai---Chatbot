@@ -73,7 +73,11 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
 function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResult, explanation: string }) {
     return (
          <Card className="bg-background/50 border-0 shadow-none">
-            <CardContent className="p-4">
+             <CardHeader className="pb-4">
+                <CardTitle>Tax Regime Comparison</CardTitle>
+                <CardDescription>FY {result.new.fy} for an income of ₹{result.new.income.toLocaleString('en-IN')}</CardDescription>
+             </CardHeader>
+            <CardContent className="p-4 pt-0">
                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2">
                     <ReactMarkdown>{explanation}</ReactMarkdown>
                 </div>
