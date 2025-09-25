@@ -25,23 +25,37 @@ export const generatePdf = async (elementId: string) => {
     onclone: (clonedDoc) => {
       const clonedEl = clonedDoc.getElementById(elementId);
       if (clonedEl) {
-        // Force-expand all accordions
+        // Force-expand all accordions to be visible in the PDF
         const triggers = clonedEl.querySelectorAll<HTMLElement>('[data-state="closed"]');
         triggers.forEach(trigger => {
+          // Set state to open
           trigger.dataset.state = 'open';
+          
+          // Rotate the chevron icon
+          const chevron = trigger.querySelector<HTMLElement>('svg');
+          if (chevron) {
+            chevron.style.transform = 'rotate(180deg)';
+          }
+          
           const contentId = trigger.getAttribute('aria-controls');
           if (contentId) {
             const content = clonedEl.querySelector<HTMLElement>(`#${contentId}`);
             if (content) {
               content.dataset.state = 'open';
-              // Remove the 'hidden' style if it's applied by the accordion
-              content.style.removeProperty('display');
+              // Directly override styles to ensure visibility for html2canvas
+              content.style.height = 'auto';
+              content.style.overflow = 'visible';
+              content.style.opacity = '1';
+              const childDiv = content.querySelector<HTMLElement>('div');
+              if (childDiv) {
+                 childDiv.style.visibility = 'visible';
+              }
             }
           }
         });
 
         // Replace gradient text with solid color for better PDF rendering
-        clonedEl.querySelectorAll<HTMLElement>('.bg-gradient-to-r, .bg-gradient-to-br').forEach(el => {
+        clonedEl.querySelectorAll<HTMLElement>('.bg-gradient-to-r, .bg-gradient-to-br, .bg-clip-text, .text-transparent').forEach(el => {
             el.classList.remove('bg-gradient-to-r', 'bg-gradient-to-br', 'bg-clip-text', 'text-transparent');
             if (el.className.includes('destructive')) {
                  el.style.color = '#ef4444';
@@ -58,7 +72,20 @@ export const generatePdf = async (elementId: string) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    let heightLeft = pdfHeight;
+    let position = 0;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+    }
+    
     pdf.save("pai-financial-report.pdf");
   });
 };
