@@ -23,20 +23,20 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
 
     return (
         <Card className="bg-background/50 border-0 shadow-none">
-            <CardHeader className="text-center pb-4">
-                <CardDescription>Total Tax Payable (FY {result.fy})</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
-                    ₹{total_tax.toLocaleString('en-IN')}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="p-4 rounded-xl bg-background border shadow-inner">
+            <CardHeader className="pb-4">
+                 <div className="p-4 rounded-xl bg-background border shadow-inner">
                     <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 text-foreground/90">
                          <ReactMarkdown>{explanation}</ReactMarkdown>
                     </div>
                 </div>
+            </CardHeader>
+            <CardContent className="text-center pt-0">
+                <CardDescription>Total Tax Payable (FY {result.fy})</CardDescription>
+                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                    ₹{total_tax.toLocaleString('en-IN')}
+                </CardTitle>
             </CardContent>
-            <CardFooter className="flex-col items-start gap-2 pt-4">
+            <CardFooter className="flex-col items-start gap-2 pt-0">
                 <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className="border-t">
