@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,7 +68,7 @@ const toolNames: Record<Tool, string> = {
 export function ToolsPanel({ setMessages, latestReportId, setLatestReportId }: ToolsPanelProps) {
   const [activeTool, setActiveTool] = useState<Tool>('tax');
 
-  const ActiveToolComponent = toolComponents[activeTool];
+  const ActiveToolComponent = useMemo(() => toolComponents[activeTool], [activeTool]);
   
   return (
     <Card className="rounded-2xl shadow-sm h-full flex flex-col">
