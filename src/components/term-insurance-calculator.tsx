@@ -65,7 +65,19 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
       <CardContent className="flex-1 overflow-y-auto pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField control={form.control} name="annualIncome" render={({ field }) => ( <FormItem> <FormLabel>Your Annual Income (₹)</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField
+              control={form.control}
+              name="annualIncome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Annual Income (₹)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button type="submit" className="w-full" disabled={isCalculating}>
               {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isCalculating ? 'Calculating...' : 'Calculate Cover'}
