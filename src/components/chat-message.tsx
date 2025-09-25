@@ -76,10 +76,12 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   }, [id, onFeedback]);
 
   const renderContent = () => {
+    // If content is a string (from user), wrap it in a div.
     if (typeof content === 'string') {
       return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
     }
-    return <div className="p-4">{content}</div>;
+    // If content is already a valid React element (from assistant), render it directly.
+    return content;
   };
 
   return (
