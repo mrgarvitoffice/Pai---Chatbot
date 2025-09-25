@@ -140,7 +140,7 @@ export default function Home() {
   
   const [api, setApi] = useState<CarouselApi>()
   const [activeMobileView, setActiveMobileView] = useState<MobileView>('chat');
-  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
+  const chatScrollAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!api) {
@@ -155,29 +155,6 @@ export default function Home() {
     setActiveMobileView(view);
     api?.scrollTo(view === 'chat' ? 0 : 1);
   }
-
-  useEffect(() => {
-    const savedMessages = localStorage.getItem('chatHistory-active');
-    if (savedMessages) {
-      try {
-        setMessages(JSON.parse(savedMessages));
-      } catch (e) {
-        console.error("Failed to parse chat history:", e);
-        setMessages([]);
-      }
-    }
-  }, []);
-
-  const saveCurrentChat = useCallback(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatHistory-active', JSON.stringify(messages));
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    saveCurrentChat();
-  }, [saveCurrentChat]);
-
 
   const scrollToBottom = () => {
     if (chatScrollAreaRef.current) {
