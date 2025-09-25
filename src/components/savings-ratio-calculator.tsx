@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { savingsRatio } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, SavingsRatioResult } from '@/lib/types';
 import { SavingsRatioResultCard } from './savings-ratio-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   monthlyIncome: z.coerce.number().min(1),
@@ -31,6 +32,7 @@ interface SavingsRatioCalculatorProps {
 export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorProps) {
   const [result, setResult] = useState<SavingsRatioResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +46,8 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
     setIsCalculating(true);
     setResult(null);
     const calculationResult = savingsRatio(values.monthlyIncome, values.monthlySavings);
+    const newId = `savings-ratio-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -56,7 +60,7 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <SavingsRatioResultCard result={calculationResult} explanation={`Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`} />
+            content: <SavingsRatioResultCard id={newId} result={calculationResult} explanation={`Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -107,6 +111,14 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
           </div>
         )}
       </CardContent>
+       {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

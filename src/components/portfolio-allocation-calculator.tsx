@@ -9,14 +9,15 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculatePortfolioAllocation } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, PortfolioAllocationResult } from '@/lib/types';
 import { PortfolioAllocationResultCard } from './portfolio-allocation-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   age: z.coerce.number().min(18).max(100),
@@ -32,6 +33,7 @@ interface PortfolioAllocationCalculatorProps {
 export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocationCalculatorProps) {
   const [result, setResult] = useState<PortfolioAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,6 +47,8 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculatePortfolioAllocation(values.age, values.riskAppetite);
+    const newId = `portfolio-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -57,7 +61,7 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <PortfolioAllocationResultCard result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
+            content: <PortfolioAllocationResultCard id={newId} result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -121,6 +125,14 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
           </div>
         )}
       </CardContent>
+       {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

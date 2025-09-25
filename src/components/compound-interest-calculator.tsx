@@ -9,14 +9,15 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { compoundFutureValue } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, CompoundInterestResult } from '@/lib/types';
 import { CompoundInterestResultCard } from './compound-interest-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   principal: z.coerce.number().min(1, { message: 'Principal must be greater than 0.' }),
@@ -34,6 +35,7 @@ interface CompoundInterestCalculatorProps {
 export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalculatorProps) {
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -49,6 +51,8 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
     setIsCalculating(true);
     setResult(null);
     const calculationResult = compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq);
+    const newId = `ci-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -61,7 +65,7 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <CompoundInterestResultCard result={calculationResult} explanation={`The future value of your lump-sum investment has been calculated with compound interest.`} />
+            content: <CompoundInterestResultCard id={newId} result={calculationResult} explanation={`The future value of your lump-sum investment has been calculated with compound interest.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -151,6 +155,14 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

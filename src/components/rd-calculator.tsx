@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateRd } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, RdCalculationResult } from '@/lib/types';
 import { RdResultCard } from './rd-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   monthly_deposit: z.coerce.number().min(1, { message: 'Deposit must be greater than 0.' }),
@@ -32,6 +33,7 @@ interface RdCalculatorProps {
 export function RdCalculator({ setMessages }: RdCalculatorProps) {
   const [result, setResult] = useState<RdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<RdFormValues>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,8 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculateRd(values.monthly_deposit, values.annual_rate, values.months);
+    const newId = `rd-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +62,7 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <RdResultCard result={calculationResult} explanation={`Here is the calculated maturity value for your Recurring Deposit.`} />
+            content: <RdResultCard id={newId} result={calculationResult} explanation={`Here is the calculated maturity value for your Recurring Deposit.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -135,6 +139,14 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

@@ -9,7 +9,7 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { budgetAllocation } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -31,7 +31,7 @@ interface BudgetAllocationCalculatorProps {
 export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalculatorProps) {
   const [result, setResult] = useState<BudgetAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const resultCardId = `budget-result-${uuidv4()}`;
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +44,8 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
     setIsCalculating(true);
     setResult(null);
     const calculationResult = budgetAllocation(values.monthlyIncome);
+    const newId = `budget-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -56,7 +58,7 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <BudgetAllocationResultCard id={resultCardId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
+            content: <BudgetAllocationResultCard id={newId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -107,13 +109,13 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
           </div>
         )}
       </CardContent>
-       {result && (
-        <div className="p-4 border-t">
+       {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
           <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>
-        </div>
+        </CardFooter>
       )}
     </Card>
   );

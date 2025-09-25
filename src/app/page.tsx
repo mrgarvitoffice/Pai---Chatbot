@@ -27,6 +27,7 @@ import { FireResultCard } from '@/components/fire-result-card';
 import { HraResultCard } from '@/components/hra-result-card';
 import { ToolsPanel } from '@/components/tools-panel';
 import { KnowledgeResultCard } from '@/components/knowledge-result-card';
+import { Header } from '@/components/header';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -128,6 +129,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-background font-body">
       <main className="flex-1 flex flex-col overflow-hidden">
+        <Header />
         <div className="flex-1 flex flex-row overflow-hidden">
            <div className="flex-1 flex flex-col">
               <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>

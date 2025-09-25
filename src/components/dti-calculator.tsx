@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { debtToIncomeRatio } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, DtiResult } from '@/lib/types';
 import { DtiResultCard } from './dti-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   monthlyIncome: z.coerce.number().min(1),
@@ -31,6 +32,7 @@ interface DtiCalculatorProps {
 export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
   const [result, setResult] = useState<DtiResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +46,8 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
     setIsCalculating(true);
     setResult(null);
     const calculationResult = debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi);
+    const newId = `dti-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -56,7 +60,7 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <DtiResultCard result={calculationResult} explanation={`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`} />
+            content: <DtiResultCard id={newId} result={calculationResult} explanation={`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -107,6 +111,14 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateReverseSip } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, ReverseSipResult } from '@/lib/types';
 import { ReverseSipResultCard } from './reverse-sip-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   future_value: z.coerce.number().min(1, { message: 'Target must be greater than 0.' }),
@@ -32,6 +33,7 @@ interface ReverseSipCalculatorProps {
 export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps) {
   const [result, setResult] = useState<ReverseSipResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<ReverseSipFormValues>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,8 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculateReverseSip(values.future_value, values.years, values.annual_rate);
+    const newId = `reverse-sip-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +62,7 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <ReverseSipResultCard result={calculationResult} explanation={`To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`} />
+            content: <ReverseSipResultCard id={newId} result={calculationResult} explanation={`To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -125,6 +129,14 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
           </div>
         )}
       </CardContent>
+       {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateFd } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, FdCalculationResult } from '@/lib/types';
 import { FdResultCard } from './fd-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   principal: z.coerce.number().min(1, { message: 'Principal must be greater than 0.' }),
@@ -32,6 +33,7 @@ interface FdCalculatorProps {
 export function FdCalculator({ setMessages }: FdCalculatorProps) {
   const [result, setResult] = useState<FdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FdFormValues>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,8 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculateFd(values.principal, values.annual_rate, values.years, 4); // Assuming quarterly compounding
+    const newId = `fd-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +62,7 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <FdResultCard result={calculationResult} explanation={`Here is the calculated maturity value for your Fixed Deposit.`} />
+            content: <FdResultCard id={newId} result={calculationResult} explanation={`Here is the calculated maturity value for your Fixed Deposit.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -135,6 +139,14 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

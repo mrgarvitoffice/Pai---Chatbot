@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateFire } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, FireCalculationResult } from '@/lib/types';
 import { FireResultCard } from './fire-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   currentAge: z.coerce.number().min(18),
@@ -37,6 +38,7 @@ interface FireCalculatorProps {
 export function FireCalculator({ setMessages }: FireCalculatorProps) {
   const [result, setResult] = useState<FireCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,6 +55,8 @@ export function FireCalculator({ setMessages }: FireCalculatorProps) {
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculateFire(values);
+    const newId = `fire-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -65,7 +69,7 @@ export function FireCalculator({ setMessages }: FireCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <FireResultCard result={calculationResult} explanation={`Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`} />
+            content: <FireResultCard id={newId} result={calculationResult} explanation={`Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -146,6 +150,14 @@ export function FireCalculator({ setMessages }: FireCalculatorProps) {
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

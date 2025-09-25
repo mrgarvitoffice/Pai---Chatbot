@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateTermInsuranceCover } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, TermInsuranceResult } from '@/lib/types';
 import { TermInsuranceResultCard } from './term-insurance-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   annualIncome: z.coerce.number().min(1),
@@ -30,6 +31,7 @@ interface TermInsuranceCalculatorProps {
 export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculatorProps) {
   const [result, setResult] = useState<TermInsuranceResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -42,6 +44,8 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
     setIsCalculating(true);
     setResult(null);
     const calculationResult = calculateTermInsuranceCover(values.annualIncome);
+    const newId = `term-insurance-result-${uuidv4()}`;
+    setResultCardId(newId);
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -54,7 +58,7 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <TermInsuranceResultCard result={calculationResult} explanation={`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`} />
+            content: <TermInsuranceResultCard id={newId} result={calculationResult} explanation={`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -92,6 +96,14 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
           </div>
         )}
       </CardContent>
+      {result && resultCardId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
