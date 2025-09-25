@@ -8,73 +8,81 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const generatePdf = (elementId: string) => {
+export const generatePdf = async (elementId: string) => {
   const input = document.getElementById(elementId);
-  if (input) {
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
-    const textColor = isDarkMode ? '#f8fafc' : '#020817';
-
-    html2canvas(input, { 
-        scale: 2, 
-        backgroundColor: backgroundColor,
-        useCORS: true,
-        onclone: (document) => {
-            const clonedEl = document.getElementById(elementId);
-            if (clonedEl) {
-                // Expand all accordion content before capturing
-                const triggers = clonedEl.querySelectorAll('[data-state="closed"][aria-expanded="false"]');
-                triggers.forEach(trigger => {
-                    if(trigger instanceof HTMLElement) {
-                        trigger.click();
-                        // In some frameworks, the click is async. We might need to adjust state directly.
-                        const content = document.getElementById(trigger.getAttribute('aria-controls')!);
-                        if (content) {
-                            content.setAttribute('data-state', 'open');
-                        }
-                    }
-                });
-                
-                // Set the base styles
-                clonedEl.style.backgroundColor = backgroundColor;
-                clonedEl.style.color = textColor;
-
-                // Selectively apply text color, preserving specific component colors
-                clonedEl.querySelectorAll('p, span, h1, h2, h3, h4, h5, h6, div').forEach((node) => {
-                    if (node instanceof HTMLElement) {
-                        // Avoid overriding chart and specific text colors
-                        const classes = node.className.toString();
-                        const isColorSpecific = classes.includes('text-primary') || 
-                                              classes.includes('text-secondary') || 
-                                              classes.includes('text-destructive') ||
-                                              classes.includes('text-green') ||
-                                              classes.includes('text-red') ||
-                                              classes.includes('text-blue') ||
-                                              classes.includes('text-yellow');
-                                              
-                        if (!isColorSpecific && node.style.color === '') {
-                           node.style.color = textColor;
-                        }
-
-                        // Fix background colors for nested cards/divs
-                         const isBackgroundSpecific = classes.includes('bg-background') || 
-                                                     classes.includes('bg-card');
-                        if (isBackgroundSpecific) {
-                            node.style.backgroundColor = isDarkMode ? '#1e293b' : '#f1f5f9'; // A slightly different shade for contrast
-                        }
-                    }
-                });
-            }
-        }
-    }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save("pai-financial-report.pdf");
-    });
-  } else {
+  if (!input) {
     console.error(`Error: Element with the given ID '${elementId}' not found`);
+    return;
   }
+
+  // Add Inter font to jsPDF
+  const fontUrl = 'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2';
+  const fontResponse = await fetch(fontUrl);
+  const fontBlob = await fontResponse.blob();
+  const reader = new FileReader();
+  const fontPromise = new Promise<string>((resolve, reject) => {
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]);
+      } else {
+        reject('Failed to read font file');
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(fontBlob);
+  });
+
+  const fontBase64 = await fontPromise;
+
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
+
+  html2canvas(input, {
+    scale: 2,
+    backgroundColor: backgroundColor,
+    useCORS: true,
+    onclone: (clonedDoc) => {
+      const clonedEl = clonedDoc.getElementById(elementId);
+      if (clonedEl) {
+        // Force-expand all accordions
+        const triggers = clonedEl.querySelectorAll<HTMLElement>('[data-state="closed"]');
+        triggers.forEach(trigger => {
+          trigger.dataset.state = 'open';
+          const contentId = trigger.getAttribute('aria-controls');
+          if (contentId) {
+            const content = clonedEl.querySelector<HTMLElement>(`#${contentId}`);
+            if (content) {
+              content.dataset.state = 'open';
+              // Remove the 'hidden' style if it's applied by the accordion
+              content.style.removeProperty('display');
+            }
+          }
+        });
+
+        // Replace gradient text with solid color for better PDF rendering
+        clonedEl.querySelectorAll<HTMLElement>('.bg-gradient-to-r, .bg-gradient-to-br').forEach(el => {
+            el.classList.remove('bg-gradient-to-r', 'bg-gradient-to-br', 'bg-clip-text', 'text-transparent');
+            if (el.className.includes('destructive')) {
+                 el.style.color = '#ef4444';
+            } else {
+                 el.style.color = isDarkMode ? '#f472b6' : '#db2777'; // primary color
+            }
+        });
+      }
+    }
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // Add the font to the PDF
+    pdf.addFileToVFS('Inter-Regular.woff2', fontBase64);
+    pdf.addFont('Inter-Regular.woff2', 'Inter', 'normal');
+    pdf.setFont('Inter');
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save("pai-financial-report.pdf");
+  });
 };
