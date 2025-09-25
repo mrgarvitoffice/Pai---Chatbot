@@ -22,13 +22,13 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
     const { total_tax, tax_breakdown, income, taxable_income } = result;
 
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card className="bg-card/50 border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">🧾 Income Tax Calculation</CardTitle>
                 <CardDescription>Total Tax Payable (FY {result.fy})</CardDescription>
-                <div className="p-4 mt-2 rounded-xl bg-gradient-to-r from-destructive/80 to-red-500/80 text-white text-center">
-                    <p className="text-3xl font-extrabold">₹{total_tax.toLocaleString('en-IN')}</p>
-                </div>
+                <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-destructive to-red-500 py-1">
+                    ₹{total_tax.toLocaleString('en-IN')}
+                </p>
             </CardHeader>
             <CardContent className="space-y-4">
                  <div className="p-4 rounded-xl bg-background/50 border border-border/20 shadow-inner">

@@ -10,17 +10,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { User, Bell, Settings } from 'lucide-react';
 import { PaiLogo } from './icons';
+import { SidebarTrigger } from './ui/sidebar';
 
 export function Header() {
   return (
-    <header className="flex h-16 items-center justify-between bg-background/80 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10 border-b border-border/50">
+    <header className="flex h-16 items-center justify-between bg-card/50 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10 border-b border-border">
       <div className="flex items-center gap-3">
-        <PaiLogo className="h-8 w-8 text-primary" />
-        <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
+        <SidebarTrigger />
+        <div className="flex items-center gap-3">
+            <PaiLogo className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
+        </div>
       </div>
       <div className="flex items-center gap-2">
+         <Button variant="ghost" size="icon" className="rounded-full">
+            <Bell className="size-5" />
+         </Button>
+         <Button variant="ghost" size="icon" className="rounded-full">
+            <Settings className="size-5" />
+         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
              <Button variant="ghost" className="relative h-10 w-10 rounded-full">

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { getTaxExplanationAction } from '@/lib/actions';
+import { sendMessageAction } from '@/lib/actions';
 import { calculateTax } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles, FileDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { ChatMessage, TaxCalculationResult } from '@/lib/types';
+import { TaxResultCard } from './tax-result-card';
 
 const formSchema = z.object({
   income: z.coerce.number().min(1, { message: 'Income must be greater than 0.' }),
@@ -49,55 +50,51 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
     setResult(null);
     const calculationResult = calculateTax(values.income, values.fy, values.regime);
     
-    // Simulate calculation time
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: `For a salary of ₹${values.income.toLocaleString('en-IN')} under the ${values.regime} regime for FY ${values.fy}, the calculated total tax is ₹${calculationResult.total_tax.toLocaleString('en-IN')}. See the detailed breakdown on the right.`
-        }
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
             content: `Calculate tax for ₹${values.income.toLocaleString('en-IN')} (FY ${values.fy}, ${values.regime} regime)`
-        }
-        setMessages(prev => [...prev, userQuery, resultMessage])
+        };
+        const resultMessage: ChatMessage = {
+            id: uuidv4(),
+            role: 'assistant',
+            content: <TaxResultCard result={calculationResult} explanation={`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`} />
+        };
+        setMessages(prev => [...prev, userQuery, resultMessage]);
 
     }, 500);
   };
 
   const handleExplain = async () => {
-    if (!result || !form.getValues().income) return;
+    if (!result) return;
     setIsExplaining(true);
     
-    // Placeholder for real source fetching
-    const sources = [
-        {
-          name: "Income Tax Department of India",
-          url: "https://www.incometax.gov.in/",
-          last_updated: "2024-04-01"
-        }
-    ];
-
-    const explanationResult = await getTaxExplanationAction({
-      income: form.getValues().income,
-      fy: form.getValues().fy,
-      regime: form.getValues().regime,
-      tax_breakdown: result.tax_breakdown,
-      total_tax: result.total_tax,
-      sources: sources,
-    });
+    const query = `Explain the tax calculation for an income of ${result.income} under the ${result.regime} regime for FY ${result.fy}. The total tax is ${result.total_tax}.`;
     
-    const explanationMessage: ChatMessage = {
+    try {
+      const explanationResult = await sendMessageAction({ query });
+      
+      const explanationMessage: ChatMessage = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: explanationResult.response,
+          sources: explanationResult.sources,
+      };
+      setMessages(prev => [...prev, explanationMessage]);
+    } catch (error) {
+      console.error("Error getting explanation:", error);
+      const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: explanationResult.explanation,
-        sources: explanationResult.sources,
-    };
-    setMessages(prev => [...prev, explanationMessage]);
-    setIsExplaining(false);
+        content: "Sorry, I couldn't generate an explanation at this time."
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsExplaining(false);
+    }
   };
 
   return (

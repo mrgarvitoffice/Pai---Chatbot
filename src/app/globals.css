@@ -8,50 +8,67 @@ body {
 
 @layer base {
   :root {
-    --background: 222 47% 11%; /* #111827 - Dark Slate Blue */
-    --foreground: 210 40% 98%; /* Almost white for text */
-    --card: 222 47% 15%; /* Slightly lighter slate for cards */
+    --background: 222 47% 11%; /* #0f172a */
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 15%; /* #111827 */
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    
+    --popover: 224 71% 4%; /* #020817 */
     --popover-foreground: 210 40% 98%;
-    --primary: 221 83% 53%; /* #3B82F6 - Vibrant Blue */
+    
+    --primary: 262 84% 60%; /* #8B5CF6 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 262 84% 60%; /* #8B5CF6 - Vibrant Purple */
+    
+    --secondary: 221 83% 53%; /* #3B82F6 */
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 20%; /* Muted slate */
+    
+    --muted: 222 47% 20%; /* #1e293b */
     --muted-foreground: 215 28% 65%;
-    --accent: 222 47% 25%; /* Accent slate for hover */
+    
+    --accent: 222 47% 25%; /* #374151 */
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 51%; /* #EF4444 - Red */
+    
+    --destructive: 0 63% 31%; /* #ef4444 */
     --destructive-foreground: 210 40% 98%;
-    --border: 221 83% 43%; /* Brighter blue for borders */
-    --input: 222 47% 18%;
-    --ring: 221 83% 53%;
+    
+    --border: 222 47% 20%; /* #1f2937 */
+    --input: 222 47% 20%;
+    --ring: 262 84% 60%;
+    
     --radius: 0.75rem;
 
-    --user-bubble: 221 83% 48%;
+    --user-bubble: 221 83% 53%;
   }
 
   .dark {
-     --background: 222 47% 11%; /* #111827 - Dark Slate Blue */
-    --foreground: 210 40% 98%; /* Almost white for text */
-    --card: 222 47% 15%; /* Slightly lighter slate for cards */
+    --background: 222 47% 11%; /* #0f172a */
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 15%; /* #111827 */
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    
+    --popover: 224 71% 4%; /* #020817 */
     --popover-foreground: 210 40% 98%;
-    --primary: 221 83% 63%; /* Brighter Blue */
+    
+    --primary: 262 84% 60%; /* #8B5CF6 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 262 84% 70%; /* Brighter Purple */
+    
+    --secondary: 221 83% 53%; /* #3B82F6 */
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 20%; /* Muted slate */
+    
+    --muted: 222 47% 20%; /* #1e293b */
     --muted-foreground: 215 28% 65%;
-    --accent: 222 47% 25%; /* Accent slate for hover */
+    
+    --accent: 222 47% 25%; /* #374151 */
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 61%; /* Brighter Red */
+    
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 221 83% 33%; /* Darker blue for borders */
-    --input: 222 47% 18%;
-    --ring: 221 83% 63%;
+    
+    --border: 222 47% 20%; /* #1f2937 */
+    --input: 222 47% 20%;
+    --ring: 262 84% 60%;
     
     --user-bubble: 221 83% 53%;
   }
@@ -63,7 +80,6 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   }
 }
 

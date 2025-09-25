@@ -17,10 +17,9 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">💹 SIP Growth Calculation</CardTitle>
                 <CardDescription>Projected Value</CardDescription>
-                 <div className="p-4 mt-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-center">
-                    <p className="text-lg">✨ Final Value</p>
-                    <p className="text-3xl font-extrabold">₹{result.future_value.toLocaleString('en-IN')}</p>
-                </div>
+                <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary py-1">
+                    ₹{result.future_value.toLocaleString('en-IN')}
+                </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="p-4 rounded-xl bg-background/50 border border-border/20 shadow-inner">
