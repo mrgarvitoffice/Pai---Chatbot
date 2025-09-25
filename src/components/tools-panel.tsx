@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TaxCalculator } from './tax-calculator';
 import { EmiCalculator } from './emi-calculator';
@@ -71,28 +72,41 @@ export function ToolsPanel({ setMessages, latestReportId, setLatestReportId }: T
   const ActiveToolComponent = useMemo(() => toolComponents[activeTool], [activeTool]);
   
   return (
-    <Card className="rounded-2xl shadow-sm h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>
-          <Select onValueChange={(value: Tool) => setActiveTool(value)} defaultValue={activeTool}>
-            <SelectTrigger className="w-full text-lg font-semibold h-auto border-0 focus:ring-0 shadow-none p-0">
-              <SelectValue placeholder="Select a calculator" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(toolNames).map(([key, name]) => (
-                <SelectItem key={key} value={key}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardTitle>
-      </CardHeader>
-      <div className="flex-1 overflow-y-auto">
-        <ActiveToolComponent 
-          setMessages={setMessages} 
-          latestReportId={latestReportId} 
-          setLatestReportId={setLatestReportId} 
-        />
+    // On mobile, we don't use a Card to make it feel more integrated.
+    <div className="h-full flex flex-col lg:p-4">
+      <div className="p-4 lg:p-0">
+        <Select onValueChange={(value: Tool) => setActiveTool(value)} defaultValue={activeTool}>
+          <SelectTrigger className="w-full text-lg font-semibold h-auto border-0 focus:ring-0 shadow-none p-0 lg:text-base">
+            <SelectValue placeholder="Select a calculator" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(toolNames).map(([key, name]) => (
+              <SelectItem key={key} value={key}>{name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-    </Card>
+
+      <div className="flex-1 overflow-y-auto thin-scrollbar mt-4">
+        {/* On Desktop, wrap the calculator in a Card for better visual separation */}
+        <div className="hidden lg:block h-full">
+           <Card className="h-full border-0 shadow-none">
+                <ActiveToolComponent 
+                    setMessages={setMessages} 
+                    latestReportId={latestReportId} 
+                    setLatestReportId={setLatestReportId} 
+                />
+           </Card>
+        </div>
+         {/* On Mobile, render it directly */}
+        <div className="lg:hidden h-full">
+             <ActiveToolComponent 
+                setMessages={setMessages} 
+                latestReportId={latestReportId} 
+                setLatestReportId={setLatestReportId} 
+            />
+        </div>
+      </div>
+    </div>
   );
 }

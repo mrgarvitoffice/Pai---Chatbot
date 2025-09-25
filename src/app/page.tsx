@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic, MessageSquare, Calculator } from 'lucide-react';
+import { ArrowUp, Mic } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -31,6 +31,8 @@ import { KnowledgeResultCard } from '@/components/knowledge-result-card';
 import { Header } from '@/components/header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -48,13 +50,23 @@ export default function Home() {
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
   
-  // Refs for scrolling
-  const mobileContainerRef = useRef<HTMLDivElement>(null);
-  const chatSectionRef = useRef<HTMLDivElement>(null);
-  const toolsSectionRef = useRef<HTMLDivElement>(null);
-  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
-  
+  const [api, setApi] = useState<CarouselApi>()
   const [activeMobileView, setActiveMobileView] = useState<MobileView>('chat');
+  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+    api.on("select", () => {
+      setActiveMobileView(api.selectedScrollSnap() === 0 ? 'chat' : 'tools')
+    })
+  }, [api])
+
+  const handleMobileNav = (view: MobileView) => {
+    setActiveMobileView(view);
+    api?.scrollTo(view === 'chat' ? 0 : 1);
+  }
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('chatHistory-active');
@@ -102,8 +114,7 @@ export default function Home() {
     if (!query.trim() || isLoading) return;
 
     if (isMobile) {
-      chatSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      setActiveMobileView('chat');
+      handleMobileNav('chat');
     }
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
@@ -174,7 +185,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, isMobile]);
+  }, [isLoading, messages, isMobile, api]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -210,12 +221,6 @@ export default function Home() {
     }
   };
   
-  const handleMobileNav = (view: MobileView) => {
-    setActiveMobileView(view);
-    const targetRef = view === 'chat' ? chatSectionRef : toolsSectionRef;
-    targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const ChatInterface = () => (
     <div className="flex-1 flex flex-col overflow-hidden h-full">
         <div className="flex-1 overflow-y-auto thin-scrollbar" ref={chatScrollAreaRef}>
@@ -264,7 +269,7 @@ export default function Home() {
   );
 
   const ToolsInterface = () => (
-    <div className="h-full overflow-y-auto p-4 lg:p-0 thin-scrollbar">
+    <div className="h-full overflow-y-auto thin-scrollbar lg:p-0">
       <ToolsPanel
           setMessages={setMessages}
           latestReportId={latestReportId}
@@ -278,34 +283,30 @@ export default function Home() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header setMessages={setMessages} messages={messages} />
         
-        {/* Mobile View with Top Nav and Smart Scrolling */}
+        {/* Mobile View with Swiping Carousel */}
         <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
-            <div className="p-2 bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-10">
-                <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                        variant={activeMobileView === 'chat' ? 'default' : 'outline'} 
-                        onClick={() => handleMobileNav('chat')}
-                        className="rounded-full"
-                    >
-                        <MessageSquare className="mr-2 size-4" /> Chat
-                    </Button>
-                    <Button 
-                        variant={activeMobileView === 'tools' ? 'default' : 'outline'} 
-                        onClick={() => handleMobileNav('tools')}
-                        className="rounded-full"
-                    >
-                        <Calculator className="mr-2 size-4" /> Calculators
-                    </Button>
-                </div>
+            <div className="px-4 pt-2 bg-background/95 backdrop-blur-sm sticky top-0 z-10 border-b">
+                <Tabs value={activeMobileView} onValueChange={(value) => handleMobileNav(value as MobileView)} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="chat">Chat</TabsTrigger>
+                        <TabsTrigger value="tools">Calculators</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
-            <div className="flex-1 overflow-y-auto thin-scrollbar" ref={mobileContainerRef}>
-                <div ref={chatSectionRef} className="h-[calc(100vh-112px)] flex flex-col">
-                    <ChatInterface />
-                </div>
-                <div ref={toolsSectionRef} className="h-screen p-4 pt-8">
-                    <ToolsInterface />
-                </div>
-            </div>
+             <Carousel setApi={setApi} className="flex-1">
+                <CarouselContent>
+                    <CarouselItem>
+                         <div className="h-[calc(100vh-112px)]">
+                             <ChatInterface />
+                         </div>
+                    </CarouselItem>
+                    <CarouselItem>
+                         <div className="h-[calc(100vh-112px)] overflow-y-auto thin-scrollbar">
+                            <ToolsInterface />
+                         </div>
+                    </CarouselItem>
+                </CarouselContent>
+            </Carousel>
         </div>
 
         {/* Desktop View */}
