@@ -17,6 +17,7 @@ export const generatePdf = async (elementId: string) => {
 
   const isDarkMode = document.documentElement.classList.contains('dark');
   const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
+  const textColor = isDarkMode ? '#f8fafc' : '#020817'; // foreground color
 
   html2canvas(input, {
     scale: 2,
@@ -42,13 +43,20 @@ export const generatePdf = async (elementId: string) => {
             const content = clonedEl.querySelector<HTMLElement>(`#${contentId}`);
             if (content) {
               content.dataset.state = 'open';
-              // Directly override styles to ensure visibility for html2canvas
+              // CRITICAL: Directly override styles to ensure visibility for html2canvas
+              // This bypasses any animations that might hide the content during capture.
               content.style.height = 'auto';
               content.style.overflow = 'visible';
               content.style.opacity = '1';
+              content.style.visibility = 'visible';
+              
+              // Remove animation classes to prevent interference
+              content.classList.remove('animate-accordion-up', 'animate-accordion-down');
+
               const childDiv = content.querySelector<HTMLElement>('div');
               if (childDiv) {
                  childDiv.style.visibility = 'visible';
+                 childDiv.style.opacity = '1';
               }
             }
           }
@@ -57,10 +65,14 @@ export const generatePdf = async (elementId: string) => {
         // Replace gradient text with solid color for better PDF rendering
         clonedEl.querySelectorAll<HTMLElement>('.bg-gradient-to-r, .bg-gradient-to-br, .bg-clip-text, .text-transparent').forEach(el => {
             el.classList.remove('bg-gradient-to-r', 'bg-gradient-to-br', 'bg-clip-text', 'text-transparent');
-            if (el.className.includes('destructive')) {
-                 el.style.color = '#ef4444';
-            } else {
-                 el.style.color = isDarkMode ? '#f472b6' : '#db2777'; // primary color
+            el.style.color = isDarkMode ? '#f472b6' : '#db2777'; // primary color
+        });
+
+        // Ensure all text has a visible color
+        clonedEl.querySelectorAll<HTMLElement>('*').forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.color === 'rgba(0, 0, 0, 0)' || style.color === 'transparent') {
+                el.style.color = textColor;
             }
         });
       }
