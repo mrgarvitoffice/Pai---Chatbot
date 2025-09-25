@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic, Bot, Menu } from 'lucide-react';
+import { ArrowUp, Mic, Bot } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -49,19 +49,24 @@ export default function Home() {
   useEffect(() => {
     const savedMessages = localStorage.getItem('chatHistory-active');
     if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error("Failed to parse chat history:", e);
+        setMessages([]);
+      }
     }
   }, []);
 
-  const saveCurrentChat = () => {
+  const saveCurrentChat = useCallback(() => {
     if (messages.length > 0) {
       localStorage.setItem('chatHistory-active', JSON.stringify(messages));
     }
-  };
+  }, [messages]);
 
   useEffect(() => {
     saveCurrentChat();
-  }, [messages]);
+  }, [saveCurrentChat]);
 
 
   const scrollToBottom = () => {
@@ -87,13 +92,12 @@ export default function Home() {
     if (!query.trim() || isLoading) return;
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const history: HistoryMessage[] = newMessages.slice(0, -1).map(msg => {
+      const history: HistoryMessage[] = [...messages, userMessage].slice(0, -1).map(msg => {
           let content = '';
           if (msg.role === 'user') {
             content = msg.content as string;
@@ -120,23 +124,25 @@ export default function Home() {
         setLatestReportId(null);
       }
 
-      if (result.calculationResult?.type === 'tax') content = <TaxResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard id={resultId!} comparisonResult={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'sip') content = <SipResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'emi') content = <EmiResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'compound_interest') content = <CompoundInterestResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'budget') content = <BudgetAllocationResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fd') content = <FdResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'rd') content = <RdResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'reverse_sip') content = <ReverseSipResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'retirement') content = <RetirementResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'dti') content = <DtiResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'savings_ratio') content = <SavingsRatioResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else content = <KnowledgeResultCard query={query} response={result.response} />;
+      const resultCardId = resultId || `knowledge-${uuidv4()}`;
+
+      if (result.calculationResult?.type === 'tax') content = <TaxResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard id={resultCardId} comparisonResult={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'sip') content = <SipResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'emi') content = <EmiResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'compound_interest') content = <CompoundInterestResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'budget') content = <BudgetAllocationResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'fd') content = <FdResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'rd') content = <RdResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'reverse_sip') content = <ReverseSipResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'retirement') content = <RetirementResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'dti') content = <DtiResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'savings_ratio') content = <SavingsRatioResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
+      else content = <KnowledgeResultCard id={resultCardId} query={query} response={result.response} />;
       
       const botResponse: ChatMessageType = { 
         id: uuidv4(), 
@@ -242,7 +248,7 @@ export default function Home() {
                         </SheetContent>
                       </Sheet>
                     )}
-                    <div className="flex-1 flex items-center px-2 bg-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+                    <div className="flex-1 flex items-center px-2 bg-card border border-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
                       <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}

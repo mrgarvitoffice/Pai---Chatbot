@@ -9,15 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuPortal
+  DropdownMenuPortal,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Settings, Check } from 'lucide-react';
+import { User } from 'lucide-react';
 import { SettingsSheet } from './settings-sheet';
 import type { ChatMessage } from '@/lib/types';
 
@@ -37,14 +37,19 @@ export function Header({ setMessages, messages }: HeaderProps) {
     historyKeys.forEach(key => {
       const saved = localStorage.getItem(key);
       if (saved) {
-        history[key] = JSON.parse(saved);
+        try {
+          history[key] = JSON.parse(saved);
+        } catch (e) {
+          console.error(`Failed to parse chat history from key ${key}:`, e);
+        }
       }
     });
     setChatHistory(history);
   }, [messages.length]); 
 
   const handleSaveScenario = () => {
-    const slotNumber = Object.keys(chatHistory).filter(k => k.startsWith('chatHistory-slot')).length + 1;
+    const slotKeys = Object.keys(chatHistory).filter(k => k.startsWith('chatHistory-slot'));
+    const slotNumber = slotKeys.length + 1;
     const key = `chatHistory-slot-${slotNumber}`;
     localStorage.setItem(key, JSON.stringify(messages));
     localStorage.setItem('chatHistory-active', '[]');
@@ -69,7 +74,7 @@ export function Header({ setMessages, messages }: HeaderProps) {
     <header className="flex h-16 items-center justify-between bg-card/50 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10 border-b border-border">
       <div className="flex items-center gap-3">
         <Image src="/logo.png" alt="Pai Logo" width={32} height={32} />
-        <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai Chatbot</h1>
+        <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
       </div>
       <div className="flex items-center gap-1">
         <SettingsSheet />

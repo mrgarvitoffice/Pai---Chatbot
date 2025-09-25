@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, Monitor, Sun, Moon, Check } from "lucide-react";
+import { Settings, Monitor, Sun, Moon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,6 +24,14 @@ import { Slider } from "@/components/ui/slider";
 const languages = [
     { code: 'en', name: 'English' },
     { code: 'hi', name: 'हिन्दी (Hindi)' },
+    { code: 'bn', name: 'বাংলা (Bengali)' },
+    { code: 'te', name: 'తెలుగు (Telugu)' },
+    { code: 'mr', name: 'मराठी (Marathi)' },
+    { code: 'ta', name: 'தமிழ் (Tamil)' },
+    { code: 'gu', name: 'ગુજરાતી (Gujarati)' },
+    { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
+    { code: 'ml', name: 'മലയാളം (Malayalam)' },
+    { code: 'pa', name: 'ਪੰਜਾਬੀ (Punjabi)' },
     { code: 'es', name: 'Español (Spanish)' },
     { code: 'fr', name: 'Français (French)' },
     { code: 'de', name: 'Deutsch (German)' },
@@ -32,7 +40,33 @@ const languages = [
     { code: 'ru', name: 'Русский (Russian)' },
     { code: 'pt', name: 'Português (Portuguese)' },
     { code: 'ar', name: 'العربية (Arabic)' },
-    { code: 'bn', name: 'বাংলা (Bengali)' },
+    { code: 'it', name: 'Italiano (Italiano)' },
+    { code: 'ko', name: '한국어 (Korean)' },
+    { code: 'tr', name: 'Türkçe (Turkish)' },
+    { code: 'nl', name: 'Nederlands (Dutch)' },
+    { code: 'pl', name: 'Polski (Polish)' },
+    { code: 'sv', name: 'Svenska (Swedish)' },
+    { code: 'vi', name: 'Tiếng Việt (Vietnamese)' },
+    { code: 'th', name: 'ไทย (Thai)' },
+    { code: 'id', name: 'Bahasa Indonesia (Indonesian)' },
+    { code: 'ro', name: 'Română (Romanian)' },
+    { code: 'el', name: 'Ελληνικά (Greek)' },
+    { code: 'hu', name: 'Magyar (Hungarian)' },
+    { code: 'cs', name: 'Čeština (Czech)' },
+    { code: 'da', name: 'Dansk (Danish)' },
+    { code: 'fi', name: 'Suomi (Finnish)' },
+    { code: 'no', name: 'Norsk (Norwegian)' },
+    { code: 'sk', name: 'Slovenčina (Slovak)' },
+    { code: 'he', name: 'עברית (Hebrew)' },
+    { code: 'uk', name: 'Українська (Ukrainian)' },
+    { code: 'ms', name: 'Bahasa Melayu (Malaysian)' },
+    { code: 'fil', name: 'Filipino (Tagalog)' },
+    { code: 'fa', name: 'فارسی (Farsi)' },
+    { code: 'ne', name: 'नेपाली (Nepali)' },
+    { code: 'ur', name: 'اردو (Urdu)' },
+    { code: 'or', name: 'ଓଡ଼ିଆ (Odia)' },
+    { code: 'as', name: 'অসমীয়া (Assamese)' },
+    { code: 'si', name: 'සිංහල (Sinhala)' },
 ];
 
 export function SettingsSheet() {
