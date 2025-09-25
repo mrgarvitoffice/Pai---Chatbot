@@ -76,11 +76,51 @@ export function FireCalculator({ setMessages }: FireCalculatorProps) {
       <CardContent className="flex-1 overflow-y-auto pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField control={form.control} name="currentAge" render={({ field }) => ( <FormItem> <FormLabel>Current Age</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="retirementAge" render={({ field }) => ( <FormItem> <FormLabel>Target Retirement Age</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="monthlyExpenses" render={({ field }) => ( <FormItem> <FormLabel>Current Monthly Expenses (₹)</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="monthlyInvestment" render={({ field }) => ( <FormItem> <FormLabel>Current Monthly Investment (₹)</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="expectedReturn" render={({ field }) => ( <FormItem> <FormLabel>Expected Return (% p.a.)</FormLabel> <FormControl> <Input type="number" step="0.5" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="currentAge" render={({ field }) => ( 
+              <FormItem> 
+                <FormLabel>Current Age</FormLabel> 
+                <FormControl> 
+                  <Input type="number" {...field} /> 
+                </FormControl> 
+                <FormMessage /> 
+              </FormItem> 
+            )}/>
+            <FormField control={form.control} name="retirementAge" render={({ field }) => ( 
+              <FormItem> 
+                <FormLabel>Target Retirement Age</FormLabel> 
+                <FormControl> 
+                  <Input type="number" {...field} /> 
+                </FormControl> 
+                <FormMessage /> 
+              </FormItem> 
+            )}/>
+            <FormField control={form.control} name="monthlyExpenses" render={({ field }) => ( 
+              <FormItem> 
+                <FormLabel>Current Monthly Expenses (₹)</FormLabel> 
+                <FormControl> 
+                  <Input type="number" {...field} /> 
+                </FormControl> 
+                <FormMessage /> 
+              </FormItem> 
+            )}/>
+            <FormField control={form.control} name="monthlyInvestment" render={({ field }) => ( 
+              <FormItem> 
+                <FormLabel>Current Monthly Investment (₹)</FormLabel> 
+                <FormControl> 
+                  <Input type="number" {...field} /> 
+                </FormControl> 
+                <FormMessage /> 
+              </FormItem> 
+            )}/>
+            <FormField control={form.control} name="expectedReturn" render={({ field }) => ( 
+              <FormItem> 
+                <FormLabel>Expected Return (% p.a.)</FormLabel> 
+                <FormControl> 
+                  <Input type="number" step="0.5" {...field} /> 
+                </FormControl> 
+                <FormMessage /> 
+              </FormItem> 
+            )}/>
             
             <Button type="submit" className="w-full" disabled={isCalculating}>
               {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

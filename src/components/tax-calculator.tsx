@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -98,12 +99,8 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
   };
 
   return (
-    <Card className="rounded-2xl shadow-sm h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Income Tax Calculator</CardTitle>
-        <CardDescription>Calculate your tax for FY 2024-25</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto">
+    <Card className="rounded-2xl shadow-sm h-full flex flex-col border-0">
+      <CardContent className="flex-1 overflow-y-auto pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
