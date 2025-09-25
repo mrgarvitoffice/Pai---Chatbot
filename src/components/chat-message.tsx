@@ -1,4 +1,6 @@
+
 import { FC, useState, useRef } from 'react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -18,7 +20,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   const isAssistant = role === 'assistant';
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const handleListen = async () => {
       if (isPlaying) {
