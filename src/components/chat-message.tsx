@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FC, useState, useRef, ReactNode, useCallback } from 'react';
+import { FC, useState, useRef, ReactNode } from 'react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
@@ -31,7 +31,8 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const handleListen = useCallback(async () => {
+  // Memoize handlers to prevent re-renders
+  const handleListen = React.useCallback(async () => {
       if (isPlaying) {
           audioRef.current?.pause();
           setIsPlaying(false);
@@ -58,7 +59,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       }
   }, [isPlaying, rawContent]);
   
-  const handleDownload = useCallback(() => {
+  const handleDownload = React.useCallback(() => {
       if (!rawContent) return;
       const blob = new Blob([rawContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -71,18 +72,25 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       URL.revokeObjectURL(url);
   }, [rawContent]);
 
-  const handleFeedback = useCallback((feedbackType: 'like' | 'dislike') => {
+  const handleFeedback = React.useCallback((feedbackType: 'like' | 'dislike') => {
     onFeedback?.(id, feedbackType);
   }, [id, onFeedback]);
 
-  const renderContent = () => {
-    // If content is a string (from user), wrap it in a div.
+  // This function now correctly handles rendering strings or React components.
+  const renderedContent = React.useMemo(() => {
     if (typeof content === 'string') {
       return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
     }
-    // If content is already a valid React element (from assistant), render it directly.
-    return content;
-  };
+    // If it's already a valid React element, just return it.
+    if (React.isValidElement(content)) {
+      // The content (e.g., a result card) might already have its own padding.
+      // Wrapping it in another div with padding can sometimes cause layout issues.
+      // Let's return it directly. The parent components (Result Cards) handle their own padding.
+      return content;
+    }
+    // Fallback for any other unexpected type
+    return null;
+  }, [content]);
 
   return (
     <div className={cn(
@@ -105,7 +113,9 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {renderContent()}
+        {/* If the content is a string, it gets padding from the renderedContent function.
+            If it's a component, it relies on its own internal padding. */}
+        {renderedContent}
 
         {isAssistant && onFeedback && (
           <div className="px-2 pb-2 mt-1 flex items-center justify-between border-t border-border/20">
@@ -223,4 +233,5 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
     </div>
   );
 });
+
 ChatMessage.displayName = 'ChatMessage';
