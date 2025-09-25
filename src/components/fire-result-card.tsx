@@ -2,7 +2,7 @@
 
 import type { FireCalculationResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Flame, Target, TrendingUp, Wallet, CheckCircle2, XCircle } from "lucide-react";
+import { Flame, Target, TrendingUp, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 

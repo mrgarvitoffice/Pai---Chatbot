@@ -22,10 +22,11 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
     return (
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
+                 <CardTitle className="text-xl font-semibold mb-2">🐖 Savings Ratio</CardTitle>
                 <CardDescription>Your Savings Ratio</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     {result.savingsRatio}%
-                </CardTitle>
+                </p>
                 <p className={`text-sm font-semibold ${benchmark.color}`}>{benchmark.label}</p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -41,7 +42,7 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
                         </div>
                         <div>
                              <p className="text-muted-foreground">Monthly Income</p>
-                            <p className="font-semibold">₹{result.monthlyIncome.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">🔵 ₹{result.monthlyIncome.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
@@ -50,7 +51,7 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
                         </div>
                         <div>
                             <p className="text-muted-foreground">Monthly Savings</p>
-                            <p className="font-semibold">₹{result.monthlySavings.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-green-600 dark:text-green-400">🟢 ₹{result.monthlySavings.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                 </div>

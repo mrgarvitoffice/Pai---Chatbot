@@ -15,10 +15,11 @@ export function TermInsuranceResultCard({ result, explanation }: TermInsuranceRe
     return (
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
-                <CardDescription>Recommended Term Insurance Cover</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                <CardTitle className="text-xl font-semibold mb-2">🛡️ Term Insurance Cover</CardTitle>
+                <CardDescription>Recommended Life Cover</CardDescription>
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     ₹{result.recommendedCover.toLocaleString('en-IN')}
-                </CardTitle>
+                </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="p-4 rounded-xl bg-background border shadow-inner">

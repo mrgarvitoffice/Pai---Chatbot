@@ -22,22 +22,22 @@ interface PortfolioAllocationResultCardProps {
 const chartData = (result: PortfolioAllocationResult) => [
   { name: "Equity", value: result.equity, fill: "hsl(var(--primary))" },
   { name: "Debt", value: result.debt, fill: "hsl(var(--secondary))" },
-  { name: "Gold", value: result.gold, fill: "hsl(var(--accent))" },
+  { name: "Gold", value: result.gold, fill: "var(--color-gold)" },
 ];
 
 const chartConfig = {
   equity: { label: "Equity", color: "hsl(var(--primary))" },
   debt: { label: "Debt", color: "hsl(var(--secondary))" },
-  gold: { label: "Gold", color: "hsl(var(--accent))" },
+  gold: { label: "Gold", color: "hsl(35, 92%, 55%)" },
 };
 
 export function PortfolioAllocationResultCard({ result, explanation }: PortfolioAllocationResultCardProps) {
     const data = chartData(result);
 
     return (
-        <Card className="bg-background/50 border-0 shadow-none">
+        <Card className="bg-background/50 border-0 shadow-none" style={{'--color-gold': 'hsl(35, 92%, 55%)'} as React.CSSProperties}>
              <CardHeader className="text-center pb-4">
-                <CardTitle>Recommended Asset Allocation</CardTitle>
+                <CardTitle className="text-xl font-semibold mb-2">📊 Recommended Asset Allocation</CardTitle>
                 <CardDescription>For a {result.age}-year-old with '{result.riskAppetite}' risk</CardDescription>
              </CardHeader>
              <CardContent className="space-y-4">
@@ -88,7 +88,7 @@ export function PortfolioAllocationResultCard({ result, explanation }: Portfolio
                                 <p><strong>Debt ({result.debt}%):</strong> Provides stability and regular income through bonds and fixed-income securities. Lower risk.</p>
                             </div>
                              <div className="flex items-start gap-2">
-                                <Gem className="size-4 mt-1 text-yellow-400 shrink-0"/>
+                                <Gem className="size-4 mt-1 text-yellow-500 shrink-0"/>
                                 <p><strong>Gold ({result.gold}%):</strong> Acts as a hedge against inflation and market volatility. Provides portfolio diversification.</p>
                             </div>
                         </div>

@@ -22,10 +22,11 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
     return (
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
-                <CardDescription>Debt-to-Income (DTI) Ratio</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                <CardTitle className="text-xl font-semibold mb-2">⚖️ Debt-to-Income Ratio</CardTitle>
+                <CardDescription>DTI Ratio</CardDescription>
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     {result.dtiRatio}%
-                </CardTitle>
+                </p>
                 <p className={`text-sm font-semibold ${risk.color}`}>{risk.label}</p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -50,7 +51,7 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Total Monthly EMI</p>
-                            <p className="font-semibold">₹{result.monthlyEmi.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-red-600 dark:text-red-400">🔴 ₹{result.monthlyEmi.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                 </div>
