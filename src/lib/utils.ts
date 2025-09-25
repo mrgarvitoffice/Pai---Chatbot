@@ -11,10 +11,9 @@ export function cn(...inputs: ClassValue[]) {
 export const generatePdf = (elementId: string) => {
   const input = document.getElementById(elementId);
   if (input) {
-    // Determine the current theme to apply the correct background color.
     const isDarkMode = document.documentElement.classList.contains('dark');
-    const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff'; // Dark theme slate-900, Light theme white
-    const textColor = isDarkMode ? '#f8fafc' : '#020817'; // Dark theme slate-50, Light theme slate-950
+    const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
+    const textColor = isDarkMode ? '#f8fafc' : '#020817';
 
     html2canvas(input, { 
         scale: 2, 
@@ -23,14 +22,46 @@ export const generatePdf = (elementId: string) => {
         onclone: (document) => {
             const clonedEl = document.getElementById(elementId);
             if (clonedEl) {
-                // Ensure the cloned element has the correct theme's background and text color for rendering.
-                clonedEl.style.setProperty('background-color', backgroundColor, 'important');
-                clonedEl.style.setProperty('color', textColor, 'important');
+                // Expand all accordion content before capturing
+                const triggers = clonedEl.querySelectorAll('[data-state="closed"][aria-expanded="false"]');
+                triggers.forEach(trigger => {
+                    if(trigger instanceof HTMLElement) {
+                        trigger.click();
+                        // In some frameworks, the click is async. We might need to adjust state directly.
+                        const content = document.getElementById(trigger.getAttribute('aria-controls')!);
+                        if (content) {
+                            content.setAttribute('data-state', 'open');
+                        }
+                    }
+                });
+                
+                // Set the base styles
+                clonedEl.style.backgroundColor = backgroundColor;
+                clonedEl.style.color = textColor;
 
-                // Apply text color to all child elements to ensure readability
-                clonedEl.querySelectorAll('*').forEach((node) => {
+                // Selectively apply text color, preserving specific component colors
+                clonedEl.querySelectorAll('p, span, h1, h2, h3, h4, h5, h6, div').forEach((node) => {
                     if (node instanceof HTMLElement) {
-                        node.style.setProperty('color', textColor, 'important');
+                        // Avoid overriding chart and specific text colors
+                        const classes = node.className.toString();
+                        const isColorSpecific = classes.includes('text-primary') || 
+                                              classes.includes('text-secondary') || 
+                                              classes.includes('text-destructive') ||
+                                              classes.includes('text-green') ||
+                                              classes.includes('text-red') ||
+                                              classes.includes('text-blue') ||
+                                              classes.includes('text-yellow');
+                                              
+                        if (!isColorSpecific && node.style.color === '') {
+                           node.style.color = textColor;
+                        }
+
+                        // Fix background colors for nested cards/divs
+                         const isBackgroundSpecific = classes.includes('bg-background') || 
+                                                     classes.includes('bg-card');
+                        if (isBackgroundSpecific) {
+                            node.style.backgroundColor = isDarkMode ? '#1e293b' : '#f1f5f9'; // A slightly different shade for contrast
+                        }
                     }
                 });
             }
