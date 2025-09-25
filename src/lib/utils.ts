@@ -15,25 +15,6 @@ export const generatePdf = async (elementId: string) => {
     return;
   }
 
-  // Add Inter font to jsPDF
-  const fontUrl = 'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2';
-  const fontResponse = await fetch(fontUrl);
-  const fontBlob = await fontResponse.blob();
-  const reader = new FileReader();
-  const fontPromise = new Promise<string>((resolve, reject) => {
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result.split(',')[1]);
-      } else {
-        reject('Failed to read font file');
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(fontBlob);
-  });
-
-  const fontBase64 = await fontPromise;
-
   const isDarkMode = document.documentElement.classList.contains('dark');
   const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
 
@@ -73,11 +54,6 @@ export const generatePdf = async (elementId: string) => {
   }).then(canvas => {
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    
-    // Add the font to the PDF
-    pdf.addFileToVFS('Inter-Regular.woff2', fontBase64);
-    pdf.addFont('Inter-Regular.woff2', 'Inter', 'normal');
-    pdf.setFont('Inter');
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
