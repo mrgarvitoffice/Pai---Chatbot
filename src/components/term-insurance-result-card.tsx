@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface TermInsuranceResultCardProps {
+    id: string;
     result: TermInsuranceResult;
     explanation: string;
 }
 
-export function TermInsuranceResultCard({ result, explanation }: TermInsuranceResultCardProps) {
+export function TermInsuranceResultCard({ id, result, explanation }: TermInsuranceResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">🛡️ Term Insurance Cover</CardTitle>
                 <CardDescription>Recommended Life Cover</CardDescription>

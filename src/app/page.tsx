@@ -62,24 +62,25 @@ export default function Home() {
 
     try {
       const result = await sendMessageAction({ query: currentInput });
+      const resultId = `result-${uuidv4()}`;
       
       let content: React.ReactNode;
-      if (result.calculationResult?.type === 'tax') content = <TaxResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard comparisonResult={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'sip') content = <SipResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'emi') content = <EmiResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'compound_interest') content = <CompoundInterestResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'budget') content = <BudgetAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fd') content = <FdResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'rd') content = <RdResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'reverse_sip') content = <ReverseSipResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'retirement') content = <RetirementResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'dti') content = <DtiResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'savings_ratio') content = <SavingsRatioResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fire') content = <FireResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'hra') content = <HraResultCard result={result.calculationResult.data} explanation={result.response} />;
+      if (result.calculationResult?.type === 'tax') content = <TaxResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard id={resultId} comparisonResult={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'sip') content = <SipResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'emi') content = <EmiResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'compound_interest') content = <CompoundInterestResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'budget') content = <BudgetAllocationResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'fd') content = <FdResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'rd') content = <RdResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'reverse_sip') content = <ReverseSipResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'retirement') content = <RetirementResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'dti') content = <DtiResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'savings_ratio') content = <SavingsRatioResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
       else content = <KnowledgeResultCard response={result.response} query={currentInput} />;
       
       const botResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content, sources: result.sources };

@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface SipResultCardProps {
+    id: string;
     result: SipCalculationResult;
     explanation: string;
 }
 
-export function SipResultCard({ result, explanation }: SipResultCardProps) {
+export function SipResultCard({ id, result, explanation }: SipResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">💹 SIP Growth Calculation</CardTitle>
                 <CardDescription>Projected Value</CardDescription>
@@ -50,11 +51,11 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className="flex-col items-start gap-2 pt-4">
+            <CardFooter className="flex-col items-start gap-2 pt-4 border-t border-border/30">
                  <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1" className="border-t border-border/30">
-                    <AccordionTrigger className="font-code text-xs">How we calculated this</AccordionTrigger>
+                  <AccordionItem value="item-1" className="border-b-0">
+                    <AccordionTrigger className="font-code text-xs pt-2">How we calculated this</AccordionTrigger>
                     <AccordionContent>
                         <div className="space-y-2 text-xs font-code text-muted-foreground">
                             <div className="flex justify-between">

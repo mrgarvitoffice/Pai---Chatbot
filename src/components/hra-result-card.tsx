@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface HraResultCardProps {
+    id: string;
     result: HraResult;
     explanation: string;
 }
 
-export function HraResultCard({ result, explanation }: HraResultCardProps) {
+export function HraResultCard({ id, result, explanation }: HraResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">🏠 HRA Exemption Calculation</CardTitle>
                 <CardDescription>Tax Exempted Amount</CardDescription>

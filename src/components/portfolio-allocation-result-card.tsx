@@ -15,6 +15,7 @@ import { Pie, PieChart as RechartsPieChart, Cell } from "recharts";
 import ReactMarkdown from "react-markdown";
 
 interface PortfolioAllocationResultCardProps {
+    id: string;
     result: PortfolioAllocationResult;
     explanation: string;
 }
@@ -31,11 +32,11 @@ const chartConfig = {
   gold: { label: "Gold", color: "hsl(35, 92%, 55%)" },
 };
 
-export function PortfolioAllocationResultCard({ result, explanation }: PortfolioAllocationResultCardProps) {
+export function PortfolioAllocationResultCard({ id, result, explanation }: PortfolioAllocationResultCardProps) {
     const data = chartData(result);
 
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg" style={{'--color-gold': 'hsl(35, 92%, 55%)'} as React.CSSProperties}>
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg" style={{'--color-gold': 'hsl(35, 92%, 55%)'} as React.CSSProperties}>
              <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">📊 Recommended Asset Allocation</CardTitle>
                 <CardDescription>For a {result.age}-year-old with '{result.riskAppetite}' risk</CardDescription>

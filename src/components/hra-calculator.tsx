@@ -14,9 +14,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, HraResult } from '@/lib/types';
 import { HraResultCard } from './hra-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   basicSalary: z.coerce.number().min(1, { message: 'Basic salary must be greater than 0.' }),
@@ -34,6 +35,7 @@ interface HraCalculatorProps {
 export function HraCalculator({ setMessages }: HraCalculatorProps) {
   const [result, setResult] = useState<HraResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const resultCardId = `hra-result-${uuidv4()}`;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,7 +63,7 @@ export function HraCalculator({ setMessages }: HraCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <HraResultCard result={calculationResult} explanation={`Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`} />
+            content: <HraResultCard id={resultCardId} result={calculationResult} explanation={`Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -142,6 +144,14 @@ export function HraCalculator({ setMessages }: HraCalculatorProps) {
           </div>
         )}
       </CardContent>
+       {result && (
+        <div className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

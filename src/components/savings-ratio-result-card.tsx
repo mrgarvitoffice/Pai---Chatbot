@@ -7,11 +7,12 @@ import { Wallet, PiggyBank } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface SavingsRatioResultCardProps {
+    id: string;
     result: SavingsRatioResult;
     explanation: string;
 }
 
-export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResultCardProps) {
+export function SavingsRatioResultCard({ id, result, explanation }: SavingsRatioResultCardProps) {
     const getBenchmark = (ratio: number) => {
         if (ratio < 10) return { label: "Needs Improvement", color: "text-red-500" };
         if (ratio < 20) return { label: "Good Start", color: "text-yellow-500" };
@@ -20,7 +21,7 @@ export function SavingsRatioResultCard({ result, explanation }: SavingsRatioResu
     const benchmark = getBenchmark(result.savingsRatio);
 
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                  <CardTitle className="text-xl font-semibold mb-2">🐖 Savings Ratio</CardTitle>
                 <CardDescription>Your Savings Ratio</CardDescription>

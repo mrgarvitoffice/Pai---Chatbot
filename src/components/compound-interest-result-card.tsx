@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface CompoundInterestResultCardProps {
+    id: string;
     result: CompoundInterestResult;
     explanation: string;
 }
 
-export function CompoundInterestResultCard({ result, explanation }: CompoundInterestResultCardProps) {
+export function CompoundInterestResultCard({ id, result, explanation }: CompoundInterestResultCardProps) {
     const getFrequencyText = (freq: number) => {
         if (freq === 1) return 'Annually';
         if (freq === 4) return 'Quarterly';
@@ -20,7 +21,7 @@ export function CompoundInterestResultCard({ result, explanation }: CompoundInte
     }
 
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                  <CardTitle className="text-xl font-semibold mb-2">💹 Investment Growth Calculation</CardTitle>
                 <CardDescription>Maturity Value</CardDescription>

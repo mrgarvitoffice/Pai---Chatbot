@@ -20,6 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import type { ChatMessage, TaxCalculationResult } from '@/lib/types';
 import { TaxResultCard } from './tax-result-card';
 import { compareTaxRegimes } from '@/ai/flows/compare-tax-regimes';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   income: z.coerce.number().min(1, { message: 'Income must be greater than 0.' }),
@@ -37,6 +38,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
   const [result, setResult] = useState<TaxCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExplaining, setIsExplaining] = useState(false);
+  const resultCardId = `tax-result-${uuidv4()}`;
 
   const form = useForm<TaxFormValues>({
     resolver: zodResolver(formSchema),
@@ -72,7 +74,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
       const resultMessage: ChatMessage = {
           id: uuidv4(),
           role: 'assistant',
-          content: <TaxResultCard comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />
+          content: <TaxResultCard id={resultCardId} comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />
       };
       setMessages(prev => [...prev, userQuery, resultMessage]);
       setIsCalculating(false);
@@ -92,7 +94,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <TaxResultCard result={calculationResult} explanation={`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`} />
+            content: <TaxResultCard id={resultCardId} result={calculationResult} explanation={`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 
@@ -222,7 +224,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
                 Explain with AI
             </Button>
         )}
-        <Button variant="secondary" disabled>
+        <Button variant="secondary" onClick={() => generatePdf(resultCardId)} disabled={!result}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
         </Button>

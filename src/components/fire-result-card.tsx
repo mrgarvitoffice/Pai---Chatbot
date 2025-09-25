@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface FireResultCardProps {
+    id: string;
     result: FireCalculationResult;
     explanation: string;
 }
 
-export function FireResultCard({ result, explanation }: FireResultCardProps) {
+export function FireResultCard({ id, result, explanation }: FireResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2 flex items-center justify-center gap-2">
                     <Flame className="text-orange-500"/>

@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface EmiResultCardProps {
+    id: string;
     result: EmiCalculationResult;
     explanation: string;
 }
 
-export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
+export function EmiResultCard({ id, result, explanation }: EmiResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">🧾 Loan EMI Calculation</CardTitle>
                 <CardDescription>Monthly EMI</CardDescription>

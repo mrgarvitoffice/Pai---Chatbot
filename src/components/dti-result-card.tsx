@@ -7,11 +7,12 @@ import { Wallet, Banknote } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface DtiResultCardProps {
+    id: string;
     result: DtiResult;
     explanation: string;
 }
 
-export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
+export function DtiResultCard({ id, result, explanation }: DtiResultCardProps) {
     const getRiskLevel = (ratio: number) => {
         if (ratio > 40) return { label: "High Risk", color: "text-destructive" };
         if (ratio > 30) return { label: "Moderate", color: "text-yellow-400" };
@@ -20,7 +21,7 @@ export function DtiResultCard({ result, explanation }: DtiResultCardProps) {
     const risk = getRiskLevel(result.dtiRatio);
 
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">⚖️ Debt-to-Income Ratio</CardTitle>
                 <CardDescription>DTI Ratio</CardDescription>

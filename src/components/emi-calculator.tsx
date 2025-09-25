@@ -13,9 +13,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, EmiCalculationResult } from '@/lib/types';
 import { EmiResultCard } from './emi-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   principal: z.coerce.number().min(1, { message: 'Loan amount must be greater than 0.' }),
@@ -32,6 +33,7 @@ interface EmiCalculatorProps {
 export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
   const [result, setResult] = useState<EmiCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const resultCardId = `emi-result-${uuidv4()}`;
 
   const form = useForm<EmiFormValues>({
     resolver: zodResolver(formSchema),
@@ -58,7 +60,7 @@ export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <EmiResultCard result={calculationResult} explanation={`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`} />
+            content: <EmiResultCard id={resultCardId} result={calculationResult} explanation={`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 
@@ -136,6 +138,14 @@ export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
           </div>
         )}
       </CardContent>
+      {result && (
+        <div className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

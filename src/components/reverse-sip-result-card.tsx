@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface ReverseSipResultCardProps {
+    id: string;
     result: ReverseSipResult;
     explanation: string;
 }
 
-export function ReverseSipResultCard({ result, explanation }: ReverseSipResultCardProps) {
+export function ReverseSipResultCard({ id, result, explanation }: ReverseSipResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                 <CardDescription>Required Monthly SIP</CardDescription>
                 <CardTitle className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary py-1">
