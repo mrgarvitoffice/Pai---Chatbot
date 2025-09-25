@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FC, useState, useRef, ReactNode, useMemo, useCallback } from 'react';
+import { FC, useState, useRef, ReactNode, useCallback } from 'react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
@@ -75,15 +75,12 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
     onFeedback?.(id, feedbackType);
   }, [id, onFeedback]);
 
-  const renderedContent = useMemo(() => {
+  const renderContent = () => {
     if (typeof content === 'string') {
       return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
     }
-    if (React.isValidElement(content)) {
-      return <div className="p-4">{content}</div>;
-    }
-    return null;
-  }, [content]);
+    return <div className="p-4">{content}</div>;
+  };
 
   return (
     <div className={cn(
@@ -106,7 +103,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {renderedContent}
+        {renderContent()}
 
         {isAssistant && onFeedback && (
           <div className="px-2 pb-2 mt-1 flex items-center justify-between border-t border-border/20">
