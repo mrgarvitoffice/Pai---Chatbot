@@ -36,13 +36,14 @@ const generateKnowledgePrompt = ai.definePrompt({
 
 User Query: "{{{query}}}"
 
-Instructions:
-1.  **Analyze the Query**: Understand the user's intent and the core financial concept they are asking about.
-2.  **Generate Content**: Create a comprehensive and accurate answer. The 'detailed_markdown' should be formatted with headings, bullet points, and bold text for clarity.
-3.  **Extract Metadata**:
+**CRITICAL INSTRUCTIONS:**
+1.  **Analyze the Query**: Understand the user's intent and the core financial concept.
+2.  **Generate Content**: Create a comprehensive and accurate answer.
+3.  **Format**: The 'detailed_markdown' MUST be concise and point-wise. Use bullet points (e.g., '-') or numbered lists for clarity. Do not use long paragraphs. The entire answer should be short and easy to read while being fully informative.
+4.  **Extract Metadata**:
     *   **slug**: Create a simple, URL-friendly slug from the title (e.g., "how-to-save-tax").
     *   **title**: Write a clear, question-based title (e.g., "How Can I Save Tax in India?").
-    *   **category**: Assign one of the following categories: 'Asset Allocation & Portfolio', 'Goal-Based Investing', 'Retirement', 'Emergency Fund', 'Mutual Funds', 'Insurance', 'Real Estate', 'Debt & Fixed Income', 'Tax Planning', 'Estate & Wills', 'General Finance'.
+    *   **category**: Assign one of the following: 'Asset Allocation & Portfolio', 'Goal-Based Investing', 'Retirement', 'Emergency Fund', 'Mutual Funds', 'Insurance', 'Real Estate', 'Debt & Fixed Income', 'Tax Planning', 'Estate & Wills', 'General Finance'.
     *   **tags**: Provide 3-5 relevant lowercase keywords (e.g., ["tax", "80c", "deductions"]).
     *   **short_answer**: Write a single, concise sentence that directly answers the user's query.
 
