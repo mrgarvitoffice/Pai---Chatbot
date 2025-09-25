@@ -217,8 +217,8 @@ export default function Home() {
   };
 
   const ChatInterface = () => (
-    <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto" ref={chatScrollAreaRef}>
+    <div className="flex-1 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 overflow-y-auto thin-scrollbar" ref={chatScrollAreaRef}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="space-y-6">
               {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} onFeedback={handleFeedback} {...message} />)}
@@ -264,7 +264,7 @@ export default function Home() {
   );
 
   const ToolsInterface = () => (
-    <div className="h-full overflow-y-auto p-4 lg:p-0">
+    <div className="h-full overflow-y-auto p-4 lg:p-0 thin-scrollbar">
       <ToolsPanel
           setMessages={setMessages}
           latestReportId={latestReportId}
@@ -278,9 +278,9 @@ export default function Home() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header setMessages={setMessages} messages={messages} />
         
-        {/* Mobile View with Top Nav */}
+        {/* Mobile View with Top Nav and Smart Scrolling */}
         <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
-            <div className="p-2 bg-background border-b border-border/50 sticky top-0 z-10">
+            <div className="p-2 bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-10">
                 <div className="grid grid-cols-2 gap-2">
                     <Button 
                         variant={activeMobileView === 'chat' ? 'default' : 'outline'} 
@@ -298,11 +298,11 @@ export default function Home() {
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 overflow-y-auto" ref={mobileContainerRef}>
-                <div ref={chatSectionRef} className="h-screen flex flex-col">
+            <div className="flex-1 overflow-y-auto thin-scrollbar" ref={mobileContainerRef}>
+                <div ref={chatSectionRef} className="h-[calc(100vh-112px)] flex flex-col">
                     <ChatInterface />
                 </div>
-                <div ref={toolsSectionRef} className="h-screen p-4">
+                <div ref={toolsSectionRef} className="h-screen p-4 pt-8">
                     <ToolsInterface />
                 </div>
             </div>
@@ -321,5 +321,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
