@@ -31,8 +31,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  // Memoize handlers to prevent re-renders
-  const handleListen = React.useCallback(async () => {
+  const handleListen = async () => {
       if (isPlaying) {
           audioRef.current?.pause();
           setIsPlaying(false);
@@ -57,9 +56,9 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       } finally {
           setIsLoadingAudio(false);
       }
-  }, [isPlaying, rawContent]);
+  };
   
-  const handleDownload = React.useCallback(() => {
+  const handleDownload = () => {
       if (!rawContent) return;
       const blob = new Blob([rawContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -70,13 +69,12 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-  }, [rawContent]);
+  };
 
-  const handleFeedback = React.useCallback((feedbackType: 'like' | 'dislike') => {
+  const handleFeedback = (feedbackType: 'like' | 'dislike') => {
     onFeedback?.(id, feedbackType);
-  }, [id, onFeedback]);
+  };
 
-  // This function now correctly handles rendering strings or React components.
   const renderedContent = (() => {
     if (typeof content === 'string') {
       return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
