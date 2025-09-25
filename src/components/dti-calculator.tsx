@@ -67,8 +67,32 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
       <CardContent className="flex-1 overflow-y-auto pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField control={form.control} name="monthlyIncome" render={({ field }) => ( <FormItem> <FormLabel>Gross Monthly Income (₹)</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="monthlyEmi" render={({ field }) => ( <FormItem> <FormLabel>Total Monthly EMI Payments (₹)</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField
+              control={form.control}
+              name="monthlyIncome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gross Monthly Income (₹)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="monthlyEmi"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total Monthly EMI Payments (₹)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button type="submit" className="w-full" disabled={isCalculating}>
               {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isCalculating ? 'Calculating...' : 'Calculate DTI Ratio'}
