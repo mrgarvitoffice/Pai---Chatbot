@@ -10,17 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import Handlebars from 'handlebars';
 import type {TaxCalculationResult} from '@/lib/types';
-
-
-Handlebars.registerHelper('subtract', function(a, b) {
-    return a - b;
-});
-
-Handlebars.registerHelper('greaterThan', function(a, b, options) {
-    return (a > b) ? options.fn(this) : options.inverse(this);
-});
 
 const CompareTaxRegimesInputSchema = z.object({
   income: z.number().describe('The income for which to calculate tax.'),
@@ -29,6 +19,13 @@ const CompareTaxRegimesInputSchema = z.object({
   oldRegimeResult: z.custom<TaxCalculationResult>(),
 });
 export type CompareTaxRegimesInput = z.infer<typeof CompareTaxRegimesInputSchema>;
+
+// This internal schema includes the pre-calculated values for the prompt
+const PromptInputSchema = CompareTaxRegimesInputSchema.extend({
+    savings: z.number(),
+    betterRegime: z.string(),
+    keyTakeaway: z.string(),
+});
 
 const CompareTaxRegimesOutputSchema = z.object({
   comparison: z.string().describe('A detailed, human-friendly comparison of the two tax regimes, formatted with Markdown.'),
@@ -41,7 +38,7 @@ export async function compareTaxRegimes(input: CompareTaxRegimesInput): Promise<
 
 const prompt = ai.definePrompt({
   name: 'compareTaxRegimesPrompt',
-  input: {schema: CompareTaxRegimesInputSchema},
+  input: {schema: PromptInputSchema},
   output: {schema: CompareTaxRegimesOutputSchema},
   prompt: `You are Pai, an expert Indian personal finance assistant. Your task is to provide a detailed, professional, and human-friendly comparison between the Old and New tax regimes based on the provided calculation results for FY {{{fy}}}.
 
@@ -96,10 +93,7 @@ You can lower this tax by claiming deductions like:
 ---
 
 ✅ Key Takeaway:
-
-- The **New Regime** is better for you if you have minimal deductions, saving you **₹{{#greaterThan oldRegimeResult.total_tax newRegimeResult.total_tax}}{{subtract oldRegimeResult.total_tax newRegimeResult.total_tax}}{{else}}0{{/greaterThan}}** upfront.
-- The **Old Regime** becomes more beneficial if your total claimed deductions significantly exceed **~₹2.5 Lakhs**.
-
+{{{keyTakeaway}}}
 This is an illustrative calculation. For personalized advice, please consult a tax professional.
 `,
 });
@@ -110,8 +104,36 @@ const compareTaxRegimesFlow = ai.defineFlow(
     inputSchema: CompareTaxRegimesInputSchema,
     outputSchema: CompareTaxRegimesOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    // Perform all logic here, before calling the prompt.
+    const { newRegimeResult, oldRegimeResult } = input;
+    let savings = 0;
+    let betterRegime = 'New Regime';
+    let keyTakeaway = '';
+
+    if (oldRegimeResult.total_tax > newRegimeResult.total_tax) {
+        savings = oldRegimeResult.total_tax - newRegimeResult.total_tax;
+        betterRegime = 'New Regime';
+        keyTakeaway = `- The **New Regime** is better for you if you have minimal deductions, saving you **₹${savings}** upfront.
+- The **Old Regime** becomes more beneficial if your total claimed deductions significantly exceed **~₹2.5 Lakhs**.`;
+    } else if (newRegimeResult.total_tax > oldRegimeResult.total_tax) {
+        savings = newRegimeResult.total_tax - oldRegimeResult.total_tax;
+        betterRegime = 'Old Regime (without deductions)';
+        keyTakeaway = `- The **Old Regime** is cheaper by **₹${savings}** even before you claim any deductions.
+- Claiming deductions like 80C will further increase your savings in the Old Regime.`;
+    } else {
+        keyTakeaway = `- Both regimes result in the **same tax liability** before deductions.
+- The **Old Regime** will be more beneficial if you can claim any deductions.`;
+    }
+
+    const promptInput = {
+      ...input,
+      savings,
+      betterRegime,
+      keyTakeaway,
+    };
+    
+    const {output} = await prompt(promptInput);
     return output!;
   }
 );
