@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -31,9 +30,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface HraCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function HraCalculator({ setMessages, latestReportId }: HraCalculatorProps) {
+export function HraCalculator({ setMessages, latestReportId, setLatestReportId }: HraCalculatorProps) {
   const [result, setResult] = useState<HraResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -50,12 +50,14 @@ export function HraCalculator({ setMessages, latestReportId }: HraCalculatorProp
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `hra-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateHRA(values.basicSalary, values.hraReceived, values.rentPaid, values.metroCity), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -64,7 +66,8 @@ export function HraCalculator({ setMessages, latestReportId }: HraCalculatorProp
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <HraResultCard id={resultId} result={calculationResult} explanation={`Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`} />
+            content: <HraResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

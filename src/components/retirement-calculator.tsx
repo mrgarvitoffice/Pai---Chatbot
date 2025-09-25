@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -32,9 +31,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface RetirementCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function RetirementCalculator({ setMessages, latestReportId }: RetirementCalculatorProps) {
+export function RetirementCalculator({ setMessages, latestReportId, setLatestReportId }: RetirementCalculatorProps) {
   const [result, setResult] = useState<RetirementCorpusResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -50,12 +50,14 @@ export function RetirementCalculator({ setMessages, latestReportId }: Retirement
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `retirement-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateRetirementCorpus(values), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -64,7 +66,8 @@ export function RetirementCalculator({ setMessages, latestReportId }: Retirement
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <RetirementResultCard id={resultId} result={calculationResult} explanation={`To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`} />
+            content: <RetirementResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -28,9 +27,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface DtiCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function DtiCalculator({ setMessages, latestReportId }: DtiCalculatorProps) {
+export function DtiCalculator({ setMessages, latestReportId, setLatestReportId }: DtiCalculatorProps) {
   const [result, setResult] = useState<DtiResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -45,12 +45,14 @@ export function DtiCalculator({ setMessages, latestReportId }: DtiCalculatorProp
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `dti-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -59,7 +61,8 @@ export function DtiCalculator({ setMessages, latestReportId }: DtiCalculatorProp
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <DtiResultCard id={resultId} result={calculationResult} explanation={`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`} />
+            content: <DtiResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

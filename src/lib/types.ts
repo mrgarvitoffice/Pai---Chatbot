@@ -4,6 +4,8 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: ReactNode;
+  rawContent?: string; // Add raw string content for TTS and download
+  feedback?: 'like' | 'dislike';
   sources?: {
       name: string;
       url:string;
@@ -18,6 +20,7 @@ export interface HistoryMessage {
 }
 
 export interface TaxCalculationResult {
+  id: string; // Ensure ID is part of the type
   income: number;
   fy: string;
   regime: 'new' | 'old';

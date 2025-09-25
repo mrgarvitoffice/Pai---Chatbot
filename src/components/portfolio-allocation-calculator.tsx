@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface PortfolioAllocationCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function PortfolioAllocationCalculator({ setMessages, latestReportId }: PortfolioAllocationCalculatorProps) {
+export function PortfolioAllocationCalculator({ setMessages, latestReportId, setLatestReportId }: PortfolioAllocationCalculatorProps) {
   const [result, setResult] = useState<PortfolioAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -46,12 +46,14 @@ export function PortfolioAllocationCalculator({ setMessages, latestReportId }: P
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `portfolio-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculatePortfolioAllocation(values.age, values.riskAppetite), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -60,7 +62,8 @@ export function PortfolioAllocationCalculator({ setMessages, latestReportId }: P
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <PortfolioAllocationResultCard id={resultId} result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
+            content: <PortfolioAllocationResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

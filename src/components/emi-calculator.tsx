@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type EmiFormValues = z.infer<typeof formSchema>;
 interface EmiCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function EmiCalculator({ setMessages, latestReportId }: EmiCalculatorProps) {
+export function EmiCalculator({ setMessages, latestReportId, setLatestReportId }: EmiCalculatorProps) {
   const [result, setResult] = useState<EmiCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -47,12 +47,14 @@ export function EmiCalculator({ setMessages, latestReportId }: EmiCalculatorProp
   const onSubmit = (values: EmiFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `emi-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateEMI(values.principal, values.annual_rate, values.years), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -61,7 +63,8 @@ export function EmiCalculator({ setMessages, latestReportId }: EmiCalculatorProp
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <EmiResultCard id={resultId} result={calculationResult} explanation={`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`} />
+            content: <EmiResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 

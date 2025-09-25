@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -27,9 +26,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface TermInsuranceCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function TermInsuranceCalculator({ setMessages, latestReportId }: TermInsuranceCalculatorProps) {
+export function TermInsuranceCalculator({ setMessages, latestReportId, setLatestReportId }: TermInsuranceCalculatorProps) {
   const [result, setResult] = useState<TermInsuranceResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -43,12 +43,14 @@ export function TermInsuranceCalculator({ setMessages, latestReportId }: TermIns
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `term-insurance-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateTermInsuranceCover(values.annualIncome), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -57,7 +59,8 @@ export function TermInsuranceCalculator({ setMessages, latestReportId }: TermIns
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <TermInsuranceResultCard id={resultId} result={calculationResult} explanation={`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`} />
+            content: <TermInsuranceResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

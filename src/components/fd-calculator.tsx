@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type FdFormValues = z.infer<typeof formSchema>;
 interface FdCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function FdCalculator({ setMessages, latestReportId }: FdCalculatorProps) {
+export function FdCalculator({ setMessages, latestReportId, setLatestReportId }: FdCalculatorProps) {
   const [result, setResult] = useState<FdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -47,12 +47,14 @@ export function FdCalculator({ setMessages, latestReportId }: FdCalculatorProps)
   const onSubmit = (values: FdFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `fd-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateFd(values.principal, values.annual_rate, values.years, 4), id: resultId }; // Assuming quarterly compounding
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Here is the calculated maturity value for your Fixed Deposit.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -61,7 +63,8 @@ export function FdCalculator({ setMessages, latestReportId }: FdCalculatorProps)
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <FdResultCard id={resultId} result={calculationResult} explanation={`Here is the calculated maturity value for your Fixed Deposit.`} />
+            content: <FdResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

@@ -51,6 +51,16 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+  
+  const handleFeedback = (messageId: string, feedback: 'like' | 'dislike') => {
+    setMessages(prevMessages => 
+        prevMessages.map(msg => 
+            msg.id === messageId ? { ...msg, feedback } : msg
+        )
+    );
+    // Here you could also send this feedback to a logging service
+    console.log(`Feedback for message ${messageId}: ${feedback}`);
+  };
 
   const processAndSetMessage = useCallback(async (query: string) => {
     if (!query.trim() || isLoading) return;
@@ -62,16 +72,16 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // Convert display messages to AI history messages
       const history: HistoryMessage[] = newMessages.slice(0, -1).map(msg => {
           let content = '';
-          if (typeof msg.content === 'string') {
-              content = msg.content;
+          if (msg.role === 'user') {
+            content = msg.content as string;
           } else if (msg.role === 'assistant') {
-              // Attempt to find the explanation text if content is a component
-              // This is a simplification; a more robust solution would store raw text separately
-              const props = (msg.content as React.ReactElement).props;
-              content = props.explanation || props.response || 'Previous calculation result displayed.';
+              content = msg.rawContent || 'Previous calculation result displayed.';
+              if (msg.feedback) {
+                  // Append feedback to the history for context
+                  content += `\n[User feedback: ${msg.feedback}]`;
+              }
           }
           return {
               role: msg.role === 'user' ? 'user' : 'model',
@@ -87,6 +97,7 @@ export default function Home() {
       if (resultId) {
         setLatestReportId(resultId);
       } else {
+        // If it's not a calculation, there's no report to download, so clear the ID
         setLatestReportId(null);
       }
 
@@ -106,13 +117,19 @@ export default function Home() {
       else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultId!} result={result.calculationResult.data} explanation={result.response} />;
-      else content = <KnowledgeResultCard response={result.response} query={query} />;
+      else content = <KnowledgeResultCard query={query} response={result.response} />;
       
-      const botResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content, sources: result.sources };
+      const botResponse: ChatMessageType = { 
+        id: uuidv4(), 
+        role: 'assistant', 
+        content, 
+        rawContent: result.response, // Store raw text for TTS/Download
+        sources: result.sources 
+      };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error(error);
-      const errorResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content: "Sorry, I encountered an error. Please try again." };
+      const errorResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content: "Sorry, I encountered an error. Please try again.", rawContent: "Sorry, I encountered an error. Please try again." };
       setMessages((prev) => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
@@ -134,12 +151,12 @@ export default function Home() {
       }
       if (!recognitionRef.current) {
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false; // Set to false to stop after first result
+        recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = false;
         recognitionRef.current.onresult = (event: any) => {
           const finalTranscript = event.results[0][0].transcript;
           setInput(finalTranscript);
-          processAndSetMessage(finalTranscript); // Process immediately after speech
+          processAndSetMessage(finalTranscript);
         };
         recognitionRef.current.onend = () => setIsRecording(false);
         recognitionRef.current.onerror = (event: any) => {
@@ -162,7 +179,7 @@ export default function Home() {
               <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   <div className="space-y-6">
-                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} {...message} />)}
+                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} onFeedback={handleFeedback} {...message} />)}
                     {isLoading && (
                       <ChatMessage
                         id="loading"
@@ -203,7 +220,7 @@ export default function Home() {
               </div>
            </div>
            <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
-               <ToolsPanel setMessages={setMessages} latestReportId={latestReportId} />
+               <ToolsPanel setMessages={setMessages} latestReportId={latestReportId} setLatestReportId={setLatestReportId} />
            </aside>
         </div>
       </main>

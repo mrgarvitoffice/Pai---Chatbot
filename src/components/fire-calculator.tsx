@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -34,9 +33,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface FireCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function FireCalculator({ setMessages, latestReportId }: FireCalculatorProps) {
+export function FireCalculator({ setMessages, latestReportId, setLatestReportId }: FireCalculatorProps) {
   const [result, setResult] = useState<FireCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -54,12 +54,14 @@ export function FireCalculator({ setMessages, latestReportId }: FireCalculatorPr
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `fire-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateFire(values), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -68,7 +70,8 @@ export function FireCalculator({ setMessages, latestReportId }: FireCalculatorPr
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <FireResultCard id={resultId} result={calculationResult} explanation={`Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`} />
+            content: <FireResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

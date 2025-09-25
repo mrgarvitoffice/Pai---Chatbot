@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -27,9 +26,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface BudgetAllocationCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function BudgetAllocationCalculator({ setMessages, latestReportId }: BudgetAllocationCalculatorProps) {
+export function BudgetAllocationCalculator({ setMessages, latestReportId, setLatestReportId }: BudgetAllocationCalculatorProps) {
   const [result, setResult] = useState<BudgetAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -43,12 +43,14 @@ export function BudgetAllocationCalculator({ setMessages, latestReportId }: Budg
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `budget-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...budgetAllocation(values.monthlyIncome), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -57,7 +59,8 @@ export function BudgetAllocationCalculator({ setMessages, latestReportId }: Budg
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <BudgetAllocationResultCard id={resultId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
+            content: <BudgetAllocationResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

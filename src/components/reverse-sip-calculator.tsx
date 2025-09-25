@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type ReverseSipFormValues = z.infer<typeof formSchema>;
 interface ReverseSipCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function ReverseSipCalculator({ setMessages, latestReportId }: ReverseSipCalculatorProps) {
+export function ReverseSipCalculator({ setMessages, latestReportId, setLatestReportId }: ReverseSipCalculatorProps) {
   const [result, setResult] = useState<ReverseSipResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -47,12 +47,14 @@ export function ReverseSipCalculator({ setMessages, latestReportId }: ReverseSip
   const onSubmit = (values: ReverseSipFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `reverse-sip-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateReverseSip(values.future_value, values.years, values.annual_rate), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -61,7 +63,8 @@ export function ReverseSipCalculator({ setMessages, latestReportId }: ReverseSip
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <ReverseSipResultCard id={resultId} result={calculationResult} explanation={`To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`} />
+            content: <ReverseSipResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

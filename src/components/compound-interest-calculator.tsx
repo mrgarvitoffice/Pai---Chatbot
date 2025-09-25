@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -31,9 +30,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface CompoundInterestCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function CompoundInterestCalculator({ setMessages, latestReportId }: CompoundInterestCalculatorProps) {
+export function CompoundInterestCalculator({ setMessages, latestReportId, setLatestReportId }: CompoundInterestCalculatorProps) {
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -50,12 +50,14 @@ export function CompoundInterestCalculator({ setMessages, latestReportId }: Comp
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `ci-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `The future value of your lump-sum investment has been calculated with compound interest.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -64,7 +66,8 @@ export function CompoundInterestCalculator({ setMessages, latestReportId }: Comp
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <CompoundInterestResultCard id={resultId} result={calculationResult} explanation={`The future value of your lump-sum investment has been calculated with compound interest.`} />
+            content: <CompoundInterestResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

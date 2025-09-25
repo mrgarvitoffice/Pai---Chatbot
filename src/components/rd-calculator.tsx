@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type RdFormValues = z.infer<typeof formSchema>;
 interface RdCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function RdCalculator({ setMessages, latestReportId }: RdCalculatorProps) {
+export function RdCalculator({ setMessages, latestReportId, setLatestReportId }: RdCalculatorProps) {
   const [result, setResult] = useState<RdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -47,12 +47,14 @@ export function RdCalculator({ setMessages, latestReportId }: RdCalculatorProps)
   const onSubmit = (values: RdFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `rd-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateRd(values.monthly_deposit, values.annual_rate, values.months), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Here is the calculated maturity value for your Recurring Deposit.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -61,7 +63,8 @@ export function RdCalculator({ setMessages, latestReportId }: RdCalculatorProps)
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <RdResultCard id={resultId} result={calculationResult} explanation={`Here is the calculated maturity value for your Recurring Deposit.`} />
+            content: <RdResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

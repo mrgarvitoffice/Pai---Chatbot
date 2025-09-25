@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,9 +28,10 @@ type SipFormValues = z.infer<typeof formSchema>;
 interface SipCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-export function SipCalculator({ setMessages, latestReportId }: SipCalculatorProps) {
+export function SipCalculator({ setMessages, latestReportId, setLatestReportId }: SipCalculatorProps) {
   const [result, setResult] = useState<SipCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -47,12 +47,14 @@ export function SipCalculator({ setMessages, latestReportId }: SipCalculatorProp
   const onSubmit = (values: SipFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const resultId = `sip-result-${uuidv4()}`;
+    const resultId = `result-${uuidv4()}`;
+    setLatestReportId(resultId);
     const calculationResult = { ...calculateSip(values.monthly_investment, values.years, values.annual_rate), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
         setIsCalculating(false);
+        const explanation = `Based on your inputs, here is the projected future value of your SIP investment of **₹${values.monthly_investment.toLocaleString('en-IN')}/month** for **${values.years} years**.`;
         const userQuery: ChatMessage = {
             id: uuidv4(),
             role: 'user',
@@ -61,7 +63,8 @@ export function SipCalculator({ setMessages, latestReportId }: SipCalculatorProp
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <SipResultCard id={resultId} result={calculationResult} explanation={`Based on your inputs, here is the projected future value of your SIP investment of **₹${values.monthly_investment.toLocaleString('en-IN')}/month** for **${values.years} years**.`} />
+            content: <SipResultCard id={resultId} result={calculationResult} explanation={explanation} />,
+            rawContent: explanation,
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);

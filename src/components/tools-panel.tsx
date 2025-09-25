@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -27,9 +26,10 @@ type Tool = 'tax' | 'emi' | 'sip' | 'fd' | 'rd' | 'reverse_sip' | 'compound_inte
 interface ToolsPanelProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
 }
 
-const toolComponents: Record<Tool, React.ComponentType<{ setMessages: Dispatch<SetStateAction<ChatMessage[]>>, latestReportId: string | null }>> = {
+const toolComponents: Record<Tool, React.ComponentType<any>> = {
   tax: TaxCalculator,
   emi: EmiCalculator,
   sip: SipCalculator,
@@ -65,7 +65,7 @@ const toolNames: Record<Tool, string> = {
   hra: 'HRA Exemption Calculator',
 };
 
-export function ToolsPanel({ setMessages, latestReportId }: ToolsPanelProps) {
+export function ToolsPanel({ setMessages, latestReportId, setLatestReportId }: ToolsPanelProps) {
   const [activeTool, setActiveTool] = useState<Tool>('tax');
 
   const ActiveToolComponent = toolComponents[activeTool];
@@ -87,7 +87,11 @@ export function ToolsPanel({ setMessages, latestReportId }: ToolsPanelProps) {
         </CardTitle>
       </CardHeader>
       <div className="flex-1 overflow-y-auto">
-        <ActiveToolComponent setMessages={setMessages} latestReportId={latestReportId} />
+        <ActiveToolComponent 
+          setMessages={setMessages} 
+          latestReportId={latestReportId} 
+          setLatestReportId={setLatestReportId} 
+        />
       </div>
     </Card>
   );
