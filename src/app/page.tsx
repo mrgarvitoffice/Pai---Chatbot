@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic, Bot, MessageSquare, Calculator } from 'lucide-react';
+import { ArrowUp, Mic, MessageSquare, Calculator } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -44,10 +44,17 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [latestReportId, setLatestReportId] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
-  const [mobileView, setMobileView] = useState<MobileView>('chat');
+  
+  // Refs for scrolling
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const chatSectionRef = useRef<HTMLDivElement>(null);
+  const toolsSectionRef = useRef<HTMLDivElement>(null);
+  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  const [activeMobileView, setActiveMobileView] = useState<MobileView>('chat');
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('chatHistory-active');
@@ -73,16 +80,14 @@ export default function Home() {
 
 
   const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    if (chatScrollAreaRef.current) {
+      chatScrollAreaRef.current.scrollTo({ top: chatScrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
   };
 
   useEffect(() => {
-    if (mobileView === 'chat') {
-        scrollToBottom();
-    }
-  }, [messages, isLoading, mobileView]);
+    scrollToBottom();
+  }, [messages, isLoading]);
   
   const handleFeedback = (messageId: string, feedback: 'like' | 'dislike') => {
     setMessages(prevMessages => 
@@ -97,7 +102,8 @@ export default function Home() {
     if (!query.trim() || isLoading) return;
 
     if (isMobile) {
-        setMobileView('chat');
+      chatSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setActiveMobileView('chat');
     }
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
@@ -204,9 +210,15 @@ export default function Home() {
     }
   };
   
-  const renderChat = () => (
-    <>
-        <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
+  const handleMobileNav = (view: MobileView) => {
+    setActiveMobileView(view);
+    const targetRef = view === 'chat' ? chatSectionRef : toolsSectionRef;
+    targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const ChatInterface = () => (
+    <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto" ref={chatScrollAreaRef}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="space-y-6">
               {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} onFeedback={handleFeedback} {...message} />)}
@@ -248,62 +260,62 @@ export default function Home() {
             </form>
           </div>
         </div>
-    </>
-  );
-
-  const renderTools = () => (
-    <div className="h-full overflow-y-auto p-4">
-        <ToolsPanel
-            setMessages={setMessages}
-            latestReportId={latestReportId}
-            setLatestReportId={setLatestReportId}
-        />
     </div>
   );
 
+  const ToolsInterface = () => (
+    <div className="h-full overflow-y-auto p-4 lg:p-0">
+      <ToolsPanel
+          setMessages={setMessages}
+          latestReportId={latestReportId}
+          setLatestReportId={setLatestReportId}
+      />
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-background font-body">
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header setMessages={setMessages} messages={messages} />
         
-        {/* Mobile View Toggler */}
-        <div className="lg:hidden p-2 bg-background border-b border-border/50">
-            <div className="grid grid-cols-2 gap-2">
-                <Button 
-                    variant={mobileView === 'chat' ? 'default' : 'outline'} 
-                    onClick={() => setMobileView('chat')}
-                    className="rounded-full"
-                >
-                    <MessageSquare className="mr-2 size-4" /> Chat
-                </Button>
-                <Button 
-                    variant={mobileView === 'tools' ? 'default' : 'outline'} 
-                    onClick={() => setMobileView('tools')}
-                    className="rounded-full"
-                >
-                    <Calculator className="mr-2 size-4" /> Calculators
-                </Button>
+        {/* Mobile View with Top Nav */}
+        <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
+            <div className="p-2 bg-background border-b border-border/50 sticky top-0 z-10">
+                <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                        variant={activeMobileView === 'chat' ? 'default' : 'outline'} 
+                        onClick={() => handleMobileNav('chat')}
+                        className="rounded-full"
+                    >
+                        <MessageSquare className="mr-2 size-4" /> Chat
+                    </Button>
+                    <Button 
+                        variant={activeMobileView === 'tools' ? 'default' : 'outline'} 
+                        onClick={() => handleMobileNav('tools')}
+                        className="rounded-full"
+                    >
+                        <Calculator className="mr-2 size-4" /> Calculators
+                    </Button>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto" ref={mobileContainerRef}>
+                <div ref={chatSectionRef} className="h-screen flex flex-col">
+                    <ChatInterface />
+                </div>
+                <div ref={toolsSectionRef} className="h-screen p-4">
+                    <ToolsInterface />
+                </div>
             </div>
         </div>
-        
-        <div className="flex-1 flex flex-row overflow-hidden">
-           <div className="flex-1 flex flex-col">
-              {/* Mobile View */}
-              <div className="lg:hidden h-full">
-                {mobileView === 'chat' ? renderChat() : renderTools()}
-              </div>
 
-              {/* Desktop View */}
-              <div className="hidden lg:flex flex-1 h-full">
-                <div className="flex-1 flex flex-col">
-                    {renderChat()}
-                </div>
-                <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4">
-                    {renderTools()}
-                </aside>
-              </div>
-           </div>
+        {/* Desktop View */}
+        <div className="hidden lg:flex flex-1 overflow-hidden">
+          <div className="flex-1 flex flex-col">
+              <ChatInterface />
+          </div>
+          <aside className="w-[400px] h-full border-l border-border/50">
+              <ToolsInterface />
+          </aside>
         </div>
       </main>
     </div>
