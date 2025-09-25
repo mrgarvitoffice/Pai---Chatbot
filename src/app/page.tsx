@@ -24,9 +24,9 @@ import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
 import { PortfolioAllocationResultCard } from '@/components/portfolio-allocation-result-card';
 import { TermInsuranceResultCard } from '@/components/term-insurance-result-card';
 import { FireResultCard } from '@/components/fire-result-card';
-import { Sidebar, SidebarProvider, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
 import { PaiLogo } from '@/components/icons';
-import { TaxCalculator } from '@/components/tax-calculator';
+import { ToolsPanel } from '@/components/tools-panel';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -207,7 +207,7 @@ export default function Home() {
                 </div>
              </div>
              <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
-                 <TaxCalculator setMessages={setMessages} />
+                 <ToolsPanel setMessages={setMessages} />
              </aside>
           </div>
         </main>
