@@ -11,23 +11,26 @@ export function cn(...inputs: ClassValue[]) {
 export const generatePdf = (elementId: string) => {
   const input = document.getElementById(elementId);
   if (input) {
-    // Use a solid background color during canvas rendering to prevent transparency issues.
-    // The theme's card color is a good choice.
+    // Determine the current theme to apply the correct background color.
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff'; // Dark theme slate-900, Light theme white
+    const textColor = isDarkMode ? '#f8fafc' : '#020817'; // Dark theme slate-50, Light theme slate-950
+
     html2canvas(input, { 
         scale: 2, 
-        backgroundColor: '#111827', // Use a solid color from the theme
-        useCORS: true, // Important for external images if any
+        backgroundColor: backgroundColor,
+        useCORS: true,
         onclone: (document) => {
-            // This ensures pseudo-elements (like gradients) are rendered
-            // by temporarily making them on a solid background.
             const clonedEl = document.getElementById(elementId);
             if (clonedEl) {
-                clonedEl.style.setProperty('background', '#111827', 'important');
-                 // Force gradients to render on a solid background
+                // Ensure the cloned element has the correct theme's background and text color for rendering.
+                clonedEl.style.setProperty('background-color', backgroundColor, 'important');
+                clonedEl.style.setProperty('color', textColor, 'important');
+
+                // Apply text color to all child elements to ensure readability
                 clonedEl.querySelectorAll('*').forEach((node) => {
-                    const style = window.getComputedStyle(node);
-                    if (style.backgroundImage.includes('gradient')) {
-                        node.setAttribute('style', `background-image: ${style.backgroundImage} !important; background-color: transparent !important;`);
+                    if (node instanceof HTMLElement) {
+                        node.style.setProperty('color', textColor, 'important');
                     }
                 });
             }
