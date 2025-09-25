@@ -8,10 +8,12 @@ export async function sendMessageAction(input: OrchestratorInput): Promise<Orche
     return await orchestrate(input);
   } catch (error) {
     console.error("Error in orchestrator:", error);
-    // Ensure a serializable error object is returned
+    // Ensure a serializable error object is returned that matches the expected OrchestratorOutput type
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     return {
       response: `I'm sorry, I encountered an error while processing your request. Please try again. \n\n**Error Details:** ${errorMessage}`,
+      sources: [],
+      calculationResult: undefined,
     };
   }
 }

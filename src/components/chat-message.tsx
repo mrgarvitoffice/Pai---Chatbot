@@ -79,13 +79,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {typeof content === 'string' ? (
-          <div className="p-4 prose prose-sm dark:prose-invert prose-p:my-2 prose-headings:my-3 prose-ul:my-2 max-w-none">
-            <ReactMarkdown>{content}</ReactMarkdown>
-          </div>
-        ) : (
-          content
-        )}
+        {content}
 
         {isAssistant && onFeedback && (
              <div className="px-2 pb-2 mt-1 flex items-center justify-between">
