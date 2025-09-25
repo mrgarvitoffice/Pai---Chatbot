@@ -1,6 +1,7 @@
+
 "use client";
 
-import { FC, useState, useRef, ReactNode } from 'react';
+import { FC, useState, useRef, ReactNode, useMemo, useCallback } from 'react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
@@ -16,13 +17,21 @@ import {
 import { Button } from './ui/button';
 import { textToSpeechAction } from '@/lib/actions';
 
-export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string, feedback: 'like' | 'dislike') => void }> = ({ id, role, content, sources, feedback, rawContent, onFeedback }) => {
+export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string, feedback: 'like' | 'dislike') => void }> = React.memo(({ 
+  id, 
+  role, 
+  content, 
+  sources, 
+  feedback, 
+  rawContent, 
+  onFeedback 
+}) => {
   const isAssistant = role === 'assistant';
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const handleListen = async () => {
+  const handleListen = useCallback(async () => {
       if (isPlaying) {
           audioRef.current?.pause();
           setIsPlaying(false);
@@ -47,9 +56,9 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       } finally {
           setIsLoadingAudio(false);
       }
-  };
+  }, [isPlaying, rawContent]);
   
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
       if (!rawContent) return;
       const blob = new Blob([rawContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -60,118 +69,159 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-  };
+  }, [rawContent]);
 
-  const renderContent = () => {
-    // If content is a string (from user message), wrap it in a div.
+  const handleFeedback = useCallback((feedbackType: 'like' | 'dislike') => {
+    onFeedback?.(id, feedbackType);
+  }, [id, onFeedback]);
+
+  const renderedContent = useMemo(() => {
     if (typeof content === 'string') {
+      return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
+    }
+    if (React.isValidElement(content)) {
       return <div className="p-4">{content}</div>;
     }
-    // If it's already a valid React element (from assistant message), render it directly.
-    return content;
-  };
+    return null;
+  }, [content]);
 
   return (
-    <div className={cn('flex items-start gap-3 animate-slide-in-up', isAssistant ? '' : 'justify-end')}>
+    <div className={cn(
+      'flex items-start gap-3 animate-slide-in-up', 
+      isAssistant ? '' : 'justify-end'
+    )}>
       {isAssistant && (
         <Avatar className="size-8 border-2 border-primary/30 bg-card text-primary flex-shrink-0 shadow-lg">
-            <div className="flex items-center justify-center h-full w-full bg-background">
-                <PaiLogo className="size-5 text-primary" />
-            </div>
+          <div className="flex items-center justify-center h-full w-full bg-background">
+            <PaiLogo className="size-5 text-primary" />
+          </div>
         </Avatar>
       )}
+      
       <div
         className={cn(
-          'w-full max-w-[85%] md:max-w-[85%] rounded-2xl text-sm md:text-base',
+          'w-full max-w-[85%] md:max-w-[85%] rounded-2xl text-sm md:text-base overflow-hidden',
           isAssistant
             ? 'bg-card/80 backdrop-blur-md rounded-tl-none shadow-md border border-border/30'
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {renderContent()}
+        {renderedContent}
 
         {isAssistant && onFeedback && (
-             <div className="px-2 pb-2 mt-1 flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                    {sources && sources.length > 0 && (
-                        <div className="flex items-center gap-1 border-r border-border/50 pr-2 mr-1">
-                            <p className="text-xs font-semibold text-muted-foreground pl-1">SOURCES:</p>
-                             <TooltipProvider>
-                                {sources.map((source, index) => (
-                                    <Tooltip key={index}>
-                                        <TooltipTrigger asChild>
-                                            <a href={source.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted/50">
-                                                <FileText className="size-4 text-muted-foreground" />
-                                            </a>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p className="text-xs">{source.name}</p>
-                                            <p className="text-xs text-muted-foreground">Updated: {source.last_updated}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ))}
-                            </TooltipProvider>
-                        </div>
-                    )}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-7 rounded-full" onClick={handleListen} disabled={isLoadingAudio}>
-                                    {isLoadingAudio ? <Loader2 className="size-4 animate-spin"/> : <Volume2 className="size-4" />}
-                                </Button>
-                            </TooltipTrigger>
-                             <TooltipContent><p>Listen to response</p></TooltipContent>
-                        </Tooltip>
-                         <Tooltip>
-                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-7 rounded-full" onClick={handleDownload}>
-                                    <Download className="size-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Download response</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+          <div className="px-2 pb-2 mt-1 flex items-center justify-between border-t border-border/20">
+            <div className="flex items-center gap-1">
+              {sources && sources.length > 0 && (
+                <div className="flex items-center gap-1 border-r border-border/50 pr-2 mr-1">
+                  <p className="text-xs font-semibold text-muted-foreground pl-1">SOURCES:</p>
+                  <TooltipProvider>
+                    {sources.map((source, index) => (
+                      <Tooltip key={index}>
+                        <TooltipTrigger asChild>
+                          <a 
+                            href={source.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
+                          >
+                            <FileText className="size-4 text-muted-foreground" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{source.name}</p>
+                          <p className="text-xs text-muted-foreground">Updated: {source.last_updated}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </TooltipProvider>
                 </div>
-                <div className="flex items-center gap-1">
-                     <TooltipProvider>
-                        <Tooltip>
-                             <TooltipTrigger asChild>
-                                 <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className={cn("size-7 rounded-full", feedback === 'like' && 'bg-primary/10 text-primary')}
-                                    onClick={() => onFeedback(id, 'like')}
-                                >
-                                    <ThumbsUp className="size-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Good response</p></TooltipContent>
-                        </Tooltip>
-                         <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className={cn("size-7 rounded-full", feedback === 'dislike' && 'bg-destructive/10 text-destructive')}
-                                    onClick={() => onFeedback(id, 'dislike')}
-                                >
-                                    <ThumbsDown className="size-4" />
-                                </Button>
-                            </TooltipTrigger>
-                             <TooltipContent><p>Bad response</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
+              )}
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="size-7 rounded-full hover:bg-muted/50 transition-colors" 
+                      onClick={handleListen} 
+                      disabled={isLoadingAudio}
+                    >
+                      {isLoadingAudio ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Volume2 className="size-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Listen to response</p></TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="size-7 rounded-full hover:bg-muted/50 transition-colors" 
+                      onClick={handleDownload}
+                    >
+                      <Download className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Download response</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
+            
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className={cn(
+                        "size-7 rounded-full hover:bg-muted/50 transition-colors", 
+                        feedback === 'like' && 'bg-primary/10 text-primary'
+                      )}
+                      onClick={() => handleFeedback('like')}
+                    >
+                      <ThumbsUp className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Good response</p></TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className={cn(
+                        "size-7 rounded-full hover:bg-muted/50 transition-colors", 
+                        feedback === 'dislike' && 'bg-destructive/10 text-destructive'
+                      )}
+                      onClick={() => handleFeedback('dislike')}
+                    >
+                      <ThumbsDown className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Bad response</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         )}
       </div>
-       {!isAssistant && (
+      
+      {!isAssistant && (
         <Avatar className="size-8 border-2 border-primary/50 flex-shrink-0 bg-user-bubble shadow-md">
-            <AvatarFallback className="bg-transparent text-primary-foreground">
-                <User className="size-4" />
-            </AvatarFallback>
+          <AvatarFallback className="bg-transparent text-primary-foreground">
+            <User className="size-4" />
+          </AvatarFallback>
         </Avatar>
       )}
     </div>
   );
-};
+});
+ChatMessage.displayName = 'ChatMessage';
