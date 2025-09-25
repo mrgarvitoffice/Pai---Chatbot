@@ -34,7 +34,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                             <p className="text-muted-foreground">{result.split.needsPct}% Needs</p>
-                            <p className="font-semibold text-red-600 dark:text-red-400">₹{result.needs.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-red-600 dark:text-red-400">🔴 ₹{result.needs.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
@@ -43,7 +43,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                              <p className="text-muted-foreground">{result.split.wantsPct}% Wants</p>
-                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.wants.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">🔵 ₹{result.wants.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
@@ -52,7 +52,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                            <p className="text-muted-foreground">{result.split.savingsPct}% Savings</p>
-                           <p className="font-semibold text-green-600 dark:text-green-400">₹{result.savings.toLocaleString('en-IN')}</p>
+                           <p className="font-semibold text-green-600 dark:text-green-400">🟢 ₹{result.savings.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                 </div>

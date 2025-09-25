@@ -119,25 +119,25 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             const resultType = toolCall.name.replace('Tool', '').replace('calculator', '_').replace('allocator', '_').replace(/_$/, "");
             
             if (toolCall.name === 'taxCalculatorTool') {
-                 explanation = `Here is the income tax summary for FY ${toolCall.input.fy} under the ${toolCall.input.regime} regime.`;
+                 explanation = `Here is the income tax summary for an income of **₹${toolCall.input.income.toLocaleString('en-IN')}** for FY ${toolCall.input.fy} under the **${toolCall.input.regime} regime**.`;
                  return {
                     response: explanation,
                     calculationResult: { type: 'tax', data: toolOutput },
                  }
             }
-             if (toolCall.name === 'sipCalculatorTool') explanation = `Based on your inputs, here is the projected future value of your SIP investment of ₹${toolCall.input.monthly_investment.toLocaleString('en-IN')}/month for ${toolCall.input.years} years.`;
-             if (toolCall.name === 'emiCalculatorTool') explanation = `For a loan of ₹${toolCall.input.principal.toLocaleString('en-IN')} at ${toolCall.input.annual_rate}% for ${toolCall.input.years} years, your Equated Monthly Installment (EMI) has been calculated.`;
-             if (toolCall.name === 'portfolioAllocatorTool') explanation = `Based on your age of ${toolCall.input.age} and a '${toolCall.input.riskAppetite}' risk appetite, here is a suggested asset allocation.`;
-             if (toolCall.name === 'termInsuranceCalculatorTool') explanation = `Based on the rule of thumb of having a life cover of at least 10-15 times your annual income, a suitable term insurance cover has been calculated.`;
-             if (toolCall.name === 'reverseSipCalculatorTool') explanation = `To reach your goal of ₹${toolCall.input.future_value.toLocaleString('en-IN')} in ${toolCall.input.years} years with an expected return of ${toolCall.input.annual_rate}%, you would need to invest approximately the following amount per month.`;
-             if (toolCall.name === 'retirementCalculatorTool') explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of ${toolCall.input.retirementAge}.`;
-             if (toolCall.name === 'fireCalculatorTool') explanation = `Here are your FIRE (Financial Independence, Retire Early) projections.`;
-             if (toolCall.name === 'budgetCalculatorTool') explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of ₹${toolCall.input.monthlyIncome.toLocaleString('en-IN')}.`;
+             if (toolCall.name === 'sipCalculatorTool') explanation = `Based on your inputs, here is the projected future value of your SIP investment of **₹${toolCall.input.monthly_investment.toLocaleString('en-IN')}/month** for **${toolCall.input.years} years**.`;
+             if (toolCall.name === 'emiCalculatorTool') explanation = `For a loan of **₹${toolCall.input.principal.toLocaleString('en-IN')}** at **${toolCall.input.annual_rate}%** for **${toolCall.input.years} years**, your Equated Monthly Installment (EMI) has been calculated.`;
+             if (toolCall.name === 'portfolioAllocatorTool') explanation = `Based on your age of **${toolCall.input.age}** and a **'${toolCall.input.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`;
+             if (toolCall.name === 'termInsuranceCalculatorTool') explanation = `Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`;
+             if (toolCall.name === 'reverseSipCalculatorTool') explanation = `To reach your goal of **₹${toolCall.input.future_value.toLocaleString('en-IN')}** in **${toolCall.input.years} years** with an expected return of **${toolCall.input.annual_rate}%**, you would need to invest approximately the following amount per month.`;
+             if (toolCall.name === 'retirementCalculatorTool') explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${toolCall.input.retirementAge}**. This is based on standard financial planning assumptions.`;
+             if (toolCall.name === 'fireCalculatorTool') explanation = `Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`;
+             if (toolCall.name === 'budgetCalculatorTool') explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${toolCall.input.monthlyIncome.toLocaleString('en-IN')}**.`;
              if (toolCall.name === 'fdCalculatorTool') explanation = `Here is the calculated maturity value for your Fixed Deposit.`;
              if (toolCall.name === 'rdCalculatorTool') explanation = `Here is the calculated maturity value for your Recurring Deposit.`;
-             if (toolCall.name === 'dtiCalculatorTool') explanation = `Your Debt-to-Income (DTI) ratio has been calculated based on your provided income and EMI details.`;
-             if (toolCall.name === 'savingsRatioCalculatorTool') explanation = `Your Savings Ratio has been calculated based on your provided income and savings details.`;
-             if (toolCall.name === 'compoundInterestCalculatorTool') explanation = `The future value of your investment has been calculated with compound interest.`;
+             if (toolCall.name === 'dtiCalculatorTool') explanation = `Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`;
+             if (toolCall.name === 'savingsRatioCalculatorTool') explanation = `Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`;
+             if (toolCall.name === 'compoundInterestCalculatorTool') explanation = `The future value of your lump-sum investment has been calculated with compound interest.`;
 
 
             return {

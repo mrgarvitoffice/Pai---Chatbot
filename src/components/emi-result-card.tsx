@@ -34,7 +34,7 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Loan Amount</p>
-                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.principal.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">🔵 ₹{result.principal.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
@@ -43,7 +43,7 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Total Interest</p>
-                            <p className="font-semibold text-red-600 dark:text-red-400">₹{result.total_interest.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-red-600 dark:text-red-400">🔴 ₹{result.total_interest.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background col-span-1 md:col-span-2">

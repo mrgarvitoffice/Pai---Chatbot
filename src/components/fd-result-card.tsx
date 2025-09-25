@@ -34,7 +34,7 @@ export function FdResultCard({ result, explanation }: FdResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Principal</p>
-                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.principal.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">🔵 ₹{result.principal.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background">

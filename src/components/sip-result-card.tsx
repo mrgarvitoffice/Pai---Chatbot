@@ -34,7 +34,7 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Total Invested</p>
-                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.total_invested.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">🔵 ₹{result.total_invested.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background">

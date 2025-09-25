@@ -43,7 +43,7 @@ export function FireResultCard({ result, explanation }: FireResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Target Corpus</p>
-                            <p className="font-semibold text-red-600 dark:text-red-400">₹{result.targetCorpus.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-red-600 dark:text-red-400">🔴 ₹{result.targetCorpus.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
@@ -53,7 +53,7 @@ export function FireResultCard({ result, explanation }: FireResultCardProps) {
                         <div>
                             <p className="text-muted-foreground">Projected Corpus</p>
                             <p className="font-semibold text-green-600 dark:text-green-400">
-                               ₹{result.projectedCorpus.toLocaleString('en-IN')}
+                               🟢 ₹{result.projectedCorpus.toLocaleString('en-IN')}
                             </p>
                         </div>
                     </div>
