@@ -26,12 +26,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface TermInsuranceCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculatorProps) {
+export function TermInsuranceCalculator({ setMessages, latestReportId }: TermInsuranceCalculatorProps) {
   const [result, setResult] = useState<TermInsuranceResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,9 +43,8 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateTermInsuranceCover(values.annualIncome);
-    const newId = `term-insurance-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `term-insurance-result-${uuidv4()}`;
+    const calculationResult = { ...calculateTermInsuranceCover(values.annualIncome), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +57,7 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <TermInsuranceResultCard id={newId} result={calculationResult} explanation={`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`} />
+            content: <TermInsuranceResultCard id={resultId} result={calculationResult} explanation={`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -96,9 +95,9 @@ export function TermInsuranceCalculator({ setMessages }: TermInsuranceCalculator
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

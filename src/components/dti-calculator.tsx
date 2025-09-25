@@ -27,12 +27,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface DtiCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
+export function DtiCalculator({ setMessages, latestReportId }: DtiCalculatorProps) {
   const [result, setResult] = useState<DtiResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,9 +45,8 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi);
-    const newId = `dti-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `dti-result-${uuidv4()}`;
+    const calculationResult = { ...debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -60,7 +59,7 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <DtiResultCard id={newId} result={calculationResult} explanation={`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`} />
+            content: <DtiResultCard id={resultId} result={calculationResult} explanation={`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -111,9 +110,9 @@ export function DtiCalculator({ setMessages }: DtiCalculatorProps) {
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

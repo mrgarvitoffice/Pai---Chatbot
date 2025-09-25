@@ -32,13 +32,13 @@ type TaxFormValues = z.infer<typeof formSchema>;
 
 interface TaxCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
+export function TaxCalculator({ setMessages, latestReportId }: TaxCalculatorProps) {
   const [result, setResult] = useState<TaxCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExplaining, setIsExplaining] = useState(false);
-  const resultCardId = `tax-result-${uuidv4()}`;
 
   const form = useForm<TaxFormValues>({
     resolver: zodResolver(formSchema),
@@ -52,6 +52,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
   const onSubmit = async (values: TaxFormValues) => {
     setIsCalculating(true);
     setResult(null);
+    const resultId = `tax-result-${uuidv4()}`;
 
     if (values.regime === 'compare') {
       const newRegimeResult = calculateTax(values.income, values.fy, 'new');
@@ -74,7 +75,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
       const resultMessage: ChatMessage = {
           id: uuidv4(),
           role: 'assistant',
-          content: <TaxResultCard id={resultCardId} comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />
+          content: <TaxResultCard id={resultId} comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />
       };
       setMessages(prev => [...prev, userQuery, resultMessage]);
       setIsCalculating(false);
@@ -94,7 +95,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <TaxResultCard id={resultCardId} result={calculationResult} explanation={`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`} />
+            content: <TaxResultCard id={resultId} result={calculationResult} explanation={`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 
@@ -224,7 +225,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
                 Explain with AI
             </Button>
         )}
-        <Button variant="secondary" onClick={() => generatePdf(resultCardId)} disabled={!result}>
+        <Button variant="secondary" onClick={() => generatePdf(latestReportId!)} disabled={!latestReportId}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
         </Button>

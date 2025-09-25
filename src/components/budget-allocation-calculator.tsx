@@ -26,12 +26,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface BudgetAllocationCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalculatorProps) {
+export function BudgetAllocationCalculator({ setMessages, latestReportId }: BudgetAllocationCalculatorProps) {
   const [result, setResult] = useState<BudgetAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,9 +43,8 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = budgetAllocation(values.monthlyIncome);
-    const newId = `budget-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `budget-result-${uuidv4()}`;
+    const calculationResult = { ...budgetAllocation(values.monthlyIncome), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +57,7 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <BudgetAllocationResultCard id={newId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
+            content: <BudgetAllocationResultCard id={resultId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -109,9 +108,9 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
           </div>
         )}
       </CardContent>
-       {result && resultCardId && (
+       {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

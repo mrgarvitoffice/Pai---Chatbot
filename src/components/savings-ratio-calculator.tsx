@@ -27,12 +27,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface SavingsRatioCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorProps) {
+export function SavingsRatioCalculator({ setMessages, latestReportId }: SavingsRatioCalculatorProps) {
   const [result, setResult] = useState<SavingsRatioResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,9 +45,8 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = savingsRatio(values.monthlyIncome, values.monthlySavings);
-    const newId = `savings-ratio-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `savings-ratio-result-${uuidv4()}`;
+    const calculationResult = { ...savingsRatio(values.monthlyIncome, values.monthlySavings), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -60,7 +59,7 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <SavingsRatioResultCard id={newId} result={calculationResult} explanation={`Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`} />
+            content: <SavingsRatioResultCard id={resultId} result={calculationResult} explanation={`Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -111,9 +110,9 @@ export function SavingsRatioCalculator({ setMessages }: SavingsRatioCalculatorPr
           </div>
         )}
       </CardContent>
-       {result && resultCardId && (
+       {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

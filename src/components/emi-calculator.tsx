@@ -28,12 +28,12 @@ type EmiFormValues = z.infer<typeof formSchema>;
 
 interface EmiCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
+export function EmiCalculator({ setMessages, latestReportId }: EmiCalculatorProps) {
   const [result, setResult] = useState<EmiCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const resultCardId = `emi-result-${uuidv4()}`;
 
   const form = useForm<EmiFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,7 +47,8 @@ export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
   const onSubmit = (values: EmiFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateEMI(values.principal, values.annual_rate, values.years);
+    const resultId = `emi-result-${uuidv4()}`;
+    const calculationResult = { ...calculateEMI(values.principal, values.annual_rate, values.years), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -60,7 +61,7 @@ export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <EmiResultCard id={resultCardId} result={calculationResult} explanation={`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`} />
+            content: <EmiResultCard id={resultId} result={calculationResult} explanation={`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 
@@ -138,9 +139,9 @@ export function EmiCalculator({ setMessages }: EmiCalculatorProps) {
           </div>
         )}
       </CardContent>
-      {result && (
+      {latestReportId && (
         <div className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

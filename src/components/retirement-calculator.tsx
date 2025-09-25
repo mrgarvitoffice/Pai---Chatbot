@@ -31,12 +31,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface RetirementCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function RetirementCalculator({ setMessages }: RetirementCalculatorProps) {
+export function RetirementCalculator({ setMessages, latestReportId }: RetirementCalculatorProps) {
   const [result, setResult] = useState<RetirementCorpusResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,9 +50,8 @@ export function RetirementCalculator({ setMessages }: RetirementCalculatorProps)
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateRetirementCorpus(values);
-    const newId = `retirement-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `retirement-result-${uuidv4()}`;
+    const calculationResult = { ...calculateRetirementCorpus(values), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -65,7 +64,7 @@ export function RetirementCalculator({ setMessages }: RetirementCalculatorProps)
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <RetirementResultCard id={newId} result={calculationResult} explanation={`To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`} />
+            content: <RetirementResultCard id={resultId} result={calculationResult} explanation={`To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -132,9 +131,9 @@ export function RetirementCalculator({ setMessages }: RetirementCalculatorProps)
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

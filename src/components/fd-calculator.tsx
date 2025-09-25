@@ -28,12 +28,12 @@ type FdFormValues = z.infer<typeof formSchema>;
 
 interface FdCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function FdCalculator({ setMessages }: FdCalculatorProps) {
+export function FdCalculator({ setMessages, latestReportId }: FdCalculatorProps) {
   const [result, setResult] = useState<FdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FdFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,9 +47,8 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
   const onSubmit = (values: FdFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateFd(values.principal, values.annual_rate, values.years, 4); // Assuming quarterly compounding
-    const newId = `fd-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `fd-result-${uuidv4()}`;
+    const calculationResult = { ...calculateFd(values.principal, values.annual_rate, values.years, 4), id: resultId }; // Assuming quarterly compounding
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -62,7 +61,7 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <FdResultCard id={newId} result={calculationResult} explanation={`Here is the calculated maturity value for your Fixed Deposit.`} />
+            content: <FdResultCard id={resultId} result={calculationResult} explanation={`Here is the calculated maturity value for your Fixed Deposit.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -139,9 +138,9 @@ export function FdCalculator({ setMessages }: FdCalculatorProps) {
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

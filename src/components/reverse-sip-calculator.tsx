@@ -28,12 +28,12 @@ type ReverseSipFormValues = z.infer<typeof formSchema>;
 
 interface ReverseSipCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps) {
+export function ReverseSipCalculator({ setMessages, latestReportId }: ReverseSipCalculatorProps) {
   const [result, setResult] = useState<ReverseSipResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<ReverseSipFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,9 +47,8 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
   const onSubmit = (values: ReverseSipFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateReverseSip(values.future_value, values.years, values.annual_rate);
-    const newId = `reverse-sip-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `reverse-sip-result-${uuidv4()}`;
+    const calculationResult = { ...calculateReverseSip(values.future_value, values.years, values.annual_rate), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -62,7 +61,7 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <ReverseSipResultCard id={newId} result={calculationResult} explanation={`To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`} />
+            content: <ReverseSipResultCard id={resultId} result={calculationResult} explanation={`To reach your goal of **₹${values.future_value.toLocaleString('en-IN')}** in **${values.years} years** with an expected return of **${values.annual_rate}%**, you would need to invest approximately the following amount per month.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -129,9 +128,9 @@ export function ReverseSipCalculator({ setMessages }: ReverseSipCalculatorProps)
           </div>
         )}
       </CardContent>
-       {result && resultCardId && (
+       {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

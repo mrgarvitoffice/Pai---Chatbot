@@ -28,12 +28,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface PortfolioAllocationCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocationCalculatorProps) {
+export function PortfolioAllocationCalculator({ setMessages, latestReportId }: PortfolioAllocationCalculatorProps) {
   const [result, setResult] = useState<PortfolioAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -46,9 +46,8 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculatePortfolioAllocation(values.age, values.riskAppetite);
-    const newId = `portfolio-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `portfolio-result-${uuidv4()}`;
+    const calculationResult = { ...calculatePortfolioAllocation(values.age, values.riskAppetite), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -61,7 +60,7 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <PortfolioAllocationResultCard id={newId} result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
+            content: <PortfolioAllocationResultCard id={resultId} result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -125,9 +124,9 @@ export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocati
           </div>
         )}
       </CardContent>
-       {result && resultCardId && (
+       {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

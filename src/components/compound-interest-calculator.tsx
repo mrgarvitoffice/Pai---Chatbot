@@ -30,12 +30,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface CompoundInterestCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalculatorProps) {
+export function CompoundInterestCalculator({ setMessages, latestReportId }: CompoundInterestCalculatorProps) {
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,9 +50,8 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
   const onSubmit = (values: FormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq);
-    const newId = `ci-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `ci-result-${uuidv4()}`;
+    const calculationResult = { ...compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -65,7 +64,7 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <CompoundInterestResultCard id={newId} result={calculationResult} explanation={`The future value of your lump-sum investment has been calculated with compound interest.`} />
+            content: <CompoundInterestResultCard id={resultId} result={calculationResult} explanation={`The future value of your lump-sum investment has been calculated with compound interest.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -155,9 +154,9 @@ export function CompoundInterestCalculator({ setMessages }: CompoundInterestCalc
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

@@ -28,12 +28,12 @@ type RdFormValues = z.infer<typeof formSchema>;
 
 interface RdCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function RdCalculator({ setMessages }: RdCalculatorProps) {
+export function RdCalculator({ setMessages, latestReportId }: RdCalculatorProps) {
   const [result, setResult] = useState<RdCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [resultCardId, setResultCardId] = useState<string | null>(null);
 
   const form = useForm<RdFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,9 +47,8 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
   const onSubmit = (values: RdFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateRd(values.monthly_deposit, values.annual_rate, values.months);
-    const newId = `rd-result-${uuidv4()}`;
-    setResultCardId(newId);
+    const resultId = `rd-result-${uuidv4()}`;
+    const calculationResult = { ...calculateRd(values.monthly_deposit, values.annual_rate, values.months), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -62,7 +61,7 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <RdResultCard id={newId} result={calculationResult} explanation={`Here is the calculated maturity value for your Recurring Deposit.`} />
+            content: <RdResultCard id={resultId} result={calculationResult} explanation={`Here is the calculated maturity value for your Recurring Deposit.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -139,9 +138,9 @@ export function RdCalculator({ setMessages }: RdCalculatorProps) {
           </div>
         )}
       </CardContent>
-      {result && resultCardId && (
+      {latestReportId && (
         <CardFooter className="p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>
