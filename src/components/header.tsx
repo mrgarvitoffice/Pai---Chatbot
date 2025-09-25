@@ -18,14 +18,11 @@ export function Header() {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    // Check for saved theme in localStorage. If not found, check system preference.
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || 'light';
+    // Check for saved theme in localStorage. If not found, use light as default.
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
     
-    setTheme(initialTheme);
-    
-    if (initialTheme === 'dark') {
+    if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');

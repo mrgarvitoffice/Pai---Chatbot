@@ -25,7 +25,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
                 <CardDescription>Total Tax Payable (FY {result.fy})</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-400 dark:to-pink-500 py-1">
+                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     ₹{total_tax.toLocaleString('en-IN')}
                 </CardTitle>
             </CardHeader>
@@ -83,7 +83,7 @@ function TaxComparisonCard({ result, explanation }: { result: TaxComparisonResul
                 </div>
             </CardContent>
              <CardFooter className="pt-0 px-4 pb-4">
-                <p className="text-xs text-muted-foreground w-full">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
+                <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
             </CardFooter>
         </Card>
     );

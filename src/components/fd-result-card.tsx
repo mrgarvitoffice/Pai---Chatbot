@@ -16,7 +16,7 @@ export function FdResultCard({ result, explanation }: FdResultCardProps) {
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
                 <CardDescription>Maturity Value</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-400 dark:to-pink-500 py-1">
+                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     ₹{result.future_value.toLocaleString('en-IN')}
                 </CardTitle>
             </CardHeader>
