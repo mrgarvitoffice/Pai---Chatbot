@@ -19,11 +19,12 @@ import { Loader2, Sparkles, FileDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { ChatMessage, TaxCalculationResult } from '@/lib/types';
 import { TaxResultCard } from './tax-result-card';
+import { compareTaxRegimes } from '@/ai/flows/compare-tax-regimes';
 
 const formSchema = z.object({
   income: z.coerce.number().min(1, { message: 'Income must be greater than 0.' }),
   fy: z.string().default('2024-25'),
-  regime: z.enum(['new', 'old']).default('new'),
+  regime: z.enum(['new', 'old', 'compare']).default('new'),
 });
 
 type TaxFormValues = z.infer<typeof formSchema>;
@@ -46,9 +47,38 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
     },
   });
 
-  const onSubmit = (values: TaxFormValues) => {
+  const onSubmit = async (values: TaxFormValues) => {
     setIsCalculating(true);
     setResult(null);
+
+    if (values.regime === 'compare') {
+      const newRegimeResult = calculateTax(values.income, values.fy, 'new');
+      const oldRegimeResult = calculateTax(values.income, values.fy, 'old');
+      
+      const comparisonInput = {
+        income: values.income,
+        fy: values.fy,
+        newRegimeResult,
+        oldRegimeResult,
+      };
+
+      const comparisonResult = await compareTaxRegimes(comparisonInput);
+      
+      const userQuery: ChatMessage = {
+          id: uuidv4(),
+          role: 'user',
+          content: `Compare tax regimes for an income of ₹${values.income.toLocaleString('en-IN')}.`
+      };
+      const resultMessage: ChatMessage = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: <TaxResultCard comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />
+      };
+      setMessages(prev => [...prev, userQuery, resultMessage]);
+      setIsCalculating(false);
+      return;
+    }
+
     const calculationResult = calculateTax(values.income, values.fy, values.regime);
     
     setTimeout(() => {
@@ -131,6 +161,7 @@ export function TaxCalculator({ setMessages }: TaxCalculatorProps) {
                     <SelectContent>
                       <SelectItem value="new">New Regime (Default)</SelectItem>
                       <SelectItem value="old">Old Regime</SelectItem>
+                      <SelectItem value="compare">Compare Regimes</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

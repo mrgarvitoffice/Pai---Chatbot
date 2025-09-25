@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, fireCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool } from '../tools/calculators';
+import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, fireCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool, hraCalculatorTool } from '../tools/calculators';
 import { searchKnowledgeBase, generateAndStoreKnowledge } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 import type { CalculationResult } from '@/lib/types';
@@ -52,6 +52,7 @@ const orchestratorPrompt = ai.definePrompt({
         portfolioAllocatorTool,
         termInsuranceCalculatorTool,
         compoundInterestCalculatorTool,
+        hraCalculatorTool,
         searchKnowledgeBase,
         generateAndStoreKnowledge,
         getDynamicData
@@ -138,6 +139,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
              if (toolCall.name === 'dtiCalculatorTool') explanation = `Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`;
              if (toolCall.name === 'savingsRatioCalculatorTool') explanation = `Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`;
              if (toolCall.name === 'compoundInterestCalculatorTool') explanation = `The future value of your lump-sum investment has been calculated with compound interest.`;
+             if (toolCall.name === 'hraCalculatorTool') explanation = `Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`;
 
 
             return {
@@ -187,7 +189,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
     console.error("Critical error in orchestrator:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     return {
-      response: `I'm very sorry, but I encountered a critical error while processing your request. Please try again later. \n\n**Error Details:** ${errorMessage}`,
+      response: `I'm very sorry, but I encountered a critical error while processing your request. Please try again. \n\n**Error Details:** ${errorMessage}`,
     };
   }
 }

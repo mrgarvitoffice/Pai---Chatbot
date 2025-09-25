@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic, MessageSquare, Calculator, Settings } from 'lucide-react';
+import { ArrowUp, Mic } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -24,8 +24,7 @@ import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
 import { PortfolioAllocationResultCard } from '@/components/portfolio-allocation-result-card';
 import { TermInsuranceResultCard } from '@/components/term-insurance-result-card';
 import { FireResultCard } from '@/components/fire-result-card';
-import { Sidebar, SidebarProvider, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
-import { PaiLogo } from '@/components/icons';
+import { HraResultCard } from '@/components/hra-result-card';
 import { ToolsPanel } from '@/components/tools-panel';
 
 const initialMessages: ChatMessageType[] = [];
@@ -79,6 +78,7 @@ export default function Home() {
       else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'fire') content = <FireResultCard result={result.calculationResult.data} explanation={result.response} />;
+      else if (result.calculationResult?.type === 'hra') content = <HraResultCard result={result.calculationResult.data} explanation={result.response} />;
       else content = result.response;
       
       const botResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content, sources: result.sources };
@@ -124,94 +124,58 @@ export default function Home() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-background font-body">
-        <Sidebar variant="sidebar" collapsible="icon">
-          <SidebarHeader>
-            <div className="flex items-center gap-3 p-2">
-                <PaiLogo className="h-8 w-8 text-primary" />
-                <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton isActive>
-                        <MessageSquare />
-                        <span>Chat</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton>
-                        <Calculator />
-                        <span>Tools</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-           <SidebarFooter>
-              <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton>
-                          <Settings />
-                          <span>Settings</span>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-              </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-row overflow-hidden">
-             <div className="flex-1 flex flex-col">
-                <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
-                  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="space-y-6">
-                      {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} /> : messages.map((message) => <ChatMessage key={message.id} {...message} />)}
-                      {isLoading && (
-                        <ChatMessage
-                          id="loading"
-                          role="assistant"
-                          content={
-                            <div className="flex items-center space-x-2 p-4">
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground dot1"></div>
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground dot2"></div>
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground dot3"></div>
-                              <span className="text-sm text-muted-foreground">Pai is thinking...</span>
-                            </div>
-                          }
-                        />
-                      )}
-                    </div>
+    <div className="flex h-screen bg-background font-body">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-row overflow-hidden">
+           <div className="flex-1 flex flex-col">
+              <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <div className="space-y-6">
+                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} /> : messages.map((message) => <ChatMessage key={message.id} {...message} />)}
+                    {isLoading && (
+                      <ChatMessage
+                        id="loading"
+                        role="assistant"
+                        content={
+                          <div className="flex items-center space-x-2 p-4">
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot1"></div>
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot2"></div>
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot3"></div>
+                            <span className="text-sm text-muted-foreground">Pai is thinking...</span>
+                          </div>
+                        }
+                      />
+                    )}
                   </div>
                 </div>
-                <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
-                  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
-                      <div className="flex-1 flex items-center px-2 bg-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
-                        <Input
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
-                          className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base md:text-sm"
-                          disabled={isLoading}
-                        />
-                        <Button type="button" variant="ghost" size="icon" onClick={toggleRecording} className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" disabled={isLoading}>
-                          <Mic className={`size-5 transition-colors ${isRecording ? 'text-primary animate-pulse' : ''}`} />
-                        </Button>
-                      </div>
-                      <Button type="submit" size="icon" className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0" disabled={!input.trim() || isLoading}>
-                        <ArrowUp className="size-5" />
+              </div>
+              <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                  <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
+                    <div className="flex-1 flex items-center px-2 bg-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+                      <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
+                        className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base md:text-sm"
+                        disabled={isLoading}
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={toggleRecording} className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" disabled={isLoading}>
+                        <Mic className={`size-5 transition-colors ${isRecording ? 'text-primary animate-pulse' : ''}`} />
                       </Button>
-                    </form>
-                  </div>
+                    </div>
+                    <Button type="submit" size="icon" className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0" disabled={!input.trim() || isLoading}>
+                      <ArrowUp className="size-5" />
+                    </Button>
+                  </form>
                 </div>
-             </div>
-             <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
-                 <ToolsPanel setMessages={setMessages} />
-             </aside>
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+              </div>
+           </div>
+           <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
+               <ToolsPanel setMessages={setMessages} />
+           </aside>
+        </div>
+      </main>
+    </div>
   );
 }

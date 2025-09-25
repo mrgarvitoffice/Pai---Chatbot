@@ -6,7 +6,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation, calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover, calculateFire } from '@/lib/calculators';
+import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation, calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover, calculateFire, calculateHRA } from '@/lib/calculators';
 import { z } from 'zod';
 
 // Tax Calculator Tool
@@ -213,4 +213,20 @@ export const compoundInterestCalculatorTool = ai.defineTool(
         outputSchema: z.any(),
     },
     async (input) => compoundFutureValue(input.principal, input.annualRate, input.years, input.compoundingFreq)
+);
+
+// HRA Calculator Tool
+export const hraCalculatorTool = ai.defineTool(
+  {
+    name: 'hraCalculatorTool',
+    description: 'Calculates House Rent Allowance (HRA) exemption.',
+    inputSchema: z.object({
+      basicSalary: z.number().describe('Annual basic salary.'),
+      hraReceived: z.number().describe('Annual HRA received from employer.'),
+      rentPaid: z.number().describe('Annual rent paid.'),
+      metroCity: z.boolean().describe('Whether the user lives in a metro city (true) or not (false).'),
+    }),
+    outputSchema: z.any(),
+  },
+  async (input) => calculateHRA(input.basicSalary, input.hraReceived, input.rentPaid, input.metroCity)
 );

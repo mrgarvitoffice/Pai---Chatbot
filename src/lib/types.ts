@@ -140,6 +140,15 @@ export interface PortfolioAllocationResult {
     gold: number;
 }
 
+export interface HraResult {
+    basicSalary: number;
+    hraReceived: number;
+    rentPaid: number;
+    metroCity: boolean;
+    hraExemption: number;
+}
+
+
 export type CalculationResult = 
   | { type: 'tax'; data: TaxCalculationResult }
   | { type: 'tax_comparison', data: TaxComparisonResult }
@@ -155,4 +164,5 @@ export type CalculationResult =
   | { type: 'dti', data: DtiResult }
   | { type: 'savings_ratio', data: SavingsRatioResult }
   | { type: 'term_insurance', data: TermInsuranceResult }
-  | { type: 'portfolio_allocation', data: PortfolioAllocationResult };
+  | { type: 'portfolio_allocation', data: PortfolioAllocationResult }
+  | { type: 'hra', data: HraResult };

@@ -19,9 +19,10 @@ import { DtiCalculator } from './dti-calculator';
 import { SavingsRatioCalculator } from './savings-ratio-calculator';
 import { PortfolioAllocationCalculator } from './portfolio-allocation-calculator';
 import { TermInsuranceCalculator } from './term-insurance-calculator';
+import { HraCalculator } from './hra-calculator';
 import type { ChatMessage } from '@/lib/types';
 
-type Tool = 'tax' | 'emi' | 'sip' | 'fd' | 'rd' | 'reverse_sip' | 'compound_interest' | 'budget' | 'retirement' | 'fire' | 'dti' | 'savings_ratio' | 'portfolio_allocation' | 'term_insurance';
+type Tool = 'tax' | 'emi' | 'sip' | 'fd' | 'rd' | 'reverse_sip' | 'compound_interest' | 'budget' | 'retirement' | 'fire' | 'dti' | 'savings_ratio' | 'portfolio_allocation' | 'term_insurance' | 'hra';
 
 interface ToolsPanelProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
@@ -42,6 +43,7 @@ const toolComponents: Record<Tool, React.ComponentType<{ setMessages: Dispatch<S
   savings_ratio: SavingsRatioCalculator,
   portfolio_allocation: PortfolioAllocationCalculator,
   term_insurance: TermInsuranceCalculator,
+  hra: HraCalculator,
 };
 
 const toolNames: Record<Tool, string> = {
@@ -59,6 +61,7 @@ const toolNames: Record<Tool, string> = {
   savings_ratio: 'Savings Ratio Calculator',
   portfolio_allocation: 'Portfolio Allocator',
   term_insurance: 'Term Insurance Calculator',
+  hra: 'HRA Exemption Calculator',
 };
 
 export function ToolsPanel({ setMessages }: ToolsPanelProps) {
