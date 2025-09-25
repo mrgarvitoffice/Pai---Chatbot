@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FC, useState, useRef } from 'react';
+import { FC, useState, useRef, ReactNode } from 'react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage as ChatMessageType } from '@/lib/types';
@@ -67,16 +67,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   const renderContent = () => {
     if (typeof content === 'string') {
       return (
-        <div className="p-4">
-          <ReactMarkdown
-            className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0"
-            components={{
-              p: ({ node, ...props }) => <p {...props} />,
-            }}
-          >
-            {content}
-          </ReactMarkdown>
-        </div>
+        <div className="p-4">{content}</div>
       );
     }
     return content;
