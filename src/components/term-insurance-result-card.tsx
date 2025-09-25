@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { TermInsuranceResult } from "@/lib/types";

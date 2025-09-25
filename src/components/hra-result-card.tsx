@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { HraResult } from "@/lib/types";

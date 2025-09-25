@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { TaxCalculationResult, TaxComparisonResult } from "@/lib/types";
@@ -95,7 +96,7 @@ export function TaxResultCard({ id, result, comparisonResult, explanation }: Tax
 function TaxComparisonCard({ id, result, explanation }: { id: string, result: TaxComparisonResult, explanation: string }) {
     const { new: newRegimeResult, old: oldRegimeResult } = result;
     const savings = Math.abs(newRegimeResult.total_tax - oldRegimeResult.total_tax);
-    const betterRegime = newRegimeResult.total_tax < oldRegimeResult.total_tax ? 'New' : 'Old';
+    const betterRegime = newRegimeResult.total_tax <= oldRegimeResult.total_tax ? 'New' : 'Old';
 
     return (
          <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">

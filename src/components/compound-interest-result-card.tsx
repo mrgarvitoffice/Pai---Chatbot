@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { CompoundInterestResult } from "@/lib/types";

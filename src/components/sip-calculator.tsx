@@ -9,13 +9,14 @@ import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateSip } from '@/lib/calculators';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, SipCalculationResult } from '@/lib/types';
 import { SipResultCard } from './sip-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   monthly_investment: z.coerce.number().min(1, { message: 'Investment must be greater than 0.' }),
@@ -27,9 +28,10 @@ type SipFormValues = z.infer<typeof formSchema>;
 
 interface SipCalculatorProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  latestReportId: string | null;
 }
 
-export function SipCalculator({ setMessages }: SipCalculatorProps) {
+export function SipCalculator({ setMessages, latestReportId }: SipCalculatorProps) {
   const [result, setResult] = useState<SipCalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -45,7 +47,8 @@ export function SipCalculator({ setMessages }: SipCalculatorProps) {
   const onSubmit = (values: SipFormValues) => {
     setIsCalculating(true);
     setResult(null);
-    const calculationResult = calculateSip(values.monthly_investment, values.years, values.annual_rate);
+    const resultId = `sip-result-${uuidv4()}`;
+    const calculationResult = { ...calculateSip(values.monthly_investment, values.years, values.annual_rate), id: resultId };
     
     setTimeout(() => {
         setResult(calculationResult);
@@ -58,7 +61,7 @@ export function SipCalculator({ setMessages }: SipCalculatorProps) {
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <SipResultCard result={calculationResult} explanation={`Based on your inputs, here is the projected future value of your SIP investment of **₹${values.monthly_investment.toLocaleString('en-IN')}/month** for **${values.years} years**.`} />
+            content: <SipResultCard id={resultId} result={calculationResult} explanation={`Based on your inputs, here is the projected future value of your SIP investment of **₹${values.monthly_investment.toLocaleString('en-IN')}/month** for **${values.years} years**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -135,6 +138,14 @@ export function SipCalculator({ setMessages }: SipCalculatorProps) {
           </div>
         )}
       </CardContent>
+       {latestReportId && (
+        <CardFooter className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

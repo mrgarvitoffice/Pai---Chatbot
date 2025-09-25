@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { SipCalculationResult } from "@/lib/types";
