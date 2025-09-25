@@ -77,20 +77,15 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   }, [id, onFeedback]);
 
   // This function now correctly handles rendering strings or React components.
-  const renderedContent = React.useMemo(() => {
+  const renderedContent = (() => {
     if (typeof content === 'string') {
       return <div className="p-4 whitespace-pre-wrap break-words">{content}</div>;
     }
-    // If it's already a valid React element, just return it.
     if (React.isValidElement(content)) {
-      // The content (e.g., a result card) might already have its own padding.
-      // Wrapping it in another div with padding can sometimes cause layout issues.
-      // Let's return it directly. The parent components (Result Cards) handle their own padding.
       return content;
     }
-    // Fallback for any other unexpected type
     return null;
-  }, [content]);
+  })();
 
   return (
     <div className={cn(
@@ -113,8 +108,6 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {/* If the content is a string, it gets padding from the renderedContent function.
-            If it's a component, it relies on its own internal padding. */}
         {renderedContent}
 
         {isAssistant && onFeedback && (
