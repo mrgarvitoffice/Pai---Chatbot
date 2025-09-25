@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic } from 'lucide-react';
+import { ArrowUp, Mic, Bot, Menu } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -28,6 +28,8 @@ import { HraResultCard } from '@/components/hra-result-card';
 import { ToolsPanel } from '@/components/tools-panel';
 import { KnowledgeResultCard } from '@/components/knowledge-result-card';
 import { Header } from '@/components/header';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -41,6 +43,26 @@ export default function Home() {
   const [latestReportId, setLatestReportId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const isMobile = useIsMobile();
+  const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
+
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('chatHistory-active');
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }, []);
+
+  const saveCurrentChat = () => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatHistory-active', JSON.stringify(messages));
+    }
+  };
+
+  useEffect(() => {
+    saveCurrentChat();
+  }, [messages]);
+
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -58,7 +80,6 @@ export default function Home() {
             msg.id === messageId ? { ...msg, feedback } : msg
         )
     );
-    // Here you could also send this feedback to a logging service
     console.log(`Feedback for message ${messageId}: ${feedback}`);
   };
 
@@ -79,7 +100,6 @@ export default function Home() {
           } else if (msg.role === 'assistant') {
               content = msg.rawContent || 'Previous calculation result displayed.';
               if (msg.feedback) {
-                  // Append feedback to the history for context
                   content += `\n[User feedback: ${msg.feedback}]`;
               }
           }
@@ -97,7 +117,6 @@ export default function Home() {
       if (resultId) {
         setLatestReportId(resultId);
       } else {
-        // If it's not a calculation, there's no report to download, so clear the ID
         setLatestReportId(null);
       }
 
@@ -123,7 +142,7 @@ export default function Home() {
         id: uuidv4(), 
         role: 'assistant', 
         content, 
-        rawContent: result.response, // Store raw text for TTS/Download
+        rawContent: result.response, 
         sources: result.sources 
       };
       setMessages((prev) => [...prev, botResponse]);
@@ -170,10 +189,21 @@ export default function Home() {
     }
   };
 
+  const renderToolsPanel = useMemo(() => {
+    return (
+      <ToolsPanel
+        setMessages={setMessages}
+        latestReportId={latestReportId}
+        setLatestReportId={setLatestReportId}
+      />
+    );
+  }, [latestReportId]);
+  
+
   return (
     <div className="flex h-screen bg-background font-body">
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header setMessages={setMessages} messages={messages} />
         <div className="flex-1 flex flex-row overflow-hidden">
            <div className="flex-1 flex flex-col">
               <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
@@ -200,6 +230,18 @@ export default function Home() {
               <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                   <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
+                    {isMobile && (
+                      <Sheet open={toolsPanelOpen} onOpenChange={setToolsPanelOpen}>
+                        <SheetTrigger asChild>
+                           <Button variant="outline" size="icon" className="size-12 rounded-full flex-shrink-0">
+                              <Bot className="size-5" />
+                           </Button>
+                        </SheetTrigger>
+                        <SheetContent side="bottom" className="h-[85%] flex flex-col">
+                           {renderToolsPanel}
+                        </SheetContent>
+                      </Sheet>
+                    )}
                     <div className="flex-1 flex items-center px-2 bg-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
                       <Input
                         value={input}
@@ -220,7 +262,7 @@ export default function Home() {
               </div>
            </div>
            <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
-               <ToolsPanel setMessages={setMessages} latestReportId={latestReportId} setLatestReportId={setLatestReportId} />
+               {renderToolsPanel}
            </aside>
         </div>
       </main>
