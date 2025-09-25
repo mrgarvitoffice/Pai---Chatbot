@@ -62,6 +62,24 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
       URL.revokeObjectURL(url);
   };
 
+  const renderContent = () => {
+    if (typeof content === 'string') {
+      return (
+        <div className="p-4">
+          <ReactMarkdown
+            className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0"
+            components={{
+              p: ({ node, ...props }) => <p {...props} />,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      );
+    }
+    return content;
+  };
+
   return (
     <div className={cn('flex items-start gap-3 animate-slide-in-up', isAssistant ? '' : 'justify-end')}>
       {isAssistant && (
@@ -79,7 +97,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
             : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
-        {content}
+        {renderContent()}
 
         {isAssistant && onFeedback && (
              <div className="px-2 pb-2 mt-1 flex items-center justify-between">
