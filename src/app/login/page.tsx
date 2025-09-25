@@ -22,7 +22,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl border-primary/10 animate-slide-in-up">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-             <Image src="/logo.png" alt="Pai Logo" width={64} height={64} />
+             <Image src="/icon.png" alt="Pai Logo" width={64} height={64} />
           </div>
           <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Welcome to Pai</CardTitle>
           <CardDescription>Your Personal AI Financial Assistant</CardDescription>

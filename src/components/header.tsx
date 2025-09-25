@@ -73,7 +73,7 @@ export function Header({ setMessages, messages }: HeaderProps) {
   return (
     <header className="flex h-16 items-center justify-between bg-card/50 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10 border-b border-border">
       <div className="flex items-center gap-3">
-        <Image src="/logo.png" alt="Pai Logo" width={32} height={32} />
+        <Image src="/icon.png" alt="Pai Logo" width={32} height={32} />
         <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
       </div>
       <div className="flex items-center gap-1">
