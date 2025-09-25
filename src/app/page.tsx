@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Mic, Bot } from 'lucide-react';
+import { ArrowUp, Mic, Bot, MessageSquare, Calculator } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
@@ -29,11 +30,13 @@ import { ToolsPanel } from '@/components/tools-panel';
 import { KnowledgeResultCard } from '@/components/knowledge-result-card';
 import { Header } from '@/components/header';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 const initialMessages: ChatMessageType[] = [];
 
 const SpeechRecognition = (typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition));
+
+type MobileView = 'chat' | 'tools';
 
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessageType[]>(initialMessages);
@@ -44,7 +47,7 @@ export default function Home() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
-  const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
+  const [mobileView, setMobileView] = useState<MobileView>('chat');
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('chatHistory-active');
@@ -76,8 +79,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (mobileView === 'chat') {
+        scrollToBottom();
+    }
+  }, [messages, isLoading, mobileView]);
   
   const handleFeedback = (messageId: string, feedback: 'like' | 'dislike') => {
     setMessages(prevMessages => 
@@ -90,6 +95,10 @@ export default function Home() {
 
   const processAndSetMessage = useCallback(async (query: string) => {
     if (!query.trim() || isLoading) return;
+
+    if (isMobile) {
+        setMobileView('chat');
+    }
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
     setMessages((prev) => [...prev, userMessage]);
@@ -159,7 +168,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages]);
+  }, [isLoading, messages, isMobile]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -194,84 +203,111 @@ export default function Home() {
       setIsRecording(true);
     }
   };
-
-  const renderToolsPanel = useMemo(() => {
-    return (
-      <ToolsPanel
-        setMessages={setMessages}
-        latestReportId={latestReportId}
-        setLatestReportId={setLatestReportId}
-      />
-    );
-  }, [latestReportId]);
   
+  const renderChat = () => (
+    <>
+        <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="space-y-6">
+              {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} onFeedback={handleFeedback} {...message} />)}
+              {isLoading && (
+                <ChatMessage
+                  id="loading"
+                  role="assistant"
+                  content={
+                    <div className="flex items-center space-x-2 p-4">
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot1"></div>
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot2"></div>
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground dot3"></div>
+                      <span className="text-sm text-muted-foreground">Pai is thinking...</span>
+                    </div>
+                  }
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
+              <div className="flex-1 flex items-center px-2 bg-card border border-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
+                  className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base md:text-sm"
+                  disabled={isLoading}
+                />
+                <Button type="button" variant="ghost" size="icon" onClick={toggleRecording} className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" disabled={isLoading}>
+                  <Mic className={`size-5 transition-colors ${isRecording ? 'text-primary animate-pulse' : ''}`} />
+                </Button>
+              </div>
+              <Button type="submit" size="icon" className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0" disabled={!input.trim() || isLoading}>
+                <ArrowUp className="size-5" />
+              </Button>
+            </form>
+          </div>
+        </div>
+    </>
+  );
+
+  const renderTools = () => (
+    <div className="h-full overflow-y-auto p-4">
+        <ToolsPanel
+            setMessages={setMessages}
+            latestReportId={latestReportId}
+            setLatestReportId={setLatestReportId}
+        />
+    </div>
+  );
+
 
   return (
     <div className="flex h-screen bg-background font-body">
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header setMessages={setMessages} messages={messages} />
+        
+        {/* Mobile View Toggler */}
+        <div className="lg:hidden p-2 bg-background border-b border-border/50">
+            <div className="grid grid-cols-2 gap-2">
+                <Button 
+                    variant={mobileView === 'chat' ? 'default' : 'outline'} 
+                    onClick={() => setMobileView('chat')}
+                    className="rounded-full"
+                >
+                    <MessageSquare className="mr-2 size-4" /> Chat
+                </Button>
+                <Button 
+                    variant={mobileView === 'tools' ? 'default' : 'outline'} 
+                    onClick={() => setMobileView('tools')}
+                    className="rounded-full"
+                >
+                    <Calculator className="mr-2 size-4" /> Calculators
+                </Button>
+            </div>
+        </div>
+        
         <div className="flex-1 flex flex-row overflow-hidden">
            <div className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                  <div className="space-y-6">
-                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} onFeedback={handleFeedback} {...message} />)}
-                    {isLoading && (
-                      <ChatMessage
-                        id="loading"
-                        role="assistant"
-                        content={
-                          <div className="flex items-center space-x-2 p-4">
-                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot1"></div>
-                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot2"></div>
-                            <div className="w-2 h-2 rounded-full bg-muted-foreground dot3"></div>
-                            <span className="text-sm text-muted-foreground">Pai is thinking...</span>
-                          </div>
-                        }
-                      />
-                    )}
-                  </div>
-                </div>
+              {/* Mobile View */}
+              <div className="lg:hidden h-full">
+                {mobileView === 'chat' ? renderChat() : renderTools()}
               </div>
-              <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                  <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
-                    {isMobile && (
-                      <Sheet open={toolsPanelOpen} onOpenChange={setToolsPanelOpen}>
-                        <SheetTrigger asChild>
-                           <Button variant="outline" size="icon" className="size-12 rounded-full flex-shrink-0">
-                              <Bot className="size-5" />
-                           </Button>
-                        </SheetTrigger>
-                        <SheetContent side="bottom" className="h-[85%] flex flex-col">
-                           {renderToolsPanel}
-                        </SheetContent>
-                      </Sheet>
-                    )}
-                    <div className="flex-1 flex items-center px-2 bg-card border border-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
-                      <Input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={isRecording ? 'Listening...' : "Ask Pai anything about finance..."}
-                        className="flex-1 h-12 px-3 bg-transparent border-none focus-visible:ring-0 text-base md:text-sm"
-                        disabled={isLoading}
-                      />
-                      <Button type="button" variant="ghost" size="icon" onClick={toggleRecording} className="size-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" disabled={isLoading}>
-                        <Mic className={`size-5 transition-colors ${isRecording ? 'text-primary animate-pulse' : ''}`} />
-                      </Button>
-                    </div>
-                    <Button type="submit" size="icon" className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0" disabled={!input.trim() || isLoading}>
-                      <ArrowUp className="size-5" />
-                    </Button>
-                  </form>
+
+              {/* Desktop View */}
+              <div className="hidden lg:flex flex-1 h-full">
+                <div className="flex-1 flex flex-col">
+                    {renderChat()}
                 </div>
+                <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4">
+                    {renderTools()}
+                </aside>
               </div>
            </div>
-           <aside className="w-[400px] h-full overflow-y-auto border-l border-border/50 p-4 hidden lg:block">
-               {renderToolsPanel}
-           </aside>
         </div>
       </main>
     </div>
   );
 }
+
+    
