@@ -180,7 +180,13 @@ export default function Home() {
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error(error);
-      const errorResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content: "Sorry, I encountered an error. Please try again.", rawContent: "Sorry, I encountered an error. Please try again." };
+      const errorMessage = "Sorry, I encountered an error. Please try again.";
+      const errorResponse: ChatMessageType = { 
+        id: uuidv4(), 
+        role: 'assistant', 
+        content: <KnowledgeResultCard id={`error-${uuidv4()}`} query="Error" response={errorMessage} />, 
+        rawContent: errorMessage 
+      };
       setMessages((prev) => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
