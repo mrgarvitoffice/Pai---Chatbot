@@ -65,9 +65,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
 
   const renderContent = () => {
     if (typeof content === 'string') {
-      return (
-        <div className="p-4">{content}</div>
-      );
+      return <div className="p-4">{content}</div>;
     }
     return content;
   };
