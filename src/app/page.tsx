@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/chat-message';
@@ -51,18 +51,16 @@ export default function Home() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const processAndSetMessage = useCallback(async (query: string) => {
+    if (!query.trim() || isLoading) return;
 
-    const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: input };
+    const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
     setMessages((prev) => [...prev, userMessage]);
-    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
-      const result = await sendMessageAction({ query: currentInput });
+      const result = await sendMessageAction({ query });
       const resultId = `result-${uuidv4()}`;
       
       let content: React.ReactNode;
@@ -82,7 +80,7 @@ export default function Home() {
       else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
-      else content = <KnowledgeResultCard response={result.response} query={currentInput} />;
+      else content = <KnowledgeResultCard id={resultId} response={result.response} query={query} />;
       
       const botResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content, sources: result.sources };
       setMessages((prev) => [...prev, botResponse]);
@@ -93,6 +91,11 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  }, [isLoading]);
+
+  const handleSendMessage = async (e: FormEvent) => {
+    e.preventDefault();
+    processAndSetMessage(input);
   };
 
   const toggleRecording = () => {
@@ -105,14 +108,12 @@ export default function Home() {
       }
       if (!recognitionRef.current) {
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
+        recognitionRef.current.continuous = false; // Set to false to stop after first result
+        recognitionRef.current.interimResults = false;
         recognitionRef.current.onresult = (event: any) => {
-          let finalTranscript = '';
-          for (let i = 0; i < event.results.length; i++) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-          }
+          const finalTranscript = event.results[0][0].transcript;
           setInput(finalTranscript);
+          processAndSetMessage(finalTranscript); // Process immediately after speech
         };
         recognitionRef.current.onend = () => setIsRecording(false);
         recognitionRef.current.onerror = (event: any) => {
@@ -135,7 +136,7 @@ export default function Home() {
               <div className="flex-1 overflow-y-auto" ref={scrollAreaRef}>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   <div className="space-y-6">
-                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} /> : messages.map((message) => <ChatMessage key={message.id} {...message} />)}
+                    {messages.length === 0 && !isLoading ? <WelcomeMessage setInput={setInput} onSendMessage={processAndSetMessage} /> : messages.map((message) => <ChatMessage key={message.id} {...message} />)}
                     {isLoading && (
                       <ChatMessage
                         id="loading"

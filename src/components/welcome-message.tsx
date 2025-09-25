@@ -13,9 +13,15 @@ const exampleQueries = [
 
 interface WelcomeMessageProps {
     setInput: Dispatch<SetStateAction<string>>;
+    onSendMessage: (query: string) => Promise<void>;
 }
 
-export function WelcomeMessage({ setInput }: WelcomeMessageProps) {
+export function WelcomeMessage({ setInput, onSendMessage }: WelcomeMessageProps) {
+  const handleQueryClick = (query: string) => {
+    setInput(query);
+    onSendMessage(query);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full pt-4 sm:pt-16 animate-slide-in-up">
         <div className="relative mb-6">
@@ -32,7 +38,7 @@ export function WelcomeMessage({ setInput }: WelcomeMessageProps) {
             {exampleQueries.map((query) => (
                 <button
                     key={query.text}
-                    onClick={() => setInput(query.text)}
+                    onClick={() => handleQueryClick(query.text)}
                     className="group p-4 bg-card/60 backdrop-blur-md border border-border/20 rounded-2xl text-left hover:bg-accent/50 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:border-primary/50"
                 >
                     <div className="flex items-center gap-3">
