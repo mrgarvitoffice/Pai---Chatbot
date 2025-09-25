@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import ReactMarkdown from "react-markdown";
 
 interface BudgetAllocationResultCardProps {
+    id: string;
     result: BudgetAllocationResult;
     explanation: string;
 }
 
-export function BudgetAllocationResultCard({ result, explanation }: BudgetAllocationResultCardProps) {
+export function BudgetAllocationResultCard({ id, result, explanation }: BudgetAllocationResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="text-center pb-4">
                  <CardTitle className="text-xl font-semibold mb-2">💰 Budget Allocation</CardTitle>
                 <CardDescription>Suggested split for a monthly income of</CardDescription>
@@ -58,7 +59,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                 </div>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 pt-4 border-t border-border/30">
-                 <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a financial advisor for personalised guidance.</p>
+                 <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. All calculations are for informational purposes only. Please consult a financial advisor for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className="border-b-0">
                     <AccordionTrigger className="font-code text-xs pt-2">What is the 50/30/20 Rule?</AccordionTrigger>

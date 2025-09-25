@@ -13,9 +13,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, BudgetAllocationResult } from '@/lib/types';
 import { BudgetAllocationResultCard } from './budget-allocation-result-card';
+import { generatePdf } from '@/lib/utils';
 
 const formSchema = z.object({
   monthlyIncome: z.coerce.number().min(1, { message: 'Income must be greater than 0.' }),
@@ -30,6 +31,7 @@ interface BudgetAllocationCalculatorProps {
 export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalculatorProps) {
   const [result, setResult] = useState<BudgetAllocationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const resultCardId = `budget-result-${uuidv4()}`;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -54,7 +56,7 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
         const resultMessage: ChatMessage = {
             id: uuidv4(),
             role: 'assistant',
-            content: <BudgetAllocationResultCard result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
+            content: <BudgetAllocationResultCard id={resultCardId} result={calculationResult} explanation={`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`} />
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
@@ -105,6 +107,14 @@ export function BudgetAllocationCalculator({ setMessages }: BudgetAllocationCalc
           </div>
         )}
       </CardContent>
+       {result && (
+        <div className="p-4 border-t">
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(resultCardId)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Download Report as PDF
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

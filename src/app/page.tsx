@@ -26,6 +26,7 @@ import { TermInsuranceResultCard } from '@/components/term-insurance-result-card
 import { FireResultCard } from '@/components/fire-result-card';
 import { HraResultCard } from '@/components/hra-result-card';
 import { ToolsPanel } from '@/components/tools-panel';
+import { KnowledgeResultCard } from '@/components/knowledge-result-card';
 
 const initialMessages: ChatMessageType[] = [];
 
@@ -79,7 +80,7 @@ export default function Home() {
       else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'fire') content = <FireResultCard result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'hra') content = <HraResultCard result={result.calculationResult.data} explanation={result.response} />;
-      else content = result.response;
+      else content = <KnowledgeResultCard response={result.response} query={currentInput} />;
       
       const botResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content, sources: result.sources };
       setMessages((prev) => [...prev, botResponse]);
