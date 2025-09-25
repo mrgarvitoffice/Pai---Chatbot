@@ -1,0 +1,114 @@
+
+"use client";
+
+import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { v4 as uuidv4 } from 'uuid';
+import { calculatePortfolioAllocation } from '@/lib/calculators';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Loader2 } from 'lucide-react';
+import type { ChatMessage, PortfolioAllocationResult } from '@/lib/types';
+import { PortfolioAllocationResultCard } from './portfolio-allocation-result-card';
+
+const formSchema = z.object({
+  age: z.coerce.number().min(18).max(100),
+  riskAppetite: z.enum(['low', 'medium', 'high']),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface PortfolioAllocationCalculatorProps {
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+}
+
+export function PortfolioAllocationCalculator({ setMessages }: PortfolioAllocationCalculatorProps) {
+  const [result, setResult] = useState<PortfolioAllocationResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      age: 35,
+      riskAppetite: 'medium',
+    },
+  });
+
+  const onSubmit = (values: FormValues) => {
+    setIsCalculating(true);
+    setResult(null);
+    const calculationResult = calculatePortfolioAllocation(values.age, values.riskAppetite);
+    
+    setTimeout(() => {
+        setResult(calculationResult);
+        setIsCalculating(false);
+        const userQuery: ChatMessage = {
+            id: uuidv4(),
+            role: 'user',
+            content: `Suggest a portfolio allocation for me.`
+        };
+        const resultMessage: ChatMessage = {
+            id: uuidv4(),
+            role: 'assistant',
+            content: <PortfolioAllocationResultCard result={calculationResult} explanation={`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`} />
+        };
+        setMessages(prev => [...prev, userQuery, resultMessage]);
+    }, 500);
+  };
+
+  return (
+    <Card className="rounded-2xl shadow-sm h-full flex flex-col border-0">
+      <CardContent className="flex-1 overflow-y-auto pt-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField control={form.control} name="age" render={({ field }) => ( <FormItem> <FormLabel>Your Age</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField
+              control={form.control}
+              name="riskAppetite"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Risk Appetite</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your risk appetite" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={isCalculating}>
+              {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isCalculating ? 'Calculating...' : 'Get Allocation'}
+            </Button>
+          </form>
+        </Form>
+        {result && (
+          <div className="mt-8 space-y-4 text-center">
+            <Separator />
+            <h3 className="text-lg font-semibold">Recommended Allocation</h3>
+            <div className="grid grid-cols-3 gap-2">
+                <div><p className="font-bold text-lg">{result.equity}%</p><p className="text-sm text-muted-foreground">Equity</p></div>
+                <div><p className="font-bold text-lg">{result.debt}%</p><p className="text-sm text-muted-foreground">Debt</p></div>
+                <div><p className="font-bold text-lg">{result.gold}%</p><p className="text-sm text-muted-foreground">Gold</p></div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

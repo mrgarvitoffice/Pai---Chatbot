@@ -3,48 +3,69 @@
 
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TaxCalculator } from './tax-calculator';
 import { EmiCalculator } from './emi-calculator';
 import { SipCalculator } from './sip-calculator';
 import { FdCalculator } from './fd-calculator';
+import { RdCalculator } from './rd-calculator';
+import { ReverseSipCalculator } from './reverse-sip-calculator';
+import { CompoundInterestCalculator } from './compound-interest-calculator';
+import { BudgetAllocationCalculator } from './budget-allocation-calculator';
+import { RetirementCalculator } from './retirement-calculator';
+import { FireCalculator } from './fire-calculator';
+import { DtiCalculator } from './dti-calculator';
+import { SavingsRatioCalculator } from './savings-ratio-calculator';
+import { PortfolioAllocationCalculator } from './portfolio-allocation-calculator';
+import { TermInsuranceCalculator } from './term-insurance-calculator';
 import type { ChatMessage } from '@/lib/types';
 
-type Tool = 'tax' | 'emi' | 'sip' | 'fd';
+type Tool = 'tax' | 'emi' | 'sip' | 'fd' | 'rd' | 'reverse_sip' | 'compound_interest' | 'budget' | 'retirement' | 'fire' | 'dti' | 'savings_ratio' | 'portfolio_allocation' | 'term_insurance';
 
 interface ToolsPanelProps {
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
 }
 
+const toolComponents: Record<Tool, React.ComponentType<{ setMessages: Dispatch<SetStateAction<ChatMessage[]>> }>> = {
+  tax: TaxCalculator,
+  emi: EmiCalculator,
+  sip: SipCalculator,
+  fd: FdCalculator,
+  rd: RdCalculator,
+  reverse_sip: ReverseSipCalculator,
+  compound_interest: CompoundInterestCalculator,
+  budget: BudgetAllocationCalculator,
+  retirement: RetirementCalculator,
+  fire: FireCalculator,
+  dti: DtiCalculator,
+  savings_ratio: SavingsRatioCalculator,
+  portfolio_allocation: PortfolioAllocationCalculator,
+  term_insurance: TermInsuranceCalculator,
+};
+
+const toolNames: Record<Tool, string> = {
+  tax: 'Income Tax Calculator',
+  emi: 'Loan EMI Calculator',
+  sip: 'SIP Calculator',
+  fd: 'FD Calculator',
+  rd: 'RD Calculator',
+  reverse_sip: 'Reverse SIP Calculator',
+  compound_interest: 'Compound Interest Calculator',
+  budget: 'Budget Allocator',
+  retirement: 'Retirement Planner',
+  fire: 'FIRE Calculator',
+  dti: 'Debt-to-Income (DTI) Calculator',
+  savings_ratio: 'Savings Ratio Calculator',
+  portfolio_allocation: 'Portfolio Allocator',
+  term_insurance: 'Term Insurance Calculator',
+};
+
 export function ToolsPanel({ setMessages }: ToolsPanelProps) {
   const [activeTool, setActiveTool] = useState<Tool>('tax');
 
-  const renderActiveTool = () => {
-    switch (activeTool) {
-      case 'tax':
-        return <TaxCalculator setMessages={setMessages} />;
-      case 'emi':
-        return <EmiCalculator setMessages={setMessages} />;
-      case 'sip':
-        return <SipCalculator setMessages={setMessages} />;
-      case 'fd':
-        return <FdCalculator setMessages={setMessages} />;
-      default:
-        return <TaxCalculator setMessages={setMessages} />;
-    }
-  };
+  const ActiveToolComponent = toolComponents[activeTool];
   
-  const getToolName = (tool: Tool) => {
-      switch (tool) {
-          case 'tax': return 'Income Tax Calculator';
-          case 'emi': return 'Loan EMI Calculator';
-          case 'sip': return 'SIP Calculator';
-          case 'fd': return 'FD Calculator';
-          default: return 'Select a Tool';
-      }
-  }
-
   return (
     <Card className="rounded-2xl shadow-sm h-full flex flex-col">
       <CardHeader>
@@ -54,16 +75,15 @@ export function ToolsPanel({ setMessages }: ToolsPanelProps) {
               <SelectValue placeholder="Select a calculator" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="tax">Income Tax Calculator</SelectItem>
-              <SelectItem value="emi">Loan EMI Calculator</SelectItem>
-              <SelectItem value="sip">SIP Calculator</SelectItem>
-              <SelectItem value="fd">FD Calculator</SelectItem>
+              {Object.entries(toolNames).map(([key, name]) => (
+                <SelectItem key={key} value={key}>{name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardTitle>
       </CardHeader>
       <div className="flex-1 overflow-y-auto">
-        {renderActiveTool()}
+        <ActiveToolComponent setMessages={setMessages} />
       </div>
     </Card>
   );
