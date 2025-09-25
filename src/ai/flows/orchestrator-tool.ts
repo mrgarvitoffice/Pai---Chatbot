@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool } from '../tools/calculators';
+import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, fireCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool } from '../tools/calculators';
 import { searchKnowledgeBase, generateAndStoreKnowledge } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
 import type { CalculationResult } from '@/lib/types';
@@ -46,6 +46,7 @@ const orchestratorPrompt = ai.definePrompt({
         rdCalculatorTool,
         reverseSipCalculatorTool,
         retirementCalculatorTool,
+        fireCalculatorTool,
         dtiCalculatorTool,
         savingsRatioCalculatorTool,
         portfolioAllocatorTool,
@@ -118,7 +119,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
             const resultType = toolCall.name.replace('Tool', '').replace('calculator', '_').replace('allocator', '_').replace(/_$/, "");
             
             if (toolCall.name === 'taxCalculatorTool') {
-                 explanation = `💰 Here's the income tax summary for FY ${toolCall.input.fy} under the ${toolCall.input.regime} regime.`;
+                 explanation = `Here is the income tax summary for FY ${toolCall.input.fy} under the ${toolCall.input.regime} regime.`;
                  return {
                     response: explanation,
                     calculationResult: { type: 'tax', data: toolOutput },
@@ -130,6 +131,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
              if (toolCall.name === 'termInsuranceCalculatorTool') explanation = `Based on the rule of thumb of having a life cover of at least 10-15 times your annual income, a suitable term insurance cover has been calculated.`;
              if (toolCall.name === 'reverseSipCalculatorTool') explanation = `To reach your goal of ₹${toolCall.input.future_value.toLocaleString('en-IN')} in ${toolCall.input.years} years with an expected return of ${toolCall.input.annual_rate}%, you would need to invest approximately the following amount per month.`;
              if (toolCall.name === 'retirementCalculatorTool') explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of ${toolCall.input.retirementAge}.`;
+             if (toolCall.name === 'fireCalculatorTool') explanation = `Here are your FIRE (Financial Independence, Retire Early) projections.`;
              if (toolCall.name === 'budgetCalculatorTool') explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of ₹${toolCall.input.monthlyIncome.toLocaleString('en-IN')}.`;
              if (toolCall.name === 'fdCalculatorTool') explanation = `Here is the calculated maturity value for your Fixed Deposit.`;
              if (toolCall.name === 'rdCalculatorTool') explanation = `Here is the calculated maturity value for your Recurring Deposit.`;

@@ -6,7 +6,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation, calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover } from '@/lib/calculators';
+import { calculateTax, calculateEMI, budgetAllocation, debtToIncomeRatio, savingsRatio, calculatePortfolioAllocation, calculateSip, calculateFd, calculateRd, calculateReverseSip, compoundFutureValue, calculateRetirementCorpus, calculateTermInsuranceCover, calculateFire } from '@/lib/calculators';
 import { z } from 'zod';
 
 // Tax Calculator Tool
@@ -125,6 +125,23 @@ export const retirementCalculatorTool = ai.defineTool(
         outputSchema: z.any(),
     },
     async (input) => calculateRetirementCorpus(input)
+);
+
+// FIRE Calculator Tool
+export const fireCalculatorTool = ai.defineTool(
+    {
+        name: 'fireCalculatorTool',
+        description: 'Calculates Financial Independence, Retire Early (FIRE) projections.',
+        inputSchema: z.object({
+            currentAge: z.number(),
+            retirementAge: z.number(),
+            monthlyExpenses: z.number(),
+            monthlyInvestment: z.number(),
+            expectedReturn: z.number().default(12),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => calculateFire(input)
 );
 
 // DTI Calculator Tool

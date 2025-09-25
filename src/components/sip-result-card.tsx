@@ -2,7 +2,7 @@
 
 import type { SipCalculationResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { TrendingUp, Wallet, Calendar } from "lucide-react";
+import { TrendingUp, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 
@@ -15,10 +15,11 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
     return (
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
+                <CardTitle className="text-xl font-semibold mb-2">📊 SIP Growth Calculation</CardTitle>
                 <CardDescription>Projected Value</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     ₹{result.future_value.toLocaleString('en-IN')}
-                </CardTitle>
+                </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="p-4 rounded-xl bg-background border shadow-inner">
@@ -33,7 +34,7 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Total Invested</p>
-                            <p className="font-semibold">₹{result.total_invested.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.total_invested.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
@@ -42,7 +43,9 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
                         </div>
                         <div>
                             <p className="text-muted-foreground">Est. Gains</p>
-                            <p className="font-semibold">₹{result.total_gain.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-green-600 dark:text-green-400">
+                               +₹{result.total_gain.toLocaleString('en-IN')} (🟢 Gain)
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -65,6 +68,10 @@ export function SipResultCard({ result, explanation }: SipResultCardProps) {
                             <div className="flex justify-between">
                                 <span>Expected Return (p.a.)</span>
                                 <span>{result.annual_rate}%</span>
+                            </div>
+                              <div className="border-t pt-2 mt-2 flex justify-between font-semibold text-foreground">
+                                <span>✨ Final Value</span>
+                                <span>₹{result.future_value.toLocaleString('en-IN')} ✅</span>
                             </div>
                         </div>
                     </AccordionContent>

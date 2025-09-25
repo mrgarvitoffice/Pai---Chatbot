@@ -2,7 +2,7 @@
 
 import type { BudgetAllocationResult } from "@/lib/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { PiggyBank, HandCoins, Building, Wallet } from "lucide-react";
+import { PiggyBank, HandCoins, Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 
@@ -15,10 +15,11 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
     return (
         <Card className="bg-background/50 border-0 shadow-none">
             <CardHeader className="text-center pb-4">
-                <CardDescription>Budget for Monthly Income of</CardDescription>
-                <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
+                 <CardTitle className="text-xl font-semibold mb-2">💰 Budget Allocation</CardTitle>
+                <CardDescription>Suggested split for a monthly income of</CardDescription>
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 dark:to-teal-300 py-1">
                     ₹{result.monthlyIncome.toLocaleString('en-IN')}
-                </CardTitle>
+                </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="p-4 rounded-xl bg-background border shadow-inner">
@@ -33,7 +34,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                             <p className="text-muted-foreground">{result.split.needsPct}% Needs</p>
-                            <p className="font-semibold">₹{result.needs.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-red-600 dark:text-red-400">₹{result.needs.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                      <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
@@ -42,7 +43,7 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                              <p className="text-muted-foreground">{result.split.wantsPct}% Wants</p>
-                            <p className="font-semibold">₹{result.wants.toLocaleString('en-IN')}</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">₹{result.wants.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
@@ -51,13 +52,13 @@ export function BudgetAllocationResultCard({ result, explanation }: BudgetAlloca
                         </div>
                         <div>
                            <p className="text-muted-foreground">{result.split.savingsPct}% Savings</p>
-                           <p className="font-semibold">₹{result.savings.toLocaleString('en-IN')}</p>
+                           <p className="font-semibold text-green-600 dark:text-green-400">₹{result.savings.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                 </div>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 pt-4">
-                 <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
+                 <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a financial advisor for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className="border-t">
                     <AccordionTrigger className="font-code text-xs">What is the 50/30/20 Rule?</AccordionTrigger>

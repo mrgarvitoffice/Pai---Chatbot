@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, PortfolioAllocationResult, SavingsRatioResult, TaxCalculationResult, SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult, RetirementCorpusResult, TermInsuranceResult } from './types';
+import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, PortfolioAllocationResult, SavingsRatioResult, TaxCalculationResult, SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult, RetirementCorpusResult, TermInsuranceResult, FireCalculationResult } from './types';
 
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 
@@ -471,6 +471,58 @@ export function calculateRetirementCorpus(
         }
     };
 }
+
+/**
+ * Calculates FIRE projections.
+ */
+export function calculateFire(
+    { currentAge, retirementAge, monthlyExpenses, monthlyInvestment, expectedReturn = 12, inflationRate = 6, swr = 4 } :
+    { currentAge: number; retirementAge: number; monthlyExpenses: number; monthlyInvestment: number; expectedReturn?: number; inflationRate?: number; swr?: number }
+): FireCalculationResult {
+    const yearsToInvest = retirementAge - currentAge;
+    
+    // 1. Calculate future value of monthly expenses at retirement
+    const futureMonthlyExpenses = monthlyExpenses * Math.pow(1 + inflationRate / 100, yearsToInvest);
+    
+    // 2. Calculate target corpus based on SWR
+    const targetCorpus = (futureMonthlyExpenses * 12) / (swr / 100);
+    
+    // 3. Calculate projected corpus from investments
+    const r = expectedReturn / 12 / 100;
+    const n = yearsToInvest * 12;
+    const projectedCorpus = monthlyInvestment * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    
+    // 4. Determine if retirement is possible
+    const canRetire = projectedCorpus >= targetCorpus;
+
+    // 5. If can't retire, estimate years to goal
+    let yearsToGoal = yearsToInvest;
+    if (!canRetire) {
+        // Formula to solve for n: n = log( (FV * r / P) + 1 ) / log(1 + r)
+        // This simplified FV is for a regular annuity. We need to find when SIP FV matches target corpus
+        // Iterative approach is simpler here.
+        let tempCorpus = 0;
+        let months = 0;
+        while(tempCorpus < targetCorpus && months < 600) { // 50 years limit
+             tempCorpus = monthlyInvestment * ((Math.pow(1 + r, months) - 1) / r) * (1 + r);
+             months++;
+        }
+        yearsToGoal = months / 12;
+    }
+
+    return {
+        currentAge,
+        retirementAge,
+        monthlyExpenses,
+        monthlyInvestment,
+        expectedReturn,
+        targetCorpus: round2(targetCorpus),
+        projectedCorpus: round2(projectedCorpus),
+        yearsToGoal: round2(yearsToGoal),
+        canRetire
+    };
+}
+
 
 /**
  * Calculates a recommended term insurance cover.

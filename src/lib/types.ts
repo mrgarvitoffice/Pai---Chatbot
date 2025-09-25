@@ -103,6 +103,18 @@ export interface RetirementCorpusResult {
     };
 }
 
+export interface FireCalculationResult {
+    currentAge: number;
+    retirementAge: number;
+    monthlyExpenses: number;
+    monthlyInvestment: number;
+    expectedReturn: number;
+    targetCorpus: number;
+    projectedCorpus: number;
+    yearsToGoal: number;
+    canRetire: boolean;
+}
+
 export interface DtiResult {
     monthlyIncome: number;
     monthlyEmi: number;
@@ -139,6 +151,7 @@ export type CalculationResult =
   | { type: 'fd', data: FdCalculationResult }
   | { type: 'rd', data: RdCalculationResult }
   | { type: 'retirement', data: RetirementCorpusResult }
+  | { type: 'fire', data: FireCalculationResult }
   | { type: 'dti', data: DtiResult }
   | { type: 'savings_ratio', data: SavingsRatioResult }
   | { type: 'term_insurance', data: TermInsuranceResult }
