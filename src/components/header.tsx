@@ -9,10 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -28,45 +24,8 @@ interface HeaderProps {
 
 export function Header({ setMessages, messages }: HeaderProps) {
   const router = useRouter();
-  const [chatHistory, setChatHistory] = useState<Record<string, ChatMessage[]>>({});
-
-  useEffect(() => {
-    const allKeys = Object.keys(localStorage);
-    const historyKeys = allKeys.filter(key => key.startsWith('chatHistory-'));
-    const history: Record<string, ChatMessage[]> = {};
-    historyKeys.forEach(key => {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        try {
-          history[key] = JSON.parse(saved);
-        } catch (e) {
-          console.error(`Failed to parse chat history from key ${key}:`, e);
-        }
-      }
-    });
-    setChatHistory(history);
-  }, [messages.length]); 
-
-  const handleSaveScenario = () => {
-    const slotKeys = Object.keys(chatHistory).filter(k => k.startsWith('chatHistory-slot'));
-    const slotNumber = slotKeys.length + 1;
-    const key = `chatHistory-slot-${slotNumber}`;
-    localStorage.setItem(key, JSON.stringify(messages));
-    localStorage.setItem('chatHistory-active', '[]');
-    setMessages([]);
-    alert(`Chat saved to Slot ${slotNumber}`);
-  };
-
-  const handleLoadScenario = (key: string) => {
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      localStorage.setItem('chatHistory-active', saved);
-      setMessages(JSON.parse(saved));
-    }
-  };
 
   const handleNewChat = () => {
-    localStorage.setItem('chatHistory-active', '[]');
     setMessages([]);
   }
 
@@ -100,20 +59,6 @@ export function Header({ setMessages, messages }: HeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleNewChat}>New Chat</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSaveScenario} disabled={messages.length === 0}>Save Scenario</DropdownMenuItem>
-             <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Load Scenario</DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {Object.keys(chatHistory).filter(k => k.startsWith('chatHistory-slot')).map((key, index) => (
-                      <DropdownMenuItem key={key} onClick={() => handleLoadScenario(key)}>
-                        Slot {index + 1}
-                      </DropdownMenuItem>
-                    ))}
-                     {Object.keys(chatHistory).filter(k => k.startsWith('chatHistory-slot')).length === 0 && <DropdownMenuLabel>No saved scenarios</DropdownMenuLabel>}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/login')}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
