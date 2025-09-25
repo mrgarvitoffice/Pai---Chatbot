@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Banknote, Minus, Plus } from 'lucide-react';
+import { Banknote, Minus, Plus, Wallet } from 'lucide-react';
 
 interface TaxResultCardProps {
     result?: TaxCalculationResult;
@@ -19,7 +19,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
     }
 
     if (!result) return null;
-    const { total_tax, tax_breakdown } = result;
+    const { total_tax, tax_breakdown, income, taxable_income } = result;
 
     return (
         <Card className="bg-card/50 border border-border/30 shadow-lg">
@@ -30,10 +30,30 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                     <p className="text-3xl font-extrabold">₹{total_tax.toLocaleString('en-IN')}</p>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
                  <div className="p-4 rounded-xl bg-background/50 border border-border/20 shadow-inner">
                     <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 text-foreground/90">
                          <ReactMarkdown>{explanation}</ReactMarkdown>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                        <div className="p-2 rounded-full bg-blue-500/10 text-blue-400">
+                            <Wallet className="size-5"/>
+                        </div>
+                        <div>
+                            <p className="text-muted-foreground">Gross Income</p>
+                            <p className="font-semibold text-blue-400">🔵 ₹{income.toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+                     <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                        <div className="p-2 rounded-full bg-yellow-500/10 text-yellow-400">
+                            <Banknote className="size-5"/>
+                        </div>
+                        <div>
+                            <p className="text-muted-foreground">Taxable Income</p>
+                            <p className="font-semibold text-yellow-400">🟡 ₹{taxable_income.toLocaleString('en-IN')}</p>
+                        </div>
                     </div>
                 </div>
             </CardContent>
@@ -50,7 +70,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                                         {value >= 0 ? <Plus className="size-4 text-green-500"/> : <Minus className="size-4 text-red-500"/>}
                                         <span>{key}</span>
                                     </div>
-                                    <span className={value < 0 ? 'text-red-500' : ''}>{value < 0 ? '-' : ''}₹{Math.abs(value).toLocaleString('en-IN')}</span>
+                                    <span className={value < 0 ? 'text-red-400 font-semibold' : 'text-green-400'}>{value < 0 ? '-' : '+'}₹{Math.abs(value).toLocaleString('en-IN')}</span>
                                 </div>
                             ))}
                             <Separator className="bg-border/30" />
@@ -59,7 +79,7 @@ export function TaxResultCard({ result, comparisonResult, explanation }: TaxResu
                                     <Banknote className="size-4 text-primary"/>
                                     <span>Total Tax</span>
                                 </div>
-                                <span>₹{total_tax.toLocaleString('en-IN')}</span>
+                                <span className="text-red-400">₹{total_tax.toLocaleString('en-IN')}</span>
                             </div>
                         </div>
                     </AccordionContent>
