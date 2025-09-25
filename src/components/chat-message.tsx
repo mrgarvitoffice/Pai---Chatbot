@@ -19,8 +19,8 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
   return (
     <div className={cn('flex items-start gap-3 animate-slide-in-up', isAssistant ? '' : 'justify-end')}>
       {isAssistant && (
-        <Avatar className="size-8 border bg-card text-primary flex-shrink-0 shadow-md">
-            <div className="flex items-center justify-center h-full w-full bg-primary/10">
+        <Avatar className="size-8 border-2 border-primary/30 bg-card text-primary flex-shrink-0 shadow-lg">
+            <div className="flex items-center justify-center h-full w-full bg-background">
                 <PaiLogo className="size-5 text-primary" />
             </div>
         </Avatar>
@@ -29,8 +29,8 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
         className={cn(
           'max-w-[85%] md:max-w-[85%] rounded-2xl text-sm md:text-base',
           isAssistant
-            ? 'bg-card/80 dark:bg-card/90 backdrop-blur-md rounded-tl-none shadow-md'
-            : 'bg-user-bubble dark:bg-user-bubble text-foreground rounded-br-none shadow-md'
+            ? 'bg-card/80 backdrop-blur-md rounded-tl-none shadow-md border border-border/30'
+            : 'bg-user-bubble text-primary-foreground rounded-br-none shadow-md'
         )}
       >
         {typeof content === 'string' ? (
@@ -41,7 +41,7 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
           content
         )}
          {isAssistant && sources && sources.length > 0 && (
-            <div className="p-2 border-t mt-2">
+            <div className="p-2 border-t border-border/50 mt-2">
                 <div className="flex items-center gap-2">
                     <p className="text-xs font-semibold text-muted-foreground px-2">SOURCES:</p>
                     <div className="flex items-center gap-1">
@@ -66,8 +66,8 @@ export const ChatMessage: FC<ChatMessageType> = ({ role, content, sources }) => 
          )}
       </div>
        {!isAssistant && (
-        <Avatar className="size-8 border flex-shrink-0 bg-user-bubble shadow-md">
-            <AvatarFallback className="bg-transparent text-foreground">
+        <Avatar className="size-8 border-2 border-primary/50 flex-shrink-0 bg-user-bubble shadow-md">
+            <AvatarFallback className="bg-transparent text-primary-foreground">
                 <User className="size-4" />
             </AvatarFallback>
         </Avatar>

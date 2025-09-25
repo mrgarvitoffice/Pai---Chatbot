@@ -202,10 +202,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="bg-background/80 backdrop-blur-md border-t">
+        <div className="bg-background/80 backdrop-blur-md border-t border-border/50">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                  <form onSubmit={handleSendMessage} className="flex items-center gap-2 md:gap-4">
-                  <div className="flex-1 flex items-center px-2 bg-muted rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+                  <div className="flex-1 flex items-center px-2 bg-input rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
                      <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -227,7 +227,7 @@ export default function Home() {
                   <Button
                     type="submit"
                     size="icon"
-                    className="size-12 rounded-full bg-gradient-to-br from-primary to-teal-400 dark:to-teal-600 flex-shrink-0 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 ease-out disabled:scale-100 disabled:shadow-lg"
+                    className="size-12 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 ease-out disabled:scale-100 disabled:shadow-lg"
                     disabled={!input.trim() || isLoading}
                   >
                     <ArrowUp className="size-5" />

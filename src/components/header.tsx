@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,50 +10,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Sun, Moon } from 'lucide-react';
+import { User } from 'lucide-react';
 import { PaiLogo } from './icons';
 
 export function Header() {
-  const [theme, setTheme] = useState('light');
-
-  useEffect(() => {
-    // Check for saved theme in localStorage. If not found, use light as default.
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10">
+    <header className="flex h-16 items-center justify-between bg-background/80 backdrop-blur-md px-4 md:px-6 sticky top-0 z-10 border-b border-border/50">
       <div className="flex items-center gap-3">
         <PaiLogo className="h-8 w-8 text-primary" />
-        <h1 className="text-xl font-semibold tracking-tight">Pai</h1>
+        <h1 className="text-xl font-semibold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pai</h1>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 border-2 border-primary/50">
                 <AvatarImage src="https://picsum.photos/seed/user-avatar/100/100" data-ai-hint="person" alt="User Avatar" />
                 <AvatarFallback>
                   <User />

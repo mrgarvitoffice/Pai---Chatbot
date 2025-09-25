@@ -33,7 +33,7 @@ export function WelcomeMessage({ setInput }: WelcomeMessageProps) {
                 <button
                     key={query.text}
                     onClick={() => setInput(query.text)}
-                    className="group p-4 bg-card/60 dark:bg-card/80 backdrop-blur-md border rounded-2xl text-left hover:bg-muted/50 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl"
+                    className="group p-4 bg-card/60 backdrop-blur-md border border-border/20 rounded-2xl text-left hover:bg-accent/50 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:border-primary/50"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-md bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
