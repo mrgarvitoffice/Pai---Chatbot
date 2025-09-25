@@ -62,7 +62,7 @@ export function DtiResultCard({ id, result, explanation }: DtiResultCardProps) {
                 </div>
             </CardContent>
              <CardFooter className="flex-col items-start gap-2 pt-4 border-t border-border/30">
-                <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
+                <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a financial advisor for personalised guidance.</p>
             </CardFooter>
         </Card>
     );

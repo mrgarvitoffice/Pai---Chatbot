@@ -17,7 +17,7 @@ export function KnowledgeResultCard({ response, query }: KnowledgeResultCardProp
                     <Info className="size-5 text-primary" />
                     Information Center
                 </CardTitle>
-                <CardDescription>AI-generated answer for: "{query}"</CardDescription>
+                <CardDescription>Answering your question about: "{query}"</CardDescription>
             </CardHeader>
             <CardContent>
                  <div className="p-4 rounded-xl bg-background/50 border border-border/20 shadow-inner">

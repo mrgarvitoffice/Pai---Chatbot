@@ -39,7 +39,7 @@ export function TermInsuranceResultCard({ id, result, explanation }: TermInsuran
                 </div>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 pt-4 border-t border-border/30">
-                <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a financial advisor for personalised guidance.</p>
+                <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a financial advisor for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className="border-b-0">
                     <AccordionTrigger className="font-code text-xs pt-2">How we calculated this</AccordionTrigger>

@@ -59,7 +59,7 @@ export function TaxResultCard({ id, result, comparisonResult, explanation }: Tax
                 </div>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 pt-0">
-                <p className="text-xs text-muted-foreground w-full text-center">This is not a financial advice. Please consult a tax professional for personalised guidance.</p>
+                <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a tax professional for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className="border-t border-border/30">
                     <AccordionTrigger className="font-code text-xs">How we calculated this</AccordionTrigger>
