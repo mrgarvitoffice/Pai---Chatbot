@@ -17,7 +17,7 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
             <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl font-semibold mb-2">🧾 Loan EMI Calculation</CardTitle>
                 <CardDescription>Monthly EMI</CardDescription>
-                <div className="p-4 mt-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-center">
+                <div className="p-4 mt-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-primary-foreground text-center">
                      <p className="text-3xl font-extrabold">₹{result.emi.toLocaleString('en-IN')}</p>
                 </div>
             </CardHeader>
@@ -57,11 +57,11 @@ export function EmiResultCard({ result, explanation }: EmiResultCardProps) {
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className="flex-col items-start gap-2 pt-4">
+            <CardFooter className="flex-col items-start gap-2 pt-4 border-t border-border/30">
                  <p className="text-xs text-muted-foreground w-full text-center">This is not financial advice. Please consult a financial advisor for personalised guidance.</p>
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1" className="border-t border-border/30">
-                    <AccordionTrigger className="font-code text-xs">How we calculated this</AccordionTrigger>
+                  <AccordionItem value="item-1" className="border-b-0">
+                    <AccordionTrigger className="font-code text-xs pt-2">How we calculated this</AccordionTrigger>
                     <AccordionContent>
                         <div className="space-y-2 text-xs font-code text-muted-foreground">
                             <div className="flex justify-between">

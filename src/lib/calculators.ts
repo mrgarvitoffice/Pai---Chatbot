@@ -1,4 +1,4 @@
-import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, PortfolioAllocationResult, SavingsRatioResult, TaxCalculationResult, SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult, RetirementCorpusResult, TermInsuranceResult, FireCalculationResult } from './types';
+import type { BudgetAllocationResult, DtiResult, EmiCalculationResult, PortfolioAllocationResult, SavingsRatioResult, TaxCalculationResult, SipCalculationResult, FdCalculationResult, RdCalculationResult, ReverseSipResult, CompoundInterestResult, RetirementCorpusResult, TermInsuranceResult, FireCalculationResult, HraResult } from './types';
 
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
 
@@ -95,32 +95,25 @@ export function calculateTax(
 }
 
 
-/**
- * Calculates House Rent Allowance (HRA) exemption.
- * @param basicSalary Annual basic salary.
- * @param totalSalary Annual total salary (for DA assumption).
- * @param rentPaid Annual rent paid.
- * @param metroCity Lives in a metro city (true) or not (false).
- * @returns The amount of HRA exemption.
- */
 export function calculateHRA(
   basicSalary: number,
-  totalSalary: number,
+  hraReceived: number,
   rentPaid: number,
   metroCity: boolean
-): number {
-  // Assuming DA is 40% of basic, a common scenario. HRA is calculated on Basic+DA.
-  // This is an estimation; actual DA can vary.
-  const dearnessAllowance = basicSalary * 0.40;
-  const salaryForHRA = basicSalary + dearnessAllowance;
-
-  const hraReceived = salaryForHRA * 0.50; // Assuming HRA component is 50% of basic+DA
-  
+): HraResult {
   const condition1 = hraReceived;
-  const condition2 = rentPaid - (salaryForHRA * 0.10);
-  const condition3 = metroCity ? (salaryForHRA * 0.50) : (salaryForHRA * 0.40);
+  const condition2 = rentPaid - (basicSalary * 0.10);
+  const condition3 = metroCity ? (basicSalary * 0.50) : (basicSalary * 0.40);
 
-  return round2(Math.max(0, Math.min(condition1, condition2, condition3)));
+  const hraExemption = round2(Math.max(0, Math.min(condition1, condition2, condition3)));
+  
+  return {
+    basicSalary,
+    hraReceived,
+    rentPaid,
+    metroCity,
+    hraExemption,
+  };
 }
 
 /** --------------- LOANS & CREDIT --------------- **/
