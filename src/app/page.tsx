@@ -118,20 +118,18 @@ export default function Home() {
     }
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const history: HistoryMessage[] = [...messages, userMessage].slice(0, -1).map(msg => {
+      const history: HistoryMessage[] = newMessages.slice(0, -1).map(msg => {
           let content = '';
-          if (msg.role === 'user') {
-            content = msg.content as string;
-          } else if (msg.role === 'assistant') {
-              content = msg.rawContent || 'Previous calculation result displayed.';
-              if (msg.feedback) {
-                  content += `\n[User feedback: ${msg.feedback}]`;
-              }
+          if (msg.role === 'user' && typeof msg.content === 'string') {
+            content = msg.content;
+          } else if (msg.role === 'assistant' && msg.rawContent) {
+              content = msg.rawContent;
           }
           return {
               role: msg.role === 'user' ? 'user' : 'model',
@@ -191,7 +189,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, isMobile, api]);
+  }, [isLoading, messages, isMobile]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
