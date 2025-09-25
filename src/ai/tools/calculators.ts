@@ -116,11 +116,11 @@ export const reverseSipCalculatorTool = ai.defineTool(
 export const retirementCalculatorTool = ai.defineTool(
     {
         name: 'retirementCalculatorTool',
-        description: 'Calculates the required retirement corpus.',
+        description: 'Calculates the required retirement corpus. Asks for current age, desired retirement age, and current monthly expenses.',
         inputSchema: z.object({
-            currentAge: z.number(),
-            retirementAge: z.number(),
-            monthlyExpenses: z.number(),
+            currentAge: z.number().describe("User's current age."),
+            retirementAge: z.number().describe("User's desired retirement age."),
+            monthlyExpenses: z.number().describe("User's current monthly expenses."),
         }),
         outputSchema: z.any(),
     },
