@@ -7,7 +7,7 @@ import { ChatMessage } from '@/components/chat-message';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, Mic } from 'lucide-react';
-import type { ChatMessage as ChatMessageType } from '@/lib/types';
+import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
 import { TaxResultCard } from '@/components/tax-result-card';
@@ -55,15 +55,34 @@ export default function Home() {
     if (!query.trim() || isLoading) return;
 
     const userMessage: ChatMessageType = { id: uuidv4(), role: 'user', content: query };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const result = await sendMessageAction({ query });
-      const resultId = `result-${uuidv4()}`;
+      // Convert display messages to AI history messages
+      const history: HistoryMessage[] = newMessages.slice(0, -1).map(msg => {
+          let content = '';
+          if (typeof msg.content === 'string') {
+              content = msg.content;
+          } else if (msg.role === 'assistant') {
+              // Attempt to find the explanation text if content is a component
+              // This is a simplification; a more robust solution would store raw text separately
+              const props = (msg.content as React.ReactElement).props;
+              content = props.explanation || props.response || 'Previous calculation result displayed.';
+          }
+          return {
+              role: msg.role === 'user' ? 'user' : 'model',
+              content: content,
+          };
+      });
+
+      const result = await sendMessageAction({ query, history });
       
       let content: React.ReactNode;
+      const resultId = result.calculationResult?.data.id || `result-${uuidv4()}`;
+
       if (result.calculationResult?.type === 'tax') content = <TaxResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard id={resultId} comparisonResult={result.calculationResult.data} explanation={result.response} />;
       else if (result.calculationResult?.type === 'sip') content = <SipResultCard id={resultId} result={result.calculationResult.data} explanation={result.response} />;
@@ -91,7 +110,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, messages]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();

@@ -6,9 +6,15 @@ export interface ChatMessage {
   content: ReactNode;
   sources?: {
       name: string;
-      url: string;
+      url:string;
       last_updated: string;
   }[];
+}
+
+// Add a simple type for passing history to the AI
+export interface HistoryMessage {
+    role: 'user' | 'model'; // Genkit uses 'model' for the assistant
+    content: string;
 }
 
 export interface TaxCalculationResult {
@@ -26,6 +32,7 @@ export interface TaxComparisonResult {
 }
 
 export interface SipCalculationResult {
+  id: string;
   monthly_investment: number;
   years: number;
   annual_rate: number;
@@ -35,6 +42,7 @@ export interface SipCalculationResult {
 }
 
 export interface ReverseSipResult {
+  id: string;
   future_value: number;
   years: number;
   annual_rate: number;
@@ -44,6 +52,7 @@ export interface ReverseSipResult {
 }
 
 export interface EmiCalculationResult {
+    id: string;
     principal: number;
     annual_rate: number;
     years: number;
@@ -53,6 +62,7 @@ export interface EmiCalculationResult {
 }
 
 export interface CompoundInterestResult {
+    id: string;
     principal: number;
     annual_rate: number;
     years: number;
@@ -62,6 +72,7 @@ export interface CompoundInterestResult {
 }
 
 export interface BudgetAllocationResult {
+    id: string;
     monthlyIncome: number;
     split: {
         needsPct: number;
@@ -74,6 +85,7 @@ export interface BudgetAllocationResult {
 }
 
 export interface FdCalculationResult {
+    id: string;
     principal: number;
     annual_rate: number;
     years: number;
@@ -82,6 +94,7 @@ export interface FdCalculationResult {
 }
 
 export interface RdCalculationResult {
+    id: string;
     monthly_deposit: number;
     annual_rate: number;
     months: number;
@@ -91,6 +104,7 @@ export interface RdCalculationResult {
 }
 
 export interface RetirementCorpusResult {
+    id: string;
     requiredCorpus: number;
     assumptions: {
         currentAge: number;
@@ -104,6 +118,7 @@ export interface RetirementCorpusResult {
 }
 
 export interface FireCalculationResult {
+    id: string;
     currentAge: number;
     retirementAge: number;
     monthlyExpenses: number;
@@ -116,23 +131,27 @@ export interface FireCalculationResult {
 }
 
 export interface DtiResult {
+    id: string;
     monthlyIncome: number;
     monthlyEmi: number;
     dtiRatio: number;
 }
 
 export interface SavingsRatioResult {
+    id: string;
     monthlyIncome: number;
     monthlySavings: number;
     savingsRatio: number;
 }
 
 export interface TermInsuranceResult {
+    id: string;
     annualIncome: number;
     recommendedCover: number;
 }
 
 export interface PortfolioAllocationResult {
+    id: string;
     age: number;
     riskAppetite: 'low' | 'medium' | 'high';
     equity: number;
@@ -141,6 +160,7 @@ export interface PortfolioAllocationResult {
 }
 
 export interface HraResult {
+    id: string;
     basicSalary: number;
     hraReceived: number;
     rentPaid: number;

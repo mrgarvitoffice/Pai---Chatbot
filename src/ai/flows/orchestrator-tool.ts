@@ -11,14 +11,20 @@ import { z } from 'zod';
 import { taxCalculatorTool, sipCalculatorTool, emiCalculatorTool, budgetCalculatorTool, fdCalculatorTool, rdCalculatorTool, reverseSipCalculatorTool, retirementCalculatorTool, fireCalculatorTool, dtiCalculatorTool, savingsRatioCalculatorTool, portfolioAllocatorTool, termInsuranceCalculatorTool, compoundInterestCalculatorTool, hraCalculatorTool } from '../tools/calculators';
 import { searchKnowledgeBase, generateAndStoreKnowledge } from '../tools/knowledge-base';
 import { getDynamicData } from '../tools/dynamic-data';
-import type { CalculationResult } from '@/lib/types';
+import type { CalculationResult, HistoryMessage } from '@/lib/types';
 import { compareTaxRegimes } from './compare-tax-regimes';
 import type { CompareTaxRegimesInput } from './compare-tax-regimes';
 import { calculateTax } from '@/lib/calculators';
+import { v4 as uuidv4 } from 'uuid';
 
+const HistoryMessageSchema = z.object({
+    role: z.enum(['user', 'model']),
+    content: z.string(),
+});
 
 const OrchestratorInputSchema = z.object({
   query: z.string().describe("The user's message to the chatbot."),
+  history: z.array(HistoryMessageSchema).optional().describe("The history of the conversation so far."),
 });
 export type OrchestratorInput = z.infer<typeof OrchestratorInputSchema>;
 
@@ -59,10 +65,12 @@ const orchestratorPrompt = ai.definePrompt({
     ],
     prompt: `You are Pai, an expert Indian personal finance assistant. Your primary goal is to provide accurate and helpful answers by using the correct tool based on the user's EXACT query.
 
-    **Analyze the user's query and decide which tool to use. Follow these rules precisely:**
+    **You are having a conversation. Use the provided Conversation History to understand the context of the user's latest query.** For example, if the user says "12%", and your previous response was "What is the interest rate?", you should understand that "12%" is the interest rate.
+
+    **Analyze the user's query and the conversation history, then decide which tool to use. Follow these rules precisely:**
 
     **RULE 1: PRIORITIZE CALCULATORS**
-    If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000"), you MUST use one of the available calculator tools.
+    If the query contains specific numbers and asks for a calculation (e.g., "how much tax on 10 lakh", "calculate SIP for 5000"), you MUST use one of the available calculator tools. If parameters are missing, ask the user for them.
 
     **RULE 2: KNOWLEDGE BASE**
     - For conceptual or informational questions (e.g., "what is SIP?", "how to save tax?"), you MUST FIRST use the 'searchKnowledgeBase' tool.
@@ -76,6 +84,13 @@ const orchestratorPrompt = ai.definePrompt({
 
     **RULE 4: FALLBACK**
     If no tool is appropriate, provide a helpful answer from your own knowledge. Do not invent numbers or financial data.
+
+    {{#if history}}
+    CONVERSATION HISTORY:
+    {{#each history}}
+    {{role}}: {{content}}
+    {{/each}}
+    {{/if}}
 
     USER QUERY:
     {{{query}}}
@@ -141,10 +156,12 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
              if (toolCall.name === 'compoundInterestCalculatorTool') explanation = `The future value of your lump-sum investment has been calculated with compound interest.`;
              if (toolCall.name === 'hraCalculatorTool') explanation = `Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`;
 
+            // Add a unique ID to each calculation result for PDF generation
+            const dataWithId = { ...toolOutput, id: `result-${uuidv4()}` };
 
             return {
                 response: explanation,
-                calculationResult: { type: resultType as any, data: toolOutput },
+                calculationResult: { type: resultType as any, data: dataWithId },
             };
         }
         
