@@ -5,19 +5,19 @@ import { Info } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface KnowledgeResultCardProps {
+    id: string;
     response: string;
     query: string;
 }
 
-export function KnowledgeResultCard({ response, query }: KnowledgeResultCardProps) {
+export function KnowledgeResultCard({ id, response, query }: KnowledgeResultCardProps) {
     return (
-        <Card className="bg-card/50 border border-border/30 shadow-lg">
+        <Card id={id} className="bg-card/50 border border-border/30 shadow-lg">
             <CardHeader className="pb-4">
-                 <CardTitle className="text-xl font-semibold mb-2 flex items-center gap-2">
-                    <Info className="size-5 text-primary" />
-                    Information Center
+                 <CardTitle className="text-xl font-semibold mb-2 flex items-start gap-3">
+                    <Info className="size-5 text-primary mt-1 flex-shrink-0" />
+                    <span>{query}</span>
                 </CardTitle>
-                <CardDescription>Answering your question about: "{query}"</CardDescription>
             </CardHeader>
             <CardContent>
                  <div className="p-4 rounded-xl bg-background/50 border border-border/20 shadow-inner">
