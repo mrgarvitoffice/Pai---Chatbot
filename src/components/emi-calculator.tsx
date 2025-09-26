@@ -143,12 +143,12 @@ export function EmiCalculator({ setMessages, latestReportId, setLatestReportId }
         )}
       </CardContent>
       {latestReportId && (
-        <div className="p-4 border-t">
+        <CardFooter className="flex flex-col gap-2 p-4 border-t">
           <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>
-        </div>
+        </CardFooter>
       )}
     </Card>
   );

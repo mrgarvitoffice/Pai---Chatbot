@@ -236,7 +236,7 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
         )}
         <Button variant="secondary" onClick={() => generatePdf(latestReportId!)} disabled={!latestReportId} className="w-full">
             <FileDown className="mr-2 h-4 w-4" />
-            Download Report
+            Download Report as PDF
         </Button>
        </CardFooter>
     </Card>
