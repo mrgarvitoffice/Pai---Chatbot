@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, EmiCalculationResult } from '@/lib/types';
 import { EmiResultCard } from './emi-result-card';
@@ -33,6 +33,7 @@ interface EmiCalculatorProps {
 
 export function EmiCalculator({ setMessages, latestReportId, setLatestReportId }: EmiCalculatorProps) {
   const [result, setResult] = useState<EmiCalculationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<EmiFormValues>({
@@ -49,25 +50,12 @@ export function EmiCalculator({ setMessages, latestReportId, setLatestReportId }
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateEMI(values.principal, values.annual_rate, values.years), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateEMI(values.principal, values.annual_rate, values.years), id: resultId };
         setResult(calculationResult);
+        setExplanation(`For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`);
         setIsCalculating(false);
-        const explanation = `For a loan of **₹${values.principal.toLocaleString('en-IN')}** at **${values.annual_rate}%** for **${values.years} years**, your Equated Monthly Installment (EMI) has been calculated.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate EMI for a loan of ₹${values.principal.toLocaleString('en-IN')} at ${values.annual_rate}% for ${values.years} years.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <EmiResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
-
     }, 500);
   };
 
@@ -122,29 +110,14 @@ export function EmiCalculator({ setMessages, latestReportId, setLatestReportId }
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-            <div className="text-center">
-                <p className="text-sm text-muted-foreground">Monthly EMI</p>
-                <p className="font-semibold text-2xl text-primary">₹{result.emi.toLocaleString('en-IN')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Interest</p>
-                <p className="font-semibold text-lg">₹{result.total_interest.toLocaleString('en-IN')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Payment</p>
-                <p className="font-semibold text-lg">₹{result.total_payment.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
+          <div className="mt-6">
+            <EmiResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

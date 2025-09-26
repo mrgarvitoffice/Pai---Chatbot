@@ -25,9 +25,9 @@ export const generatePdf = async (elementId: string) => {
   clonedElement.style.top = '0px';
   clonedElement.style.width = `${sourceElement.offsetWidth}px`;
   clonedElement.style.height = 'auto';
-
-  // Force a white background for readability
   clonedElement.style.backgroundColor = '#ffffff';
+  clonedElement.style.color = '#020817';
+
 
   // Fix text with gradient/clip effects to be visible with a solid color
   const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
@@ -61,6 +61,9 @@ export const generatePdf = async (elementId: string) => {
         content.style.overflow = 'visible';
         content.style.visibility = 'visible';
         content.style.display = 'block';
+        
+        // Remove animation classes to prevent race conditions
+        content.classList.remove('data-[state=closed]:animate-accordion-up', 'data-[state=open]:animate-accordion-down');
       }
     }
   });
@@ -69,6 +72,7 @@ export const generatePdf = async (elementId: string) => {
 
   // Wait for the browser to render the cloned element fully
   await new Promise(resolve => requestAnimationFrame(resolve));
+  await new Promise(resolve => setTimeout(resolve, 100)); // Extra delay for safety
 
   try {
     const canvas = await html2canvas(clonedElement, {
@@ -87,16 +91,10 @@ export const generatePdf = async (elementId: string) => {
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    if (pdfHeight < pageHeight) {
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    } else {
-       // Simple fallback for very long content, though unlikely with these cards
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pageHeight);
-    }
     
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save("pai-financial-report.pdf");
+
   } catch (error) {
     console.error("Error generating PDF:", error);
   } finally {

@@ -14,13 +14,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles, FileDown } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import type { ChatMessage, TaxCalculationResult } from '@/lib/types';
+import type { ChatMessage, TaxCalculationResult, TaxComparisonResult } from '@/lib/types';
 import { TaxResultCard } from './tax-result-card';
 import { compareTaxRegimes } from '@/ai/flows/compare-tax-regimes';
 import { generatePdf } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 const formSchema = z.object({
   income: z.coerce.number().min(1, { message: 'Income must be greater than 0.' }),
@@ -38,6 +37,8 @@ interface TaxCalculatorProps {
 
 export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }: TaxCalculatorProps) {
   const [result, setResult] = useState<TaxCalculationResult | null>(null);
+  const [comparisonResult, setComparisonResult] = useState<TaxComparisonResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExplaining, setIsExplaining] = useState(false);
 
@@ -53,12 +54,15 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
   const onSubmit = async (values: TaxFormValues) => {
     setIsCalculating(true);
     setResult(null);
+    setComparisonResult(null);
+    setExplanation('');
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
 
     if (values.regime === 'compare') {
       const newRegimeResult = { ...calculateTax(values.income, values.fy, 'new'), id: resultId };
       const oldRegimeResult = { ...calculateTax(values.income, values.fy, 'old'), id: resultId };
+      const comparisonData = { new: newRegimeResult, old: oldRegimeResult };
       
       const comparisonInput = {
         income: values.income,
@@ -67,46 +71,17 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
         oldRegimeResult,
       };
 
-      const comparisonResult = await compareTaxRegimes(comparisonInput);
+      const comparisonExplanation = await compareTaxRegimes(comparisonInput);
+      setComparisonResult(comparisonData);
+      setExplanation(comparisonExplanation.comparison);
       
-      const userQuery: ChatMessage = {
-          id: uuidv4(),
-          role: 'user',
-          content: `Compare tax regimes for an income of ₹${values.income.toLocaleString('en-IN')}.`
-      };
-      const resultMessage: ChatMessage = {
-          id: uuidv4(),
-          role: 'assistant',
-          content: <TaxResultCard id={resultId} comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />,
-          rawContent: comparisonResult.comparison,
-          calculationResult: { type: 'tax_comparison', data: { new: newRegimeResult, old: oldRegimeResult } }
-      };
-      setMessages(prev => [...prev, userQuery, resultMessage]);
-      setIsCalculating(false);
-      return;
+    } else {
+      const calculationResult = { ...calculateTax(values.income, values.fy, values.regime), id: resultId };
+      setResult(calculationResult);
+      setExplanation(`Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`);
     }
 
-    const calculationResult = { ...calculateTax(values.income, values.fy, values.regime), id: resultId };
-    
-    setTimeout(() => {
-        setResult(calculationResult);
-        setIsCalculating(false);
-        const explanation = `Here is the income tax summary for an income of **₹${values.income.toLocaleString('en-IN')}** for FY ${values.fy} under the **${values.regime} regime**.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate tax for ₹${values.income.toLocaleString('en-IN')} (FY ${values.fy}, ${values.regime} regime)`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <TaxResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-            calculationResult: { type: 'tax', data: calculationResult }
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
-
-    }, 500);
+    setIsCalculating(false);
   };
 
   const handleExplain = async () => {
@@ -121,20 +96,13 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
       const explanationMessage: ChatMessage = {
           id: uuidv4(),
           role: 'assistant',
-          content: explanationResult.response,
+          content: <ReactMarkdown>{explanationResult.response}</ReactMarkdown>,
           rawContent: explanationResult.response,
           sources: explanationResult.sources,
       };
       setMessages(prev => [...prev, explanationMessage]);
     } catch (error) {
       console.error("Error getting explanation:", error);
-      const errorMessage: ChatMessage = {
-        id: uuidv4(),
-        role: 'assistant',
-        content: "Sorry, I couldn't generate an explanation at this time.",
-        rawContent: "Sorry, I couldn't generate an explanation at this time."
-      };
-      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsExplaining(false);
     }
@@ -186,40 +154,10 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
             </Button>
           </form>
         </Form>
-        {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Taxable Income</p>
-                <p className="font-semibold text-lg">₹{result.taxable_income.toLocaleString('en-IN')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Tax</p>
-                <p className="font-semibold text-lg text-primary">₹{result.total_tax.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
-             <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="font-code text-sm">How we calculated this</AccordionTrigger>
-                <AccordionContent>
-                    <div className="space-y-2 text-sm font-code text-muted-foreground">
-                        {Object.entries(result.tax_breakdown).map(([key, value]) => (
-                             <div key={key} className="flex justify-between">
-                                <span>{key}</span>
-                                <span>₹{value.toLocaleString('en-IN')}</span>
-                            </div>
-                        ))}
-                        <Separator />
-                         <div className="flex justify-between font-semibold text-foreground">
-                            <span>Total Tax</span>
-                            <span>₹{result.total_tax.toLocaleString('en-IN')}</span>
-                        </div>
-                    </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+        {(result || comparisonResult) && (
+          <div className="mt-6">
+            {result && <TaxResultCard id={latestReportId!} result={result} explanation={explanation} />}
+            {comparisonResult && <TaxResultCard id={latestReportId!} comparisonResult={comparisonResult} explanation={explanation} />}
           </div>
         )}
       </CardContent>

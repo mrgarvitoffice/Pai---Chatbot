@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, DtiResult } from '@/lib/types';
 import { DtiResultCard } from './dti-result-card';
@@ -32,6 +32,7 @@ interface DtiCalculatorProps {
 
 export function DtiCalculator({ setMessages, latestReportId, setLatestReportId }: DtiCalculatorProps) {
   const [result, setResult] = useState<DtiResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -47,24 +48,12 @@ export function DtiCalculator({ setMessages, latestReportId, setLatestReportId }
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...debtToIncomeRatio(values.monthlyIncome, values.monthlyEmi), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`);
         setIsCalculating(false);
-        const explanation = `Your Debt-to-Income (DTI) ratio has been calculated. Lenders generally prefer a DTI ratio below 40%.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate my DTI ratio.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <DtiResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -106,16 +95,14 @@ export function DtiCalculator({ setMessages, latestReportId, setLatestReportId }
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">DTI Ratio</h3>
-            <p className="font-bold text-2xl text-primary">{result.dtiRatio}%</p>
+          <div className="mt-6">
+            <DtiResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

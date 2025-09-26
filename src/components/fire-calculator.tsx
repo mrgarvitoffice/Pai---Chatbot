@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, FireCalculationResult } from '@/lib/types';
 import { FireResultCard } from './fire-result-card';
@@ -38,6 +38,7 @@ interface FireCalculatorProps {
 
 export function FireCalculator({ setMessages, latestReportId, setLatestReportId }: FireCalculatorProps) {
   const [result, setResult] = useState<FireCalculationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -56,24 +57,12 @@ export function FireCalculator({ setMessages, latestReportId, setLatestReportId 
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateFire(values), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateFire(values), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`);
         setIsCalculating(false);
-        const explanation = `Here are your FIRE (Financial Independence, Retire Early) projections based on your current investment plan.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate my FIRE projection.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <FireResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -135,26 +124,14 @@ export function FireCalculator({ setMessages, latestReportId, setLatestReportId 
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">FIRE Projection</h3>
-            <p className={`font-bold ${result.canRetire ? 'text-green-500' : 'text-destructive'}`}>
-                {result.canRetire ? "🎉 On Track to FIRE!" : "⚠️ Goal Not Met"}
-            </p>
-             <div>
-                <p className="text-sm text-muted-foreground">Target Corpus</p>
-                <p className="font-semibold">₹{result.targetCorpus.toLocaleString('en-IN')}</p>
-            </div>
-             <div>
-                <p className="text-sm text-muted-foreground">Projected Corpus</p>
-                <p className="font-semibold">₹{result.projectedCorpus.toLocaleString('en-IN')}</p>
-            </div>
+          <div className="mt-6">
+            <FireResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

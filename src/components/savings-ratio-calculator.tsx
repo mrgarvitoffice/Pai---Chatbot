@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, SavingsRatioResult } from '@/lib/types';
 import { SavingsRatioResultCard } from './savings-ratio-result-card';
@@ -32,6 +32,7 @@ interface SavingsRatioCalculatorProps {
 
 export function SavingsRatioCalculator({ setMessages, latestReportId, setLatestReportId }: SavingsRatioCalculatorProps) {
   const [result, setResult] = useState<SavingsRatioResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -47,24 +48,12 @@ export function SavingsRatioCalculator({ setMessages, latestReportId, setLatestR
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...savingsRatio(values.monthlyIncome, values.monthlySavings), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...savingsRatio(values.monthlyIncome, values.monthlySavings), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`);
         setIsCalculating(false);
-        const explanation = `Your Savings Ratio has been calculated. A ratio above 20% is generally considered healthy.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate my savings ratio.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <SavingsRatioResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -106,16 +95,14 @@ export function SavingsRatioCalculator({ setMessages, latestReportId, setLatestR
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">Savings Ratio</h3>
-            <p className="font-bold text-2xl text-primary">{result.savingsRatio}%</p>
+          <div className="mt-6">
+            <SavingsRatioResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-       {latestReportId && (
+       {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

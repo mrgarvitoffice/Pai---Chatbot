@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -12,7 +13,6 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, CompoundInterestResult } from '@/lib/types';
 import { CompoundInterestResultCard } from './compound-interest-result-card';
@@ -35,6 +35,7 @@ interface CompoundInterestCalculatorProps {
 
 export function CompoundInterestCalculator({ setMessages, latestReportId, setLatestReportId }: CompoundInterestCalculatorProps) {
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -52,24 +53,12 @@ export function CompoundInterestCalculator({ setMessages, latestReportId, setLat
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...compoundFutureValue(values.principal, values.annualRate, values.years, values.compoundingFreq), id: resultId };
         setResult(calculationResult);
+        setExplanation(`The future value of your lump-sum investment has been calculated with compound interest.`);
         setIsCalculating(false);
-        const explanation = `The future value of your lump-sum investment has been calculated with compound interest.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate compound interest for ₹${values.principal.toLocaleString('en-IN')} at ${values.annualRate}% for ${values.years} years.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <CompoundInterestResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -147,19 +136,14 @@ export function CompoundInterestCalculator({ setMessages, latestReportId, setLat
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-             <div className="text-center">
-                <p className="text-sm text-muted-foreground">Future Value</p>
-                <p className="font-semibold text-2xl text-primary">₹{result.future_value.toLocaleString('en-IN')}</p>
-            </div>
+          <div className="mt-6">
+            <CompoundInterestResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

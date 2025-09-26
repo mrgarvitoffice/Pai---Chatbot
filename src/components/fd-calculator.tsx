@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, FdCalculationResult } from '@/lib/types';
 import { FdResultCard } from './fd-result-card';
@@ -33,6 +33,7 @@ interface FdCalculatorProps {
 
 export function FdCalculator({ setMessages, latestReportId, setLatestReportId }: FdCalculatorProps) {
   const [result, setResult] = useState<FdCalculationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FdFormValues>({
@@ -49,24 +50,12 @@ export function FdCalculator({ setMessages, latestReportId, setLatestReportId }:
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateFd(values.principal, values.annual_rate, values.years, 4), id: resultId }; // Assuming quarterly compounding
     
     setTimeout(() => {
+        const calculationResult = { ...calculateFd(values.principal, values.annual_rate, values.years, 4), id: resultId }; // Assuming quarterly compounding
         setResult(calculationResult);
+        setExplanation(`Here is the calculated maturity value for your Fixed Deposit.`);
         setIsCalculating(false);
-        const explanation = `Here is the calculated maturity value for your Fixed Deposit.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate FD maturity for ₹${values.principal.toLocaleString('en-IN')} at ${values.annual_rate}% for ${values.years} years.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <FdResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -121,29 +110,14 @@ export function FdCalculator({ setMessages, latestReportId, setLatestReportId }:
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-            <div className="text-center">
-                <p className="text-sm text-muted-foreground">Maturity Value</p>
-                <p className="font-semibold text-2xl text-primary">₹{result.future_value.toLocaleString('en-IN')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Principal</p>
-                <p className="font-semibold text-lg">₹{result.principal.toLocaleString('en-IN')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Interest</p>
-                <p className="font-semibold text-lg">₹{result.total_interest.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
+          <div className="mt-6">
+            <FdResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

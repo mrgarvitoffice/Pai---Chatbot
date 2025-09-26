@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -12,7 +13,6 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, PortfolioAllocationResult } from '@/lib/types';
 import { PortfolioAllocationResultCard } from './portfolio-allocation-result-card';
@@ -33,6 +33,7 @@ interface PortfolioAllocationCalculatorProps {
 
 export function PortfolioAllocationCalculator({ setMessages, latestReportId, setLatestReportId }: PortfolioAllocationCalculatorProps) {
   const [result, setResult] = useState<PortfolioAllocationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -48,24 +49,12 @@ export function PortfolioAllocationCalculator({ setMessages, latestReportId, set
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculatePortfolioAllocation(values.age, values.riskAppetite), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculatePortfolioAllocation(values.age, values.riskAppetite), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`);
         setIsCalculating(false);
-        const explanation = `Based on your age of **${values.age}** and a **'${values.riskAppetite}'** risk appetite, here is a suggested asset allocation. This is a general guideline.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Suggest a portfolio allocation for me.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <PortfolioAllocationResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -116,20 +105,14 @@ export function PortfolioAllocationCalculator({ setMessages, latestReportId, set
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">Recommended Allocation</h3>
-            <div className="grid grid-cols-3 gap-2">
-                <div><p className="font-bold text-lg">{result.equity}%</p><p className="text-sm text-muted-foreground">Equity</p></div>
-                <div><p className="font-bold text-lg">{result.debt}%</p><p className="text-sm text-muted-foreground">Debt</p></div>
-                <div><p className="font-bold text-lg">{result.gold}%</p><p className="text-sm text-muted-foreground">Gold</p></div>
-            </div>
+          <div className="mt-6">
+            <PortfolioAllocationResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-       {latestReportId && (
+       {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

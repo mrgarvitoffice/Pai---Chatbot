@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, RetirementCorpusResult } from '@/lib/types';
 import { RetirementResultCard } from './retirement-result-card';
@@ -36,6 +36,7 @@ interface RetirementCalculatorProps {
 
 export function RetirementCalculator({ setMessages, latestReportId, setLatestReportId }: RetirementCalculatorProps) {
   const [result, setResult] = useState<RetirementCorpusResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -52,24 +53,12 @@ export function RetirementCalculator({ setMessages, latestReportId, setLatestRep
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateRetirementCorpus(values), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateRetirementCorpus(values), id: resultId };
         setResult(calculationResult);
+        setExplanation(`To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`);
         setIsCalculating(false);
-        const explanation = `To meet your estimated retirement expenses, here is the total corpus you would need to accumulate by the age of **${values.retirementAge}**. This is based on standard financial planning assumptions.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate my retirement corpus.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <RetirementResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -124,19 +113,14 @@ export function RetirementCalculator({ setMessages, latestReportId, setLatestRep
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-             <div className="text-center">
-                <p className="text-sm text-muted-foreground">Required Corpus</p>
-                <p className="font-semibold text-2xl text-primary">₹{result.requiredCorpus.toLocaleString('en-IN')}</p>
-            </div>
+          <div className="mt-6">
+            <RetirementResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

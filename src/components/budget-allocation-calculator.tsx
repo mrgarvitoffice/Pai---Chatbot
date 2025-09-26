@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, BudgetAllocationResult } from '@/lib/types';
 import { BudgetAllocationResultCard } from './budget-allocation-result-card';
@@ -31,6 +31,7 @@ interface BudgetAllocationCalculatorProps {
 
 export function BudgetAllocationCalculator({ setMessages, latestReportId, setLatestReportId }: BudgetAllocationCalculatorProps) {
   const [result, setResult] = useState<BudgetAllocationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -45,24 +46,12 @@ export function BudgetAllocationCalculator({ setMessages, latestReportId, setLat
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...budgetAllocation(values.monthlyIncome), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...budgetAllocation(values.monthlyIncome), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`);
         setIsCalculating(false);
-        const explanation = `Based on the 50/30/20 rule, here is a suggested budget allocation for your monthly income of **₹${values.monthlyIncome.toLocaleString('en-IN')}**.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate budget for a monthly income of ₹${values.monthlyIncome.toLocaleString('en-IN')}.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <BudgetAllocationResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -91,29 +80,14 @@ export function BudgetAllocationCalculator({ setMessages, latestReportId, setLat
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">50/30/20 Allocation</h3>
-            <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                    <p className="text-sm text-muted-foreground">Needs (50%)</p>
-                    <p className="font-semibold text-lg">₹{result.needs.toLocaleString('en-IN')}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Wants (30%)</p>
-                    <p className="font-semibold text-lg">₹{result.wants.toLocaleString('en-IN')}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Savings (20%)</p>
-                    <p className="font-semibold text-lg text-primary">₹{result.savings.toLocaleString('en-IN')}</p>
-                </div>
-            </div>
+          <div className="mt-6">
+            <BudgetAllocationResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-       {latestReportId && (
+       {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

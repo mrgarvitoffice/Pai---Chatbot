@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, TermInsuranceResult } from '@/lib/types';
 import { TermInsuranceResultCard } from './term-insurance-result-card';
@@ -31,6 +31,7 @@ interface TermInsuranceCalculatorProps {
 
 export function TermInsuranceCalculator({ setMessages, latestReportId, setLatestReportId }: TermInsuranceCalculatorProps) {
   const [result, setResult] = useState<TermInsuranceResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -45,24 +46,12 @@ export function TermInsuranceCalculator({ setMessages, latestReportId, setLatest
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateTermInsuranceCover(values.annualIncome), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateTermInsuranceCover(values.annualIncome), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`);
         setIsCalculating(false);
-        const explanation = `Based on the rule of thumb of having a life cover of at least **10-15 times your annual income**, a suitable term insurance cover has been calculated to secure your family's future.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate my recommended term insurance cover.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <TermInsuranceResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -91,16 +80,14 @@ export function TermInsuranceCalculator({ setMessages, latestReportId, setLatest
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">Recommended Cover</h3>
-            <p className="font-bold text-2xl text-primary">₹{result.recommendedCover.toLocaleString('en-IN')}</p>
+          <div className="mt-6">
+            <TermInsuranceResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

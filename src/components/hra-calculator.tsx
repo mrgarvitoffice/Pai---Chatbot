@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -12,7 +13,6 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, HraResult } from '@/lib/types';
 import { HraResultCard } from './hra-result-card';
@@ -35,6 +35,7 @@ interface HraCalculatorProps {
 
 export function HraCalculator({ setMessages, latestReportId, setLatestReportId }: HraCalculatorProps) {
   const [result, setResult] = useState<HraResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -52,24 +53,12 @@ export function HraCalculator({ setMessages, latestReportId, setLatestReportId }
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateHRA(values.basicSalary, values.hraReceived, values.rentPaid, values.metroCity), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateHRA(values.basicSalary, values.hraReceived, values.rentPaid, values.metroCity), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`);
         setIsCalculating(false);
-        const explanation = `Here is your estimated HRA exemption. This is based on standard assumptions and may vary.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate HRA Exemption for me.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <HraResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -141,16 +130,14 @@ export function HraCalculator({ setMessages, latestReportId, setLatestReportId }
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4 text-center">
-            <Separator />
-            <h3 className="text-lg font-semibold">HRA Exemption Amount</h3>
-            <p className="font-bold text-2xl text-primary">₹{result.hraExemption.toLocaleString('en-IN')}</p>
+          <div className="mt-6">
+            <HraResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-       {latestReportId && (
+       {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>

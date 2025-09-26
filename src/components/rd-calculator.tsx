@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, FileDown } from 'lucide-react';
 import type { ChatMessage, RdCalculationResult } from '@/lib/types';
 import { RdResultCard } from './rd-result-card';
@@ -33,6 +33,7 @@ interface RdCalculatorProps {
 
 export function RdCalculator({ setMessages, latestReportId, setLatestReportId }: RdCalculatorProps) {
   const [result, setResult] = useState<RdCalculationResult | null>(null);
+  const [explanation, setExplanation] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
 
   const form = useForm<RdFormValues>({
@@ -49,24 +50,12 @@ export function RdCalculator({ setMessages, latestReportId, setLatestReportId }:
     setResult(null);
     const resultId = `result-${uuidv4()}`;
     setLatestReportId(resultId);
-    const calculationResult = { ...calculateRd(values.monthly_deposit, values.annual_rate, values.months), id: resultId };
     
     setTimeout(() => {
+        const calculationResult = { ...calculateRd(values.monthly_deposit, values.annual_rate, values.months), id: resultId };
         setResult(calculationResult);
+        setExplanation(`Here is the calculated maturity value for your Recurring Deposit.`);
         setIsCalculating(false);
-        const explanation = `Here is the calculated maturity value for your Recurring Deposit.`;
-        const userQuery: ChatMessage = {
-            id: uuidv4(),
-            role: 'user',
-            content: `Calculate RD maturity for ₹${values.monthly_deposit.toLocaleString('en-IN')}/month at ${values.annual_rate}% for ${values.months} months.`
-        };
-        const resultMessage: ChatMessage = {
-            id: uuidv4(),
-            role: 'assistant',
-            content: <RdResultCard id={resultId} result={calculationResult} explanation={explanation} />,
-            rawContent: explanation,
-        };
-        setMessages(prev => [...prev, userQuery, resultMessage]);
     }, 500);
   };
 
@@ -121,29 +110,14 @@ export function RdCalculator({ setMessages, latestReportId, setLatestReportId }:
           </form>
         </Form>
         {result && (
-          <div className="mt-8 space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold text-center">Calculation Results</h3>
-            <div className="text-center">
-                <p className="text-sm text-muted-foreground">Maturity Value</p>
-                <p className="font-semibold text-2xl text-primary">₹{result.future_value.toLocaleString('en-IN')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Deposited</p>
-                <p className="font-semibold text-lg">₹{result.total_deposited.toLocaleString('en-IN')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Interest</p>
-                <p className="font-semibold text-lg">₹{result.total_interest.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
+          <div className="mt-6">
+            <RdResultCard id={latestReportId!} result={result} explanation={explanation} />
           </div>
         )}
       </CardContent>
-      {latestReportId && (
+      {latestReportId && result && (
         <CardFooter className="flex flex-col gap-2 p-4 border-t">
-          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId)}>
+          <Button variant="secondary" className="w-full" onClick={() => generatePdf(latestReportId!)}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report as PDF
           </Button>
