@@ -10,7 +10,7 @@ Pai is a modern, AI-powered chatbot designed to provide accurate answers to ques
 - **Responsive Design**: A clean, modern UI that works seamlessly on both desktop and mobile devices.
 - **Light & Dark Themes**: Switch between themes for your viewing comfort.
 - **Voice Input**: Use your microphone to ask questions.
-- **Source-Backed Answers**: The AI can cite its sources for general financial knowledge questions.
+- **Source-Backed Answers**: The AI can cite its sources for general financial knowledge questions. !!!
 
 ## 🚀 Tech Stack :
 
