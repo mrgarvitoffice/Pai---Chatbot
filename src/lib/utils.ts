@@ -19,14 +19,14 @@ export const generatePdf = async (elementId: string) => {
   // Create a clone to manipulate without affecting the live view
   const clonedElement = sourceElement.cloneNode(true) as HTMLElement;
   
-  // Style the clone for off-screen rendering
+  // Style the clone for off-screen rendering to ensure it has a defined width for layout
   clonedElement.style.position = 'absolute';
   clonedElement.style.left = '-9999px';
   clonedElement.style.top = '0px';
   clonedElement.style.width = `${sourceElement.offsetWidth}px`;
-  clonedElement.style.height = 'auto';
-  clonedElement.style.backgroundColor = '#ffffff'; // Force white background
-  clonedElement.style.color = '#020817'; // Force dark text
+  clonedElement.style.height = 'auto'; // Let height be determined by content
+  clonedElement.style.backgroundColor = '#ffffff'; // Force white background for PDF
+  clonedElement.style.color = '#020817'; // Force dark text for readability
 
   // Force-expand all accordions in the clone
   const triggers = clonedElement.querySelectorAll<HTMLElement>('[data-state="closed"]');
@@ -41,13 +41,14 @@ export const generatePdf = async (elementId: string) => {
       const content = clonedElement.querySelector<HTMLElement>(`#${contentId}`);
       if (content) {
         content.dataset.state = 'open';
+        // Remove animation classes and force visibility
+        content.classList.remove('data-[state=closed]:animate-accordion-up', 'data-[state=open]:animate-accordion-down');
         content.style.height = 'auto';
         content.style.maxHeight = 'none';
         content.style.opacity = '1';
         content.style.overflow = 'visible';
         content.style.visibility = 'visible';
         content.style.display = 'block';
-        content.classList.remove('data-[state=closed]:animate-accordion-up', 'data-[state=open]:animate-accordion-down');
       }
     }
   });
@@ -72,7 +73,7 @@ export const generatePdf = async (elementId: string) => {
 
   try {
     const canvas = await html2canvas(clonedElement, {
-      scale: 2,
+      scale: 2, // Use a higher scale for better quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
@@ -87,45 +88,40 @@ export const generatePdf = async (elementId: string) => {
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const canvasAspectRatio = canvas.width / canvas.height;
     
-    const totalImageHeight = pdfWidth / canvasAspectRatio;
+    // Calculate the aspect ratio of the captured image
+    const imgAspectRatio = canvas.width / canvas.height;
+    
+    // Calculate the total height of the image if it were scaled to the PDF's width
+    const totalImageHeightInPdf = pdfWidth / imgAspectRatio;
+    
     let yPosition = 0;
     let pageCount = 1;
-    const maxPages = 3; // Limit to 3 pages
+    const maxPages = 3; // Limit to 3 pages to prevent infinite loops
 
-    while (yPosition < totalImageHeight && pageCount <= maxPages) {
+    while (yPosition < totalImageHeightInPdf && pageCount <= maxPages) {
       if (pageCount > 1) {
         pdf.addPage();
       }
       
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
+      // The y-coordinate on the source canvas to start the slice from
+      const sourceY = yPosition * (canvas.width / pdfWidth);
       
-      // Calculate height of the slice for one PDF page
-      const sliceHeightInPdfMm = pdfHeight;
-      const sliceHeightInCanvasPixels = (sliceHeightInPdfMm * canvas.width) / pdfWidth;
-      pageCanvas.height = sliceHeightInCanvasPixels;
+      // The height of the slice on the source canvas
+      const sourceHeight = pdfHeight * (canvas.width / pdfWidth);
+      
+      pdf.addImage(
+        imgData,
+        'PNG',
+        0, // x position in PDF
+        0, // y position in PDF
+        pdfWidth, // width in PDF
+        totalImageHeightInPdf, // height in PDF
+        undefined, // alias
+        'FAST', // compression
+        -yPosition // y-offset for slicing
+      );
 
-      const ctx = pageCanvas.getContext('2d');
-      if (ctx) {
-        // Draw the slice of the original canvas onto the page canvas
-        ctx.drawImage(
-          canvas,
-          0, // sourceX
-          (yPosition * canvas.width) / pdfWidth, // sourceY
-          canvas.width, // sourceWidth
-          sliceHeightInCanvasPixels, // sourceHeight
-          0, // destX
-          0, // destY
-          canvas.width, // destWidth
-          sliceHeightInCanvasPixels // destHeight
-        );
-        
-        const pageImgData = pageCanvas.toDataURL('image/png');
-        pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, Math.min(pdfHeight, totalImageHeight - yPosition));
-      }
-      
       yPosition += pdfHeight;
       pageCount++;
     }
