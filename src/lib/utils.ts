@@ -19,30 +19,16 @@ export const generatePdf = async (elementId: string) => {
   // Create a clone to manipulate without affecting the live view
   const clonedElement = sourceElement.cloneNode(true) as HTMLElement;
   
-  // Style the clone to be rendered off-screen
+  // Style the clone for off-screen rendering
   clonedElement.style.position = 'absolute';
   clonedElement.style.left = '-9999px';
   clonedElement.style.top = '0px';
   clonedElement.style.width = `${sourceElement.offsetWidth}px`;
   clonedElement.style.height = 'auto';
-  clonedElement.style.backgroundColor = '#ffffff';
-  clonedElement.style.color = '#020817';
+  clonedElement.style.backgroundColor = '#ffffff'; // Force white background
+  clonedElement.style.color = '#020817'; // Force dark text
 
-
-  // Fix text with gradient/clip effects to be visible with a solid color
-  const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
-  gradientTextElements.forEach(el => {
-      el.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
-      if (el.classList.contains('from-primary')) {
-          el.style.color = '#E11D48'; // ShadCN Pink
-      } else if (el.classList.contains('from-destructive')) {
-          el.style.color = '#EF4444'; // ShadCN Red
-      } else {
-          el.style.color = '#020817'; // Dark text color
-      }
-  });
-  
-  // Force expand all accordions in the clone
+  // Force-expand all accordions in the clone
   const triggers = clonedElement.querySelectorAll<HTMLElement>('[data-state="closed"]');
   triggers.forEach(trigger => {
     trigger.dataset.state = 'open';
@@ -61,25 +47,35 @@ export const generatePdf = async (elementId: string) => {
         content.style.overflow = 'visible';
         content.style.visibility = 'visible';
         content.style.display = 'block';
-        
-        // Remove animation classes to prevent race conditions
         content.classList.remove('data-[state=closed]:animate-accordion-up', 'data-[state=open]:animate-accordion-down');
       }
     }
   });
 
+  // Fix text with gradient/clip effects to be visible with a solid color
+  const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
+  gradientTextElements.forEach(el => {
+      el.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
+      if (el.classList.contains('from-primary')) {
+          el.style.color = '#E11D48'; // ShadCN Pink
+      } else if (el.classList.contains('from-destructive')) {
+          el.style.color = '#EF4444'; // ShadCN Red
+      } else {
+          el.style.color = '#020817'; // Dark text color
+      }
+  });
+
   document.body.appendChild(clonedElement);
 
   // Wait for the browser to render the cloned element fully
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  await new Promise(resolve => setTimeout(resolve, 100)); // Extra delay for safety
+  await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 300)));
 
   try {
     const canvas = await html2canvas(clonedElement, {
       scale: 2,
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff', // Explicitly set background
+      backgroundColor: '#ffffff',
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -90,9 +86,50 @@ export const generatePdf = async (elementId: string) => {
     });
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const canvasAspectRatio = canvas.width / canvas.height;
     
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    const totalImageHeight = pdfWidth / canvasAspectRatio;
+    let yPosition = 0;
+    let pageCount = 1;
+    const maxPages = 3; // Limit to 3 pages
+
+    while (yPosition < totalImageHeight && pageCount <= maxPages) {
+      if (pageCount > 1) {
+        pdf.addPage();
+      }
+      
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      
+      // Calculate height of the slice for one PDF page
+      const sliceHeightInPdfMm = pdfHeight;
+      const sliceHeightInCanvasPixels = (sliceHeightInPdfMm * canvas.width) / pdfWidth;
+      pageCanvas.height = sliceHeightInCanvasPixels;
+
+      const ctx = pageCanvas.getContext('2d');
+      if (ctx) {
+        // Draw the slice of the original canvas onto the page canvas
+        ctx.drawImage(
+          canvas,
+          0, // sourceX
+          (yPosition * canvas.width) / pdfWidth, // sourceY
+          canvas.width, // sourceWidth
+          sliceHeightInCanvasPixels, // sourceHeight
+          0, // destX
+          0, // destY
+          canvas.width, // destWidth
+          sliceHeightInCanvasPixels // destHeight
+        );
+        
+        const pageImgData = pageCanvas.toDataURL('image/png');
+        pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, Math.min(pdfHeight, totalImageHeight - yPosition));
+      }
+      
+      yPosition += pdfHeight;
+      pageCount++;
+    }
+
     pdf.save("pai-financial-report.pdf");
 
   } catch (error) {

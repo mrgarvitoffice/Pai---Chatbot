@@ -10,23 +10,7 @@ import { ArrowUp, Mic } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, HistoryMessage } from '@/lib/types';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { sendMessageAction } from '@/lib/actions';
-import { TaxResultCard } from '@/components/tax-result-card';
-import { SipResultCard } from '@/components/sip-result-card';
-import { EmiResultCard } from '@/components/emi-result-card';
-import { CompoundInterestResultCard } from '@/components/compound-interest-result-card';
-import { BudgetAllocationResultCard } from '@/components/budget-allocation-result-card';
-import { FdResultCard } from '@/components/fd-result-card';
-import { RdResultCard } from '@/components/rd-result-card';
-import { ReverseSipResultCard } from '@/components/reverse-sip-result-card';
-import { RetirementResultCard } from '@/components/retirement-result-card';
-import { DtiResultCard } from '@/components/dti-result-card';
-import { SavingsRatioResultCard } from '@/components/savings-ratio-result-card';
-import { PortfolioAllocationResultCard } from '@/components/portfolio-allocation-result-card';
-import { TermInsuranceResultCard } from '@/components/term-insurance-result-card';
-import { FireResultCard } from '@/components/fire-result-card';
-import { HraResultCard } from '@/components/hra-result-card';
 import { ToolsPanel } from '@/components/tools-panel';
-import { KnowledgeResultCard } from '@/components/knowledge-result-card';
 import { Header } from '@/components/header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, type CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -113,17 +97,9 @@ const ChatInterface = ({
 );
 
 // Moved ToolsInterface outside of Home to prevent re-renders
-const ToolsInterface = ({ setMessages, latestReportId, setLatestReportId }: {
-  setMessages: Dispatch<SetStateAction<ChatMessageType[]>>;
-  latestReportId: string | null;
-  setLatestReportId: Dispatch<SetStateAction<string | null>>;
-}) => (
+const ToolsInterface = () => (
   <div className="h-full overflow-y-auto thin-scrollbar lg:p-0">
-    <ToolsPanel
-      setMessages={setMessages}
-      latestReportId={latestReportId}
-      setLatestReportId={setLatestReportId}
-    />
+    <ToolsPanel />
   </div>
 );
 
@@ -133,7 +109,6 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [latestReportId, setLatestReportId] = useState<string | null>(null);
   
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
@@ -172,6 +147,7 @@ export default function Home() {
             msg.id === messageId ? { ...msg, feedback } : msg
         )
     );
+    // In a real app, you would send this feedback to a server
     console.log(`Feedback for message ${messageId}: ${feedback}`);
   };
 
@@ -194,6 +170,7 @@ export default function Home() {
           if (msg.role === 'user' && typeof msg.content === 'string') {
             content = msg.content;
           } else if (msg.role === 'assistant' && msg.rawContent) {
+              // Use the raw text content for the assistant's history
               content = msg.rawContent;
           }
           return {
@@ -204,53 +181,18 @@ export default function Home() {
 
       const result = await sendMessageAction({ query, history });
       
-      let content: React.ReactNode;
-      const resultId = result.calculationResult?.data.id;
-
-      if (resultId) {
-        setLatestReportId(resultId);
-      } else {
-        setLatestReportId(null);
-      }
-
-      const resultCardId = resultId || `knowledge-${uuidv4()}`;
-
-      if (result.calculationResult?.type === 'tax') content = <TaxResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'tax_comparison') content = <TaxResultCard id={resultCardId} comparisonResult={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'sip') content = <SipResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'emi') content = <EmiResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'compound_interest') content = <CompoundInterestResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'budget') content = <BudgetAllocationResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fd') content = <FdResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'rd') content = <RdResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'reverse_sip') content = <ReverseSipResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'retirement') content = <RetirementResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'dti') content = <DtiResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'savings_ratio') content = <SavingsRatioResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'portfolio_allocation') content = <PortfolioAllocationResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'term_insurance') content = <TermInsuranceResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'fire') content = <FireResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else if (result.calculationResult?.type === 'hra') content = <HraResultCard id={resultCardId} result={result.calculationResult.data} explanation={result.response} />;
-      else content = <KnowledgeResultCard id={resultCardId} query={query} response={result.response} />;
-      
       const botResponse: ChatMessageType = { 
         id: uuidv4(), 
         role: 'assistant', 
-        content, 
+        content: result.response, 
         rawContent: result.response, 
         sources: result.sources,
-        calculationResult: result.calculationResult,
       };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error(error);
       const errorMessage = "Sorry, I encountered an error. Please try again.";
-      const errorResponse: ChatMessageType = { 
-        id: uuidv4(), 
-        role: 'assistant', 
-        content: <KnowledgeResultCard id={`error-${uuidv4()}`} query="Error" response={errorMessage} />, 
-        rawContent: errorMessage 
-      };
+      const errorResponse: ChatMessageType = { id: uuidv4(), role: 'assistant', content: errorMessage, rawContent: errorMessage };
       setMessages((prev) => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
@@ -277,7 +219,7 @@ export default function Home() {
         recognitionRef.current.onresult = (event: any) => {
           const finalTranscript = event.results[0][0].transcript;
           setInput(finalTranscript);
-          processAndSetMessage(finalTranscript);
+          processAndSetMessage(finalTranscript); // Automatically send after transcription
         };
         recognitionRef.current.onend = () => setIsRecording(false);
         recognitionRef.current.onerror = (event: any) => {
@@ -326,11 +268,7 @@ export default function Home() {
                     </CarouselItem>
                     <CarouselItem>
                          <div className="h-[calc(100vh-112px)] overflow-y-auto thin-scrollbar">
-                            <ToolsInterface 
-                                setMessages={setMessages}
-                                latestReportId={latestReportId}
-                                setLatestReportId={setLatestReportId}
-                            />
+                            <ToolsInterface />
                          </div>
                     </CarouselItem>
                 </CarouselContent>
@@ -339,7 +277,7 @@ export default function Home() {
 
         {/* Desktop View */}
         <div className="hidden lg:flex flex-1 overflow-hidden">
-          <div className="flex-1 flex flex-col">
+          <div className="flex-[60%] flex flex-col">
               <ChatInterface 
                 messages={messages} 
                 isLoading={isLoading} 
@@ -353,12 +291,8 @@ export default function Home() {
                 processAndSetMessage={processAndSetMessage}
               />
           </div>
-          <aside className="w-[400px] h-full border-l border-border/50">
-              <ToolsInterface 
-                setMessages={setMessages}
-                latestReportId={latestReportId}
-                setLatestReportId={setLatestReportId}
-              />
+          <aside className="flex-[40%] h-full border-l border-border/50">
+              <ToolsInterface />
           </aside>
         </div>
       </main>
