@@ -24,7 +24,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
              <Image src="/icon.png" alt="Pai Logo" width={64} height={64} />
           </div>
-          <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Welcome to Pai</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Welcome to Pai Chatbot</CardTitle>
           <CardDescription>Your Personal AI Financial Assistant</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

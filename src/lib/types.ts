@@ -11,6 +11,7 @@ export interface ChatMessage {
       url:string;
       last_updated: string;
   }[];
+  calculationResult?: CalculationResult;
 }
 
 // Add a simple type for passing history to the AI

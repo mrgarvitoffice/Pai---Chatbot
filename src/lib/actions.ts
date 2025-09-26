@@ -2,6 +2,9 @@
 
 import { orchestrate, OrchestratorInput, OrchestratorOutput } from '@/ai/flows/orchestrator-tool';
 import { generateAudio } from '@/ai/flows/tts-flow';
+import { summarizeCalculation } from '@/ai/flows/summarize-calculation-flow';
+import type { CalculationResult } from './types';
+
 
 export async function sendMessageAction(input: OrchestratorInput): Promise<OrchestratorOutput> {
   try {
@@ -25,5 +28,17 @@ export async function textToSpeechAction(text: string): Promise<{ audioUrl: stri
     } catch (error) {
         console.error("Error in TTS action:", error);
         throw new Error("Failed to generate audio.");
+    }
+}
+
+
+export async function summarizeResultAction(result: CalculationResult): Promise<string> {
+    try {
+        const { summary } = await summarizeCalculation({ result });
+        return summary;
+    } catch (error) {
+        console.error("Error in summary action:", error);
+        // Fallback to a simple string representation if the AI summary fails
+        return "Here are your calculation results.";
     }
 }

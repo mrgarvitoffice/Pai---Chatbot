@@ -238,7 +238,8 @@ export default function Home() {
         role: 'assistant', 
         content, 
         rawContent: result.response, 
-        sources: result.sources 
+        sources: result.sources,
+        calculationResult: result.calculationResult,
       };
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {

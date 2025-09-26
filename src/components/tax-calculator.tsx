@@ -78,6 +78,7 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
           role: 'assistant',
           content: <TaxResultCard id={resultId} comparisonResult={{new: newRegimeResult, old: oldRegimeResult}} explanation={comparisonResult.comparison} />,
           rawContent: comparisonResult.comparison,
+          calculationResult: { type: 'tax_comparison', data: { new: newRegimeResult, old: oldRegimeResult } }
       };
       setMessages(prev => [...prev, userQuery, resultMessage]);
       setIsCalculating(false);
@@ -100,6 +101,7 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
             role: 'assistant',
             content: <TaxResultCard id={resultId} result={calculationResult} explanation={explanation} />,
             rawContent: explanation,
+            calculationResult: { type: 'tax', data: calculationResult }
         };
         setMessages(prev => [...prev, userQuery, resultMessage]);
 
@@ -220,9 +222,9 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
           </div>
         )}
       </CardContent>
-       <CardFooter className="flex-col items-stretch gap-2 !pt-6">
+       <CardFooter className="flex-col sm:flex-row items-stretch gap-2 !pt-6">
         {result && (
-            <Button variant="outline" onClick={handleExplain} disabled={isExplaining} className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+            <Button variant="outline" onClick={handleExplain} disabled={isExplaining} className="w-full bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                 {isExplaining ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -231,9 +233,9 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
                 Explain with AI
             </Button>
         )}
-        <Button variant="secondary" onClick={() => generatePdf(latestReportId!)} disabled={!latestReportId}>
+        <Button variant="secondary" onClick={() => generatePdf(latestReportId!)} disabled={!latestReportId} className="w-full">
             <FileDown className="mr-2 h-4 w-4" />
-            Download Report as PDF
+            Download Report
         </Button>
        </CardFooter>
     </Card>

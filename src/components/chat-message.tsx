@@ -4,7 +4,7 @@
 import { FC, useState, useRef, ReactNode } from 'react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import type { ChatMessage as ChatMessageType } from '@/lib/types';
+import type { ChatMessage as ChatMessageType, CalculationResult } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, FileText, ThumbsUp, ThumbsDown, Volume2, Download, Loader2 } from 'lucide-react';
 import { PaiLogo } from './icons';
@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Button } from './ui/button';
-import { textToSpeechAction } from '@/lib/actions';
+import { textToSpeechAction, summarizeResultAction } from '@/lib/actions';
 
 export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string, feedback: 'like' | 'dislike') => void }> = React.memo(({ 
   id, 
@@ -24,6 +24,7 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
   sources, 
   feedback, 
   rawContent, 
+  calculationResult,
   onFeedback 
 }) => {
   const isAssistant = role === 'assistant';
@@ -43,13 +44,21 @@ export const ChatMessage: FC<ChatMessageType & { onFeedback?: (messageId: string
           if (audioRef.current) {
               audioRef.current.play();
               setIsPlaying(true);
-          } else if (rawContent) {
-              const { audioUrl } = await textToSpeechAction(rawContent);
-              const audio = new Audio(audioUrl);
-              audioRef.current = audio;
-              audio.play();
-              setIsPlaying(true);
-              audio.onended = () => setIsPlaying(false);
+          } else {
+              let textToSpeak = rawContent;
+              // If there's a calculation result, generate a smart summary for TTS
+              if (calculationResult) {
+                  textToSpeak = await summarizeResultAction(calculationResult);
+              }
+              
+              if (textToSpeak) {
+                  const { audioUrl } = await textToSpeechAction(textToSpeak);
+                  const audio = new Audio(audioUrl);
+                  audioRef.current = audio;
+                  audio.play();
+                  setIsPlaying(true);
+                  audio.onended = () => setIsPlaying(false);
+              }
           }
       } catch (error) {
           console.error("Failed to play audio:", error);
