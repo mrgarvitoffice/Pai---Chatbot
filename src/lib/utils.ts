@@ -16,18 +16,33 @@ export const generatePdf = async (elementId: string) => {
     return;
   }
 
-  // Use a clone to avoid altering the live view
+  // Create a clone to manipulate without affecting the live view
   const clonedElement = sourceElement.cloneNode(true) as HTMLElement;
+  
+  // Style the clone to be rendered off-screen
   clonedElement.style.position = 'absolute';
   clonedElement.style.left = '-9999px';
   clonedElement.style.top = '0px';
-  clonedElement.style.width = `${sourceElement.offsetWidth}px`; // Ensure consistent width
-  clonedElement.style.height = 'auto'; // Let height be natural
-  
-  const isDarkMode = document.documentElement.classList.contains('dark');
-  const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
+  clonedElement.style.width = `${sourceElement.offsetWidth}px`;
+  clonedElement.style.height = 'auto';
 
-  // Force-expand all accordions in the clone
+  // Force a white background for readability
+  clonedElement.style.backgroundColor = '#ffffff';
+
+  // Fix text with gradient/clip effects to be visible with a solid color
+  const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
+  gradientTextElements.forEach(el => {
+      el.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
+      if (el.classList.contains('from-primary')) {
+          el.style.color = '#E11D48'; // ShadCN Pink
+      } else if (el.classList.contains('from-destructive')) {
+          el.style.color = '#EF4444'; // ShadCN Red
+      } else {
+          el.style.color = '#020817'; // Dark text color
+      }
+  });
+  
+  // Force expand all accordions in the clone
   const triggers = clonedElement.querySelectorAll<HTMLElement>('[data-state="closed"]');
   triggers.forEach(trigger => {
     trigger.dataset.state = 'open';
@@ -40,38 +55,27 @@ export const generatePdf = async (elementId: string) => {
       const content = clonedElement.querySelector<HTMLElement>(`#${contentId}`);
       if (content) {
         content.dataset.state = 'open';
-        // Directly override styles to ensure visibility for html2canvas
         content.style.height = 'auto';
         content.style.maxHeight = 'none';
         content.style.opacity = '1';
         content.style.overflow = 'visible';
         content.style.visibility = 'visible';
+        content.style.display = 'block';
       }
     }
-  });
-  
-  // Fix text with gradient/clip effects to be visible with a solid color
-  const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
-  gradientTextElements.forEach(el => {
-      el.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
-      // A bit of a hack: try to guess the color from the gradient classes
-      if (el.classList.contains('from-primary')) {
-          el.style.color = 'hsl(336 84% 60%)'; // Use HSL value directly
-      } else if (el.classList.contains('from-destructive')) {
-          el.style.color = 'hsl(0 84% 60%)';
-      } else {
-          el.style.color = isDarkMode ? '#f8fafc' : '#020817';
-      }
   });
 
   document.body.appendChild(clonedElement);
 
+  // Wait for the browser to render the cloned element fully
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
   try {
     const canvas = await html2canvas(clonedElement, {
-      scale: 2, // Higher resolution for better quality
-      backgroundColor: backgroundColor,
+      scale: 2,
       useCORS: true,
       logging: false,
+      backgroundColor: '#ffffff', // Explicitly set background
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -83,22 +87,13 @@ export const generatePdf = async (elementId: string) => {
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    // Check if content is taller than one page
     const pageHeight = pdf.internal.pageSize.getHeight();
-    let heightLeft = pdfHeight;
-    let position = 0;
 
-    // Add the first page
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-    heightLeft -= pageHeight;
-
-    // Add new pages if content overflows
-    while (heightLeft > 0) {
-      position = heightLeft - pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
+    if (pdfHeight < pageHeight) {
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    } else {
+       // Simple fallback for very long content, though unlikely with these cards
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pageHeight);
     }
     
     pdf.save("pai-financial-report.pdf");
