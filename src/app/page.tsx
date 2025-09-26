@@ -97,9 +97,17 @@ const ChatInterface = ({
 );
 
 // Moved ToolsInterface outside of Home to prevent re-renders
-const ToolsInterface = () => (
+const ToolsInterface = ({ setMessages, latestReportId, setLatestReportId }: { 
+  setMessages: Dispatch<SetStateAction<ChatMessageType[]>>;
+  latestReportId: string | null;
+  setLatestReportId: Dispatch<SetStateAction<string | null>>;
+}) => (
   <div className="h-full overflow-y-auto thin-scrollbar lg:p-0">
-    <ToolsPanel />
+    <ToolsPanel 
+      setMessages={setMessages} 
+      latestReportId={latestReportId} 
+      setLatestReportId={setLatestReportId} 
+    />
   </div>
 );
 
@@ -109,6 +117,7 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [latestReportId, setLatestReportId] = useState<string | null>(null);
   
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
@@ -268,7 +277,11 @@ export default function Home() {
                     </CarouselItem>
                     <CarouselItem>
                          <div className="h-[calc(100vh-112px)] overflow-y-auto thin-scrollbar">
-                            <ToolsInterface />
+                            <ToolsInterface 
+                                setMessages={setMessages} 
+                                latestReportId={latestReportId} 
+                                setLatestReportId={setLatestReportId} 
+                            />
                          </div>
                     </CarouselItem>
                 </CarouselContent>
@@ -292,7 +305,11 @@ export default function Home() {
               />
           </div>
           <aside className="flex-[40%] h-full border-l border-border/50">
-              <ToolsInterface />
+              <ToolsInterface 
+                setMessages={setMessages} 
+                latestReportId={latestReportId} 
+                setLatestReportId={setLatestReportId} 
+              />
           </aside>
         </div>
       </main>
