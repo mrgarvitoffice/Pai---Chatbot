@@ -12,7 +12,7 @@ Pai is a modern, AI-powered chatbot designed to provide accurate answers to ques
 - **Voice Input**: Use your microphone to ask questions.
 - **Source-Backed Answers**: The AI can cite its sources for general financial knowledge questions.
 
-## 🚀 Tech Stack
+## 🚀 Tech Stack :
 
 - **Framework**: [Next.js](https://nextjs.org/) (with App Router)
 - **AI**: [Google Gemini](https://ai.google/discover/gemini/) via [Genkit](https://firebase.google.com/docs/genkit)
