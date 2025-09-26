@@ -16,23 +16,18 @@ export const generatePdf = async (elementId: string) => {
     return;
   }
 
-  // Create a clone of the element to prepare it for printing off-screen
+  // Use a clone to avoid altering the live view
   const clonedElement = sourceElement.cloneNode(true) as HTMLElement;
-  
-  // Prepare the clone for PDF generation
   clonedElement.style.position = 'absolute';
   clonedElement.style.left = '-9999px';
   clonedElement.style.top = '0px';
-  clonedElement.style.width = `${sourceElement.offsetWidth}px`;
-  clonedElement.style.height = 'auto';
-  clonedElement.style.margin = '0';
-  clonedElement.style.padding = '0';
+  clonedElement.style.width = `${sourceElement.offsetWidth}px`; // Ensure consistent width
+  clonedElement.style.height = 'auto'; // Let height be natural
   
   const isDarkMode = document.documentElement.classList.contains('dark');
-  const textColor = isDarkMode ? '#f8fafc' : '#020817'; // foreground color
-  const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff'; // background color
+  const backgroundColor = isDarkMode ? '#0f172a' : '#ffffff';
 
-  // Force-expand all accordions and set chevron rotation
+  // Force-expand all accordions in the clone
   const triggers = clonedElement.querySelectorAll<HTMLElement>('[data-state="closed"]');
   triggers.forEach(trigger => {
     trigger.dataset.state = 'open';
@@ -54,45 +49,51 @@ export const generatePdf = async (elementId: string) => {
       }
     }
   });
-
-  // Fix text with gradient/clip effects to be visible
+  
+  // Fix text with gradient/clip effects to be visible with a solid color
   const gradientTextElements = clonedElement.querySelectorAll<HTMLElement>('.text-transparent.bg-clip-text');
   gradientTextElements.forEach(el => {
       el.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
       // A bit of a hack: try to guess the color from the gradient classes
       if (el.classList.contains('from-primary')) {
-          el.style.color = 'hsl(var(--primary))';
+          el.style.color = 'hsl(336 84% 60%)'; // Use HSL value directly
       } else if (el.classList.contains('from-destructive')) {
-          el.style.color = 'hsl(var(--destructive))';
+          el.style.color = 'hsl(0 84% 60%)';
       } else {
-          el.style.color = textColor; // Fallback to default text color
+          el.style.color = isDarkMode ? '#f8fafc' : '#020817';
       }
   });
 
-  // Append the clone to the body to allow it to render
   document.body.appendChild(clonedElement);
 
   try {
     const canvas = await html2canvas(clonedElement, {
-      scale: 2, // Higher resolution
+      scale: 2, // Higher resolution for better quality
       backgroundColor: backgroundColor,
       useCORS: true,
       logging: false,
     });
 
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4',
+    });
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     
+    // Check if content is taller than one page
+    const pageHeight = pdf.internal.pageSize.getHeight();
     let heightLeft = pdfHeight;
     let position = 0;
-    const pageHeight = pdf.internal.pageSize.getHeight();
 
+    // Add the first page
     pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
     heightLeft -= pageHeight;
 
+    // Add new pages if content overflows
     while (heightLeft > 0) {
       position = heightLeft - pdfHeight;
       pdf.addPage();
@@ -104,7 +105,7 @@ export const generatePdf = async (elementId: string) => {
   } catch (error) {
     console.error("Error generating PDF:", error);
   } finally {
-    // Clean up by removing the cloned element from the DOM
+    // Clean up by removing the cloned element
     document.body.removeChild(clonedElement);
   }
 };

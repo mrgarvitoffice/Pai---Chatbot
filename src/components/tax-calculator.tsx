@@ -223,7 +223,7 @@ export function TaxCalculator({ setMessages, latestReportId, setLatestReportId }
           </div>
         )}
       </CardContent>
-       <CardFooter className="flex-col sm:flex-row items-stretch gap-2 !pt-6">
+       <CardFooter className="flex flex-col sm:flex-row items-center gap-2 p-4 border-t">
         {result && (
             <Button variant="outline" onClick={handleExplain} disabled={isExplaining} className="w-full bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                 {isExplaining ? (
