@@ -3,7 +3,7 @@
 Pai is a modern, AI-powered chatbot designed to provide accurate answers to questions about Indian personal finance. It combines a conversational interface with powerful financial calculators to help users with topics like income tax, investments (SIP, FD), and loan EMIs.
 ---
 
-## ✨ Key Features
+## ✨ Key Features :
 
 - **Conversational AI**: Ask complex financial questions in plain English, Hindi, or Hinglish.
 - **Financial Calculators**: Built-in tools for calculating Income Tax, SIP returns, EMI, and more.
